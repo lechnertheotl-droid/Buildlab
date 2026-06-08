@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "formula.schema.json",
+  "title": "Formel-Objekt",
+  "type": "object",
+  "required": ["id", "latex", "expr", "result", "variables"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "latex": { "type": "string", "description": "Anzeige der Formel (LaTeX)" },
+    "expr": { "type": "string", "description": "mathjs-auswertbar; nutzt die 'var'-Namen der Variablen" },
+    "conceptId": { "type": "string", "description": "verknuepftes Konzept (optional)" },
+    "result": {
+      "type": "object",
+      "required": ["symbol", "name", "unit"],
+      "additionalProperties": false,
+      "properties": {
+        "symbol": { "type": "string" },
+        "name": { "type": "string" },
+        "unit": { "type": "string", "description": "Einheit, '-' fuer dimensionslos" }
+      }
+    },
+    "variables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["var", "symbol", "name", "unit", "explanation"],
+        "additionalProperties": false,
+        "properties": {
+          "var": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$", "description": "Name im expr" },
+          "symbol": { "type": "string", "description": "Anzeige (LaTeX)" },
+          "name": { "type": "string" },
+          "unit": { "type": "string" },
+          "explanation": { "type": "string", "description": "Antippen-erklaert-Text" },
+          "typicalRange": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    }
+  }
+}

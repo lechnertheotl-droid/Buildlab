@@ -1,0 +1,10 @@
+[
+  { "id": "ratio_20_60", "formulaId": "ratio", "inputs": { "z2": 60, "z1": 20 }, "expected": { "value": 3, "unit": "-" }, "tol": 1e-9 },
+  { "id": "pitch_m2_z20", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 20 }, "expected": { "value": 40, "unit": "mm" }, "tol": 1e-9 },
+  { "id": "axis_2_20_60", "formulaId": "axis_dist", "inputs": { "m": 2, "z1": 20, "z2": 60 }, "expected": { "value": 80, "unit": "mm" }, "tol": 1e-9 },
+  { "id": "speed_3000_i3", "formulaId": "speed_out", "inputs": { "n1": 3000, "i": 3 }, "expected": { "value": 1000, "unit": "1/min" }, "tol": 1e-9 },
+  { "id": "torque_10_i3_e097", "formulaId": "torque_out", "inputs": { "M1": 10, "i": 3, "eta": 0.97 }, "expected": { "value": 29.1, "unit": "N*m" }, "tol": 1e-6 },
+  { "id": "reaction_50", "formulaId": "beam_reaction", "inputs": { "F": 50 }, "expected": { "value": 25, "unit": "N" }, "tol": 1e-9 },
+  { "id": "drag_example", "formulaId": "drag", "inputs": { "rho": 1.225, "v": 50, "cw": 0.5, "A": 0.002 }, "expected": { "value": 1.53125, "unit": "N" }, "tol": 1e-6 },
+  { "id": "stability_example", "formulaId": "stability", "inputs": { "xcp": 520, "xcg": 480, "d": 24 }, "expected": { "value": 1.6667, "unit": "Kaliber" }, "tol": 1e-3 }
+]

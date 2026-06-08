@@ -1,0 +1,57 @@
+{
+  "_doc": "Geprüfte Pseudo-3D-Interaktiv-Komponenten. interactive-Bloecke duerfen NUR diese componentId verwenden. params muss zum jeweiligen Schema passen. Werte kommen, wo angegeben, aus packages/engine.",
+  "components": [
+    {
+      "id": "value-slider",
+      "purpose": "Generischer Slider, der eine Formel-Variable treibt und das Ergebnis live zeigt.",
+      "params": { "formulaId": "string", "var": "string", "min": "number", "max": "number", "step": "number" },
+      "computedBy": "engine"
+    },
+    {
+      "id": "vector-drag",
+      "purpose": "Ziehbarer 2.5D-Kraftvektor; zeigt Betrag und Richtung.",
+      "params": { "maxN": "number" }
+    },
+    {
+      "id": "force-balance",
+      "purpose": "Mehrere Kräfte addieren, bis Gleichgewicht (ΣF=0) erreicht ist.",
+      "params": { "forces": "array", "tolerance": "number" },
+      "computedBy": "engine"
+    },
+    {
+      "id": "gear-pair",
+      "purpose": "Zwei kämmende Zahnräder, isometrisch; Slider für z1, z2, Modul; zeigt i und Achsabstand.",
+      "params": { "z1": "number", "z2": "number", "m": "number", "z1Range": "array", "z2Range": "array", "mRange": "array" },
+      "computedBy": "engine"
+    },
+    {
+      "id": "stress-bar",
+      "purpose": "Stab/Balken unter Last mit farbcodierter Spannung (grün→rot).",
+      "params": { "profile": "string", "load": "number" },
+      "computedBy": "engine"
+    },
+    {
+      "id": "linkage-anim",
+      "purpose": "Animiertes ebenes Gelenkgetriebe (z. B. Viergelenk); zeigt Bewegung und Totlagen.",
+      "params": { "links": "array" },
+      "computedBy": "engine"
+    },
+    {
+      "id": "cad-preview",
+      "purpose": "Isometrische Pseudo-3D-Vorschau eines parametrischen Modells aus /cad; Slider treiben Parameter; STL-Export.",
+      "params": { "cadModel": "string", "parameters": "object" }
+    },
+    {
+      "id": "rocket-stability",
+      "purpose": "Raketen-Seitenriss mit Schwerpunkt (CG), Druckpunkt (CP) und Stabilitätsmaß; Finnen-Slider.",
+      "params": { "finRoot": "number", "finTip": "number", "finCount": "number" },
+      "computedBy": "engine"
+    },
+    {
+      "id": "flight-sim",
+      "purpose": "Flugbahn-Diagramm (Höhe über Zeit) mit Apogäum und v_max aus der Flug-ODE.",
+      "params": { "motorClass": "string" },
+      "computedBy": "engine"
+    }
+  ]
+}

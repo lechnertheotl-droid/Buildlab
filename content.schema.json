@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "content.schema.json",
+  "title": "Projekt",
+  "type": "object",
+  "required": ["id", "title", "level", "buildResult", "challenge", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+    "title": { "type": "string" },
+    "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "buildResult": { "type": "string", "description": "was man am Ende physisch hat" },
+    "challenge": { "type": "string", "description": "reale Aufgabe mit messbarer Anforderung" },
+    "prerequisites": { "type": "array", "items": { "type": "string" }, "description": "Projekt-IDs vorher" },
+    "conceptsIntroduced": { "type": "array", "items": { "type": "string" } },
+    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/step" } }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "required": ["id", "title", "goal", "blocks"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "goal": { "type": "string", "description": "genau EIN Lernziel" },
+        "estMinutes": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/block" } }
+      }
+    },
+    "block": {
+      "oneOf": [
+        { "$ref": "#/$defs/textBlock" },
+        { "$ref": "#/$defs/formulaBlock" },
+        { "$ref": "#/$defs/interactiveBlock" },
+        { "$ref": "#/$defs/calcBlock" },
+        { "$ref": "#/$defs/buildBlock" },
+        { "$ref": "#/$defs/checkBlock" }
+      ]
+    },
+    "textBlock": {
+      "type": "object",
+      "required": ["type", "layers"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "text" },
+        "layers": {
+          "type": "object",
+          "required": ["intuitive"],
+          "additionalProperties": false,
+          "properties": {
+            "intuitive": { "type": "string" },
+            "practical": { "type": "string" },
+            "rigorous": { "type": "string" }
+          }
+        },
+        "introduces": { "type": "array", "items": { "type": "string" }, "description": "Konzept-IDs erstmals erklaert" },
+        "uses": { "type": "array", "items": { "type": "string" }, "description": "Konzept-IDs nur verwendet (Auffrischung)" }
+      }
+    },
+    "formulaBlock": {
+      "type": "object",
+      "required": ["type", "formulaId"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "formula" },
+        "formulaId": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "interactiveBlock": {
+      "type": "object",
+      "required": ["type", "componentId"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "interactive" },
+        "componentId": { "type": "string", "description": "ID aus components.registry.json" },
+        "params": { "type": "object" },
+        "caption": { "type": "string" }
+      }
+    },
+    "calcBlock": {
+      "type": "object",
+      "required": ["type", "formulaId", "inputs", "expected"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "calc" },
+        "formulaId": { "type": "string" },
+        "inputs": { "type": "object", "description": "var-Name -> Zahl (in Basis-Einheit der Variable)" },
+        "expected": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "additionalProperties": false,
+          "properties": { "value": { "type": "number" }, "unit": { "type": "string" } }
+        },
+        "narrative": { "type": "string" }
+      }
+    },
+    "buildBlock": {
+      "type": "object",
+      "required": ["type", "cadModel", "parameters"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "build" },
+        "cadModel": { "type": "string", "description": "Name des parametrischen Modells in /cad" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["min", "max", "default", "unit"],
+            "additionalProperties": false,
+            "properties": {
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "default": { "type": "number" },
+              "unit": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "exports": { "type": "array", "items": { "enum": ["stl", "step"] } },
+        "bom": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "checkBlock": {
+      "type": "object",
+      "required": ["type", "kind", "question"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "check" },
+        "kind": { "enum": ["single", "multi", "numeric"] },
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" }, "description": "nur single/multi" },
+        "answer": { "description": "Index (single), Index-Array (multi) oder Zahl (numeric)" },
+        "tolerance": { "type": "number", "description": "nur numeric: erlaubte relative Abweichung" },
+        "unit": { "type": "string" },
+        "explanation": { "type": "string" }
+      }
+    }
+  }
+}

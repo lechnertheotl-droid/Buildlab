@@ -1,0 +1,57 @@
+[
+  { "id": "kraft", "name": "Kraft", "symbol": "F", "unit": "N",
+    "short": "Eine gerichtete Einwirkung, die etwas verformt oder beschleunigt. Hat Betrag und Richtung.",
+    "prerequisites": [] },
+
+  { "id": "drehmoment", "name": "Drehmoment", "symbol": "M", "unit": "N*m",
+    "short": "Die Drehwirkung einer Kraft: Kraft mal Hebelarm. Sorgt fürs Verdrehen statt Verschieben.",
+    "prerequisites": ["kraft"] },
+
+  { "id": "gleichgewicht", "name": "Gleichgewicht", "unit": "-",
+    "short": "Wenn alle Kräfte und Momente sich aufheben (ΣF = 0, ΣM = 0), bewegt sich nichts.",
+    "prerequisites": ["kraft", "drehmoment"] },
+
+  { "id": "auflagerreaktion", "name": "Auflagerreaktion", "symbol": "F_A", "unit": "N",
+    "short": "Die Kraft, mit der ein Auflager zurückdrückt, damit alles im Gleichgewicht bleibt.",
+    "prerequisites": ["gleichgewicht"], "relatedFormulas": ["beam_reaction"] },
+
+  { "id": "zugdruckstab", "name": "Zug- und Druckstab", "unit": "-",
+    "short": "Ein Stab im Fachwerk wird entweder gezogen (Zug) oder gestaucht (Druck) – nie gebogen.",
+    "prerequisites": ["kraft"] },
+
+  { "id": "zahnrad", "name": "Zahnrad", "unit": "-",
+    "short": "Ein Rad mit Zähnen, das formschlüssig in ein anderes greift und so Drehung überträgt.",
+    "prerequisites": [] },
+
+  { "id": "zaehnezahl", "name": "Zähnezahl", "symbol": "z", "unit": "-",
+    "short": "Die Anzahl der Zähne eines Rads – bestimmt zusammen mit dem Partnerrad die Übersetzung.",
+    "prerequisites": ["zahnrad"] },
+
+  { "id": "modul", "name": "Modul", "symbol": "m", "unit": "mm",
+    "short": "Das Maß für die Zahngröße. Zwei Räder kämmen nur, wenn ihr Modul gleich ist.",
+    "prerequisites": ["zahnrad"], "relatedFormulas": ["pitch_d"] },
+
+  { "id": "teilkreisdurchmesser", "name": "Teilkreisdurchmesser", "symbol": "d", "unit": "mm",
+    "short": "Der gedachte Durchmesser, an dem zwei Zahnräder sich gerade berühren: d = m·z.",
+    "prerequisites": ["modul", "zaehnezahl"], "relatedFormulas": ["pitch_d"] },
+
+  { "id": "uebersetzung", "name": "Übersetzungsverhältnis", "symbol": "i", "unit": "-",
+    "short": "Der Faktor, um den ein Getriebe Drehzahl verringert und Drehmoment erhöht: i = z₂/z₁.",
+    "prerequisites": ["zaehnezahl", "drehmoment"], "relatedFormulas": ["ratio", "speed_out", "torque_out"] },
+
+  { "id": "achsabstand", "name": "Achsabstand", "symbol": "a", "unit": "mm",
+    "short": "Der Abstand der beiden Radachsen, damit die Zähne sauber ineinandergreifen.",
+    "prerequisites": ["teilkreisdurchmesser"], "relatedFormulas": ["axis_dist"] },
+
+  { "id": "wirkungsgrad", "name": "Wirkungsgrad", "symbol": "\\eta", "unit": "-",
+    "short": "Der Anteil der Eingangsleistung, der hinten ankommt – der Rest geht als Reibung verloren.",
+    "prerequisites": [] },
+
+  { "id": "luftwiderstand", "name": "Luftwiderstand", "symbol": "F_w", "unit": "N",
+    "short": "Die bremsende Kraft der Luft; wächst mit dem Quadrat der Geschwindigkeit.",
+    "prerequisites": ["kraft"], "relatedFormulas": ["drag"] },
+
+  { "id": "stabilitaetsmass", "name": "Stabilitätsmaß", "symbol": "S", "unit": "Kaliber",
+    "short": "Wie stabil eine Rakete fliegt: Abstand Druckpunkt–Schwerpunkt, gemessen in Rohrdurchmessern. Gut sind 1–2.",
+    "prerequisites": ["luftwiderstand"], "relatedFormulas": ["stability"] }
+]

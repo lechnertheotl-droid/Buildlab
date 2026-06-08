@@ -1,0 +1,97 @@
+[
+  {
+    "id": "ratio",
+    "latex": "i = \\dfrac{z_2}{z_1}",
+    "expr": "z2 / z1",
+    "conceptId": "uebersetzung",
+    "result": { "symbol": "i", "name": "Übersetzungsverhältnis", "unit": "-" },
+    "variables": [
+      { "var": "z2", "symbol": "z_2", "name": "Zähnezahl des Abtriebsrads", "unit": "-",
+        "explanation": "Anzahl der Zähne am abgetriebenen (langsameren) Rad.", "typicalRange": [12, 200] },
+      { "var": "z1", "symbol": "z_1", "name": "Zähnezahl des Antriebsrads", "unit": "-",
+        "explanation": "Anzahl der Zähne am treibenden (schnelleren) Rad.", "typicalRange": [12, 200] }
+    ]
+  },
+  {
+    "id": "pitch_d",
+    "latex": "d = m \\cdot z",
+    "expr": "m * z",
+    "conceptId": "teilkreisdurchmesser",
+    "result": { "symbol": "d", "name": "Teilkreisdurchmesser", "unit": "mm" },
+    "variables": [
+      { "var": "m", "symbol": "m", "name": "Modul", "unit": "mm",
+        "explanation": "Maß für die Zahngröße. Räder kämmen nur, wenn ihr Modul gleich ist.", "typicalRange": [0.5, 10] },
+      { "var": "z", "symbol": "z", "name": "Zähnezahl", "unit": "-",
+        "explanation": "Anzahl der Zähne des Rads.", "typicalRange": [12, 200] }
+    ]
+  },
+  {
+    "id": "axis_dist",
+    "latex": "a = \\dfrac{m\\,(z_1 + z_2)}{2}",
+    "expr": "m * (z1 + z2) / 2",
+    "conceptId": "achsabstand",
+    "result": { "symbol": "a", "name": "Achsabstand", "unit": "mm" },
+    "variables": [
+      { "var": "m", "symbol": "m", "name": "Modul", "unit": "mm",
+        "explanation": "Zahngröße beider Räder (muss gleich sein).", "typicalRange": [0.5, 10] },
+      { "var": "z1", "symbol": "z_1", "name": "Zähnezahl Antriebsrad", "unit": "-", "explanation": "Zähne des treibenden Rads.", "typicalRange": [12, 200] },
+      { "var": "z2", "symbol": "z_2", "name": "Zähnezahl Abtriebsrad", "unit": "-", "explanation": "Zähne des abgetriebenen Rads.", "typicalRange": [12, 200] }
+    ]
+  },
+  {
+    "id": "speed_out",
+    "latex": "n_2 = \\dfrac{n_1}{i}",
+    "expr": "n1 / i",
+    "result": { "symbol": "n_2", "name": "Abtriebsdrehzahl", "unit": "1/min" },
+    "variables": [
+      { "var": "n1", "symbol": "n_1", "name": "Antriebsdrehzahl", "unit": "1/min", "explanation": "Drehzahl der Eingangswelle.", "typicalRange": [10, 10000] },
+      { "var": "i", "symbol": "i", "name": "Übersetzungsverhältnis", "unit": "-", "explanation": "Faktor zwischen An- und Abtrieb.", "typicalRange": [0.1, 20] }
+    ]
+  },
+  {
+    "id": "torque_out",
+    "latex": "M_2 = M_1 \\cdot i \\cdot \\eta",
+    "expr": "M1 * i * eta",
+    "result": { "symbol": "M_2", "name": "Abtriebsdrehmoment", "unit": "N*m" },
+    "variables": [
+      { "var": "M1", "symbol": "M_1", "name": "Antriebsdrehmoment", "unit": "N*m", "explanation": "Drehmoment an der Eingangswelle.", "typicalRange": [0.01, 1000] },
+      { "var": "i", "symbol": "i", "name": "Übersetzungsverhältnis", "unit": "-", "explanation": "Faktor zwischen An- und Abtrieb.", "typicalRange": [0.1, 20] },
+      { "var": "eta", "symbol": "\\eta", "name": "Wirkungsgrad", "unit": "-", "explanation": "Anteil der Leistung, der nicht durch Reibung verloren geht.", "typicalRange": [0.9, 0.99] }
+    ]
+  },
+  {
+    "id": "beam_reaction",
+    "latex": "F_A = \\dfrac{F}{2}",
+    "expr": "F / 2",
+    "conceptId": "auflagerreaktion",
+    "result": { "symbol": "F_A", "name": "Auflagerkraft (mittige Last, symmetrisch)", "unit": "N" },
+    "variables": [
+      { "var": "F", "symbol": "F", "name": "mittige Last", "unit": "N", "explanation": "In der Mitte aufgebrachte Kraft; verteilt sich gleich auf beide Auflager.", "typicalRange": [1, 100000] }
+    ]
+  },
+  {
+    "id": "drag",
+    "latex": "F_w = \\tfrac{1}{2}\\,\\rho\\,v^2 c_w A",
+    "expr": "0.5 * rho * v^2 * cw * A",
+    "conceptId": "luftwiderstand",
+    "result": { "symbol": "F_w", "name": "Luftwiderstand", "unit": "N" },
+    "variables": [
+      { "var": "rho", "symbol": "\\rho", "name": "Luftdichte", "unit": "kg/m^3", "explanation": "Dichte der Luft; auf Meereshöhe ca. 1,225.", "typicalRange": [1.0, 1.3] },
+      { "var": "v", "symbol": "v", "name": "Geschwindigkeit", "unit": "m/s", "explanation": "Geschwindigkeit relativ zur Luft.", "typicalRange": [0, 400] },
+      { "var": "cw", "symbol": "c_w", "name": "Widerstandsbeiwert", "unit": "-", "explanation": "Formabhängiger Beiwert; je stromlinienförmiger, desto kleiner.", "typicalRange": [0.1, 1.0] },
+      { "var": "A", "symbol": "A", "name": "Stirnfläche", "unit": "m^2", "explanation": "Angeströmte Querschnittsfläche.", "typicalRange": [0.0001, 1.0] }
+    ]
+  },
+  {
+    "id": "stability",
+    "latex": "S = \\dfrac{x_{CP} - x_{CG}}{d}",
+    "expr": "(xcp - xcg) / d",
+    "conceptId": "stabilitaetsmass",
+    "result": { "symbol": "S", "name": "Stabilitätsmaß", "unit": "Kaliber" },
+    "variables": [
+      { "var": "xcp", "symbol": "x_{CP}", "name": "Lage des Druckpunkts", "unit": "mm", "explanation": "Abstand des Druckpunkts (Angriff der Luftkräfte) von der Spitze.", "typicalRange": [0, 2000] },
+      { "var": "xcg", "symbol": "x_{CG}", "name": "Lage des Schwerpunkts", "unit": "mm", "explanation": "Abstand des Schwerpunkts von der Spitze.", "typicalRange": [0, 2000] },
+      { "var": "d", "symbol": "d", "name": "Rohrdurchmesser (Kaliber)", "unit": "mm", "explanation": "Außendurchmesser des Raketenrohrs; dient als Längenmaß.", "typicalRange": [10, 200] }
+    ]
+  }
+]

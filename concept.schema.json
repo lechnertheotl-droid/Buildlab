@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "concept.schema.json",
+  "title": "Konzept",
+  "type": "object",
+  "required": ["id", "name", "short", "prerequisites"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "name": { "type": "string" },
+    "symbol": { "type": "string", "description": "Formelzeichen (optional)" },
+    "unit": { "type": "string" },
+    "short": { "type": "string", "description": "1-2 Saetze fuers Antippen-Popover" },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Konzept-IDs, die man vorher verstehen sollte"
+    },
+    "explanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "intuitive": { "type": "string" },
+        "practical": { "type": "string" },
+        "rigorous": { "type": "string" }
+      }
+    },
+    "relatedFormulas": { "type": "array", "items": { "type": "string" } }
+  }
+}
