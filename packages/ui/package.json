@@ -12,7 +12,11 @@
     }
   },
   "dependencies": {
-    "@buildlab/engine": "workspace:*"
+    "@buildlab/engine": "workspace:*",
+    "katex": "^0.16.22"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7"
   },
   "peerDependencies": {
     "react": "^18.3.1"
