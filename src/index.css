@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens — verbindlich aus DESIGN.md. Keine Farben/Fonts außerhalb dieser Liste. */
+:root {
+  /* Flächen */
+  --paper: #ede6d6;
+  --paper-2: #f4eee0;
+  --paper-sink: #e3dac6;
+
+  /* Tinte */
+  --ink: #23211c;
+  --ink-2: #57534a;
+  --ink-faint: #8b857a;
+
+  /* Akzent */
+  --accent: #c2562b;
+  --accent-ink: #8e3c1c;
+
+  /* Linien */
+  --rule: #00000014;
+  --grid: #00000008;
+
+  /* Datenvisualisierung (nur Sim-Overlays) */
+  --viz-low: #4f7a4a;
+  --viz-mid: #c9a227;
+  --viz-high: #b23a2e;
+
+  /* Radius & Schatten */
+  --radius: 6px;
+  --shadow: 0 1px 0 #00000010, 0 8px 24px -16px #00000033;
+
+  /* Typografie */
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Hanken Grotesk', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
