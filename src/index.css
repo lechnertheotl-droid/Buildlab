@@ -37,12 +37,19 @@
   --font-mono: 'IBM Plex Mono', monospace;
 }
 
-/* Millimeterpapier-Raster (DESIGN.md): sehr dezente --grid-Linien als Tiefe. */
+/* Millimeterpapier-Raster (DESIGN.md): dezente Linien als Tiefe wie auf
+   Konstruktionspapier — feines Raster plus kräftigere Hauptlinien. */
 .mm-grid {
   background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 8px 8px;
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size:
+    24px 24px,
+    24px 24px,
+    120px 120px,
+    120px 120px;
 }
 
 /* Sanftes Cross-Fade für Tiefen-Umschalter & Popover (Motion 150–250 ms). */
