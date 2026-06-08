@@ -1,0 +1,17 @@
+{
+  "name": "@buildlab/engine",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Deterministische Rechen-Engine. Die einzige Quelle für Zahlen.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "dependencies": {
+    "mathjs": "^13.2.0"
+  }
+}
