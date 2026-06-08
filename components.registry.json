@@ -8,6 +8,12 @@
       "computedBy": "engine"
     },
     {
+      "id": "lever-slider",
+      "purpose": "Hebel mit verschiebbarer Kraft und Hebelarm; live 2.5D-Kraftvektor; zeigt das resultierende Drehmoment aus der Engine.",
+      "params": { "formulaId": "string", "forceVar": "string", "armVar": "string", "force": "number", "arm": "number", "forceRange": "array", "armRange": "array" },
+      "computedBy": "engine"
+    },
+    {
       "id": "vector-drag",
       "purpose": "Ziehbarer 2.5D-Kraftvektor; zeigt Betrag und Richtung.",
       "params": { "maxN": "number" }

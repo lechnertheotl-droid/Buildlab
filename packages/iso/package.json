@@ -1,0 +1,14 @@
+{
+  "name": "@buildlab/iso",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Pseudo-3D Renderer (isometrische Projektion, Schattierung, Explosion). Reine Mathematik + SVG-Helfer, KEIN WebGL/three (Eiserne Regel 3).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  }
+}

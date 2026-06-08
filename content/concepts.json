@@ -3,9 +3,13 @@
     "short": "Eine gerichtete Einwirkung, die etwas verformt oder beschleunigt. Hat Betrag und Richtung.",
     "prerequisites": [] },
 
+  { "id": "hebelarm", "name": "Hebelarm", "symbol": "r", "unit": "m",
+    "short": "Der senkrechte Abstand einer Kraft von der Drehachse. Er entscheidet, wie viel Drehwirkung die Kraft entfaltet.",
+    "prerequisites": ["kraft"] },
+
   { "id": "drehmoment", "name": "Drehmoment", "symbol": "M", "unit": "N*m",
     "short": "Die Drehwirkung einer Kraft: Kraft mal Hebelarm. Sorgt fürs Verdrehen statt Verschieben.",
-    "prerequisites": ["kraft"] },
+    "prerequisites": ["kraft", "hebelarm"], "relatedFormulas": ["torque_lever"] },
 
   { "id": "gleichgewicht", "name": "Gleichgewicht", "unit": "-",
     "short": "Wenn alle Kräfte und Momente sich aufheben (ΣF = 0, ΣM = 0), bewegt sich nichts.",
