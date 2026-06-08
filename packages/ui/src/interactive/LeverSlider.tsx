@@ -217,9 +217,11 @@ export function LeverSlider({
   const dimA = proj({ x: 0, y: 0, z: BEAM.max.z });
   const dimB = proj({ x: armX, y: 0, z: BEAM.max.z });
 
-  // Label sicher im sichtbaren Bereich halten (nie am Rand abschneiden).
-  const labelX = Math.max(MARGIN.l + 30, Math.min(VIEW_W - MARGIN.r - 30, tail.x));
-  const labelY = Math.max(13, tail.y - 10);
+  // Kraft-Label als Mess-Tag; Breite aus der Monospace-Zeichenzahl geschätzt.
+  const labelText = `F = ${fmt(force)} N`;
+  const labelW = labelText.length * 6.7 + 12;
+  const labelX = Math.max(MARGIN.l + labelW / 2, Math.min(VIEW_W - MARGIN.r - labelW / 2, tail.x));
+  const labelY = Math.max(15, tail.y - 10);
 
   return (
     <figure className="rounded border border-black/10 bg-paper-2 p-4 shadow">
@@ -286,32 +288,17 @@ export function LeverSlider({
           </g>
         )}
 
-        {/* Drehwirkungs-Bogen über dem Drehpunkt (Betrag ∝ Drehmoment), mit Papier-Halo */}
-        <path
-          d={`M ${r2(pivot.x - arcR)} ${r2(pivot.y - 2)} A ${r2(arcR)} ${r2(arcR)} 0 0 1 ${r2(pivot.x)} ${r2(pivot.y - arcR - 2)}`}
-          fill="none"
-          stroke="var(--paper-2)"
-          strokeWidth={5}
-          strokeLinecap="round"
-        />
+        {/* Drehwirkungs-Bogen über dem Drehpunkt (Betrag ∝ Drehmoment) */}
         <path
           d={`M ${r2(pivot.x - arcR)} ${r2(pivot.y - 2)} A ${r2(arcR)} ${r2(arcR)} 0 0 1 ${r2(pivot.x)} ${r2(pivot.y - arcR - 2)}`}
           fill="none"
           stroke={vecColor}
           strokeWidth={2.5}
+          strokeLinecap="round"
           markerEnd="url(#lever-arc-head)"
         />
 
-        {/* Kraftvektor (2.5D): Papier-Halo + farbige Linie + Pfeilspitze, Länge & Farbe ∝ Kraft */}
-        <line
-          x1={r2(tail.x)}
-          y1={r2(tail.y)}
-          x2={r2(tip.x)}
-          y2={r2(tip.y)}
-          stroke="var(--paper-2)"
-          strokeWidth={6.5}
-          strokeLinecap="round"
-        />
+        {/* Kraftvektor (2.5D): farbige Linie + Pfeilspitze, Länge & Farbe ∝ Kraft */}
         <line
           x1={r2(tail.x)}
           y1={r2(tail.y)}
@@ -324,21 +311,29 @@ export function LeverSlider({
         <polygon
           points={`${r2(tip.x)},${r2(tip.y)} ${r2(tip.x - ah)},${r2(tip.y - ah * 1.6)} ${r2(tip.x + ah)},${r2(tip.y - ah * 1.6)}`}
           fill={vecColor}
-          stroke="var(--paper-2)"
-          strokeWidth={1}
         />
-        <text
-          x={r2(labelX)}
-          y={r2(labelY)}
-          textAnchor="middle"
-          className="fill-ink font-mono"
-          style={{ fontSize: 11, fontWeight: 600, userSelect: 'none', paintOrder: 'stroke' }}
-          stroke="var(--paper-2)"
-          strokeWidth={3}
-          pointerEvents="none"
-        >
-          F = {fmt(force)} N
-        </text>
+
+        {/* Kraft-Label als dezentes Mess-Tag (Mono auf Papier-Chip) */}
+        <g pointerEvents="none">
+          <rect
+            x={r2(labelX - labelW / 2)}
+            y={r2(labelY - 11)}
+            width={r2(labelW)}
+            height={15}
+            rx={3}
+            fill="var(--paper-2)"
+            stroke="#00000014"
+          />
+          <text
+            x={r2(labelX)}
+            y={r2(labelY)}
+            textAnchor="middle"
+            className="fill-ink font-mono"
+            style={{ fontSize: 11, userSelect: 'none' }}
+          >
+            {labelText}
+          </text>
+        </g>
       </svg>
 
       {/* Live-Ergebnis aus der Engine */}
