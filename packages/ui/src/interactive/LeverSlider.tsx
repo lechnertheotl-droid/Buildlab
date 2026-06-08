@@ -37,6 +37,8 @@ const ARM_MIN_X = 0.4;
 const ARM_SPAN = 3.2;
 const ARROW_MAX = 1.4; // maximale Vektorlänge (Welteinheiten)
 const GROUND_Z = -0.7;
+// Drehpunkt als 3D-Keil (Prisma): halbe Breite in x, halbe Tiefe in y.
+const FUL = { halfX: 0.5, halfY: 0.3 };
 
 function fmt(n: number, digits = 1): string {
   return new Intl.NumberFormat('de-DE', { maximumFractionDigits: digits }).format(n);
@@ -91,11 +93,11 @@ function isoBox(min: Vec3, max: Vec3, proj: (p: Vec3) => Vec2) {
 // Schieben nicht und nichts wird je abgeschnitten.
 const ENVELOPE: Vec3[] = [
   ...box(BEAM.min, BEAM.max),
-  { x: 0, y: 0, z: 0 },
-  { x: -0.5, y: 0, z: GROUND_Z },
-  { x: 0.5, y: 0, z: GROUND_Z },
-  { x: BEAM.min.x, y: 0, z: GROUND_Z },
-  { x: BEAM.max.x, y: 0, z: GROUND_Z },
+  // Drehpunkt-Keil (mit Tiefe), inkl. Kontaktschatten-Spielraum.
+  { x: 0, y: FUL.halfY, z: 0 },
+  { x: 0, y: -FUL.halfY, z: 0 },
+  { x: -FUL.halfX - 0.15, y: FUL.halfY, z: GROUND_Z },
+  { x: FUL.halfX + 0.15, y: -FUL.halfY, z: GROUND_Z },
   { x: ARM_MIN_X, y: 0, z: BEAM.max.z + ARROW_MAX },
   { x: ARM_MIN_X + ARM_SPAN, y: 0, z: BEAM.max.z + ARROW_MAX },
 ];
@@ -189,90 +191,150 @@ export function LeverSlider({
   const arrowLen = 0.3 + forceFrac * (ARROW_MAX - 0.3); // Vektorlänge ∝ Kraft
 
   const beam = isoBox(BEAM.min, BEAM.max, proj);
-  const fulcrum = toPolygonPoints(
-    [
-      { x: -0.5, y: 0, z: GROUND_Z },
-      { x: 0.5, y: 0, z: GROUND_Z },
-      { x: 0, y: 0, z: 0 },
-    ].map(proj),
-  );
-  const groundA = proj({ x: BEAM.min.x - 0.2, y: 0, z: GROUND_Z });
-  const groundB = proj({ x: BEAM.max.x + 0.2, y: 0, z: GROUND_Z });
+
+  // Drehpunkt als pseudo-3D-Keil: Stirndreieck (vorne) + rechte Schrägfläche (Tiefe).
+  const apexF = { x: 0, y: FUL.halfY, z: 0 };
+  const apexB = { x: 0, y: -FUL.halfY, z: 0 };
+  const baseLF = { x: -FUL.halfX, y: FUL.halfY, z: GROUND_Z };
+  const baseRF = { x: FUL.halfX, y: FUL.halfY, z: GROUND_Z };
+  const baseRB = { x: FUL.halfX, y: -FUL.halfY, z: GROUND_Z };
+  const fulFront = toPolygonPoints([apexF, baseLF, baseRF].map(proj));
+  const fulSide = toPolygonPoints([apexF, apexB, baseRB, baseRF].map(proj));
+  const fulRidge = [proj(apexF), proj(apexB)];
+
+  // Kontaktschatten unter dem Keil (statt verwirrender Bodenlinie).
+  const shadow = proj({ x: 0, y: 0, z: GROUND_Z });
+  const shadowRx = Math.abs(proj(baseRF).x - proj(baseLF).x) / 2 + 6;
 
   const tip = proj({ x: armX, y: 0, z: BEAM.max.z });
   const tail = proj({ x: armX, y: 0, z: BEAM.max.z + arrowLen });
-  const ah = 6; // Pfeilspitzen-Größe (Bildschirm-px)
+  const ah = 7; // Pfeilspitzen-Größe (Bildschirm-px)
 
   const pivot = proj({ x: 0, y: 0, z: 0 });
-  const arcR = 16 + torqueFrac * 20;
+  const arcR = 18 + torqueFrac * 22;
+
+  // Maßlinie für den Hebelarm r auf der Balken-Oberkante (DESIGN.md: Maßlinien-Stil).
+  const dimA = proj({ x: 0, y: 0, z: BEAM.max.z });
+  const dimB = proj({ x: armX, y: 0, z: BEAM.max.z });
 
   // Label sicher im sichtbaren Bereich halten (nie am Rand abschneiden).
   const labelX = Math.max(MARGIN.l + 30, Math.min(VIEW_W - MARGIN.r - 30, tail.x));
-  const labelY = Math.max(13, tail.y - 8);
+  const labelY = Math.max(13, tail.y - 10);
 
   return (
     <figure className="rounded border border-black/10 bg-paper-2 p-4 shadow">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className="mm-grid w-full rounded bg-paper-sink/40"
+        className="w-full rounded"
         role="img"
         aria-label={`Hebel: Kraft ${fmt(force)} Newton am Hebelarm ${fmt(arm, 2)} Meter, Drehmoment ${torque === null ? 'unbestimmt' : fmt(torque)} Newtonmeter`}
       >
         <defs>
+          {/* Zeichenblatt-Raster: feines + grobes Gitter (DESIGN.md). */}
+          <pattern id="lever-grid-min" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M10 0H0V10" fill="none" stroke="#0000000d" strokeWidth={0.6} />
+          </pattern>
+          <pattern id="lever-grid-maj" width="50" height="50" patternUnits="userSpaceOnUse">
+            <path d="M50 0H0V50" fill="none" stroke="#00000016" strokeWidth={0.8} />
+          </pattern>
           <marker id="lever-arc-head" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
             <path d="M0,0 L7,3.5 L0,7 Z" fill={vecColor} />
           </marker>
         </defs>
 
-        {/* Bodenlinie unter dem Drehpunkt */}
-        <line
-          x1={r2(groundA.x)}
-          y1={r2(groundA.y)}
-          x2={r2(groundB.x)}
-          y2={r2(groundB.y)}
-          stroke="var(--ink-faint)"
-          strokeOpacity={0.35}
+        {/* Gerahmtes Zeichenblatt: Papierfläche + Raster + sauberer Rand */}
+        <rect x={0} y={0} width={VIEW_W} height={VIEW_H} rx={6} fill="var(--paper-sink)" fillOpacity={0.5} />
+        <rect x={0} y={0} width={VIEW_W} height={VIEW_H} rx={6} fill="url(#lever-grid-min)" />
+        <rect x={0} y={0} width={VIEW_W} height={VIEW_H} rx={6} fill="url(#lever-grid-maj)" />
+        <rect
+          x={4.5}
+          y={4.5}
+          width={VIEW_W - 9}
+          height={VIEW_H - 9}
+          rx={4}
+          fill="none"
+          stroke="#00000022"
+          strokeWidth={1}
         />
 
-        {/* Drehpunkt-Keil */}
-        <polygon points={fulcrum} fill={shade(BEAM_BASE, -0.18)} stroke="#0000001f" />
+        {/* Kontaktschatten unter dem Drehpunkt */}
+        <ellipse cx={r2(shadow.x)} cy={r2(shadow.y)} rx={r2(shadowRx)} ry={5} fill="#0000001f" />
+
+        {/* Drehpunkt als pseudo-3D-Keil: Schrägfläche (dunkler) + Stirndreieck */}
+        <polygon points={fulSide} fill={shade(BEAM_BASE, -0.28)} />
+        <polygon points={fulFront} fill={shade(BEAM_BASE, -0.1)} stroke="#00000022" />
+        <line
+          x1={r2(fulRidge[0].x)}
+          y1={r2(fulRidge[0].y)}
+          x2={r2(fulRidge[1].x)}
+          y2={r2(fulRidge[1].y)}
+          stroke={shade(BEAM_BASE, 0.18)}
+          strokeWidth={1}
+        />
 
         {/* Balken als pseudo-3D-Box: oben hell, Stirn/Seite dunkler (Schattierung) */}
-        <polygon points={beam.front} fill={shade(BEAM_BASE, -0.24)} />
+        <polygon points={beam.front} fill={shade(BEAM_BASE, -0.26)} />
         <polygon points={beam.end} fill={shade(BEAM_BASE, -0.12)} />
-        <polygon points={beam.top} fill={shade(BEAM_BASE, 0.16)} stroke="#0000001f" />
+        <polygon points={beam.top} fill={shade(BEAM_BASE, 0.18)} stroke="#00000022" />
 
-        {/* Drehwirkungs-Bogen über dem Drehpunkt (Betrag ∝ Drehmoment) */}
+        {/* Maßlinie für den Hebelarm r auf der Balken-Oberkante */}
+        {Math.hypot(dimB.x - dimA.x, dimB.y - dimA.y) > 14 && (
+          <g stroke="var(--ink-faint)" strokeOpacity={0.7}>
+            <line x1={r2(dimA.x)} y1={r2(dimA.y)} x2={r2(dimB.x)} y2={r2(dimB.y)} strokeDasharray="2 2" />
+            <circle cx={r2(dimA.x)} cy={r2(dimA.y)} r={1.6} fill="var(--ink-faint)" stroke="none" />
+            <circle cx={r2(dimB.x)} cy={r2(dimB.y)} r={1.6} fill="var(--ink-faint)" stroke="none" />
+          </g>
+        )}
+
+        {/* Drehwirkungs-Bogen über dem Drehpunkt (Betrag ∝ Drehmoment), mit Papier-Halo */}
+        <path
+          d={`M ${r2(pivot.x - arcR)} ${r2(pivot.y - 2)} A ${r2(arcR)} ${r2(arcR)} 0 0 1 ${r2(pivot.x)} ${r2(pivot.y - arcR - 2)}`}
+          fill="none"
+          stroke="var(--paper-2)"
+          strokeWidth={5}
+          strokeLinecap="round"
+        />
         <path
           d={`M ${r2(pivot.x - arcR)} ${r2(pivot.y - 2)} A ${r2(arcR)} ${r2(arcR)} 0 0 1 ${r2(pivot.x)} ${r2(pivot.y - arcR - 2)}`}
           fill="none"
           stroke={vecColor}
-          strokeWidth={2}
-          strokeDasharray="4 3"
-          opacity={0.85}
+          strokeWidth={2.5}
           markerEnd="url(#lever-arc-head)"
         />
 
-        {/* Kraftvektor (2.5D): Linie + Pfeilspitze nach unten, Länge & Farbe ∝ Kraft */}
+        {/* Kraftvektor (2.5D): Papier-Halo + farbige Linie + Pfeilspitze, Länge & Farbe ∝ Kraft */}
+        <line
+          x1={r2(tail.x)}
+          y1={r2(tail.y)}
+          x2={r2(tip.x)}
+          y2={r2(tip.y)}
+          stroke="var(--paper-2)"
+          strokeWidth={6.5}
+          strokeLinecap="round"
+        />
         <line
           x1={r2(tail.x)}
           y1={r2(tail.y)}
           x2={r2(tip.x)}
           y2={r2(tip.y)}
           stroke={vecColor}
-          strokeWidth={3}
+          strokeWidth={3.5}
           strokeLinecap="round"
         />
         <polygon
-          points={`${r2(tip.x)},${r2(tip.y)} ${r2(tip.x - ah)},${r2(tip.y - ah * 1.5)} ${r2(tip.x + ah)},${r2(tip.y - ah * 1.5)}`}
+          points={`${r2(tip.x)},${r2(tip.y)} ${r2(tip.x - ah)},${r2(tip.y - ah * 1.6)} ${r2(tip.x + ah)},${r2(tip.y - ah * 1.6)}`}
           fill={vecColor}
+          stroke="var(--paper-2)"
+          strokeWidth={1}
         />
         <text
           x={r2(labelX)}
           y={r2(labelY)}
           textAnchor="middle"
           className="fill-ink font-mono"
-          style={{ fontSize: 11, userSelect: 'none' }}
+          style={{ fontSize: 11, fontWeight: 600, userSelect: 'none', paintOrder: 'stroke' }}
+          stroke="var(--paper-2)"
+          strokeWidth={3}
           pointerEvents="none"
         >
           F = {fmt(force)} N
