@@ -67,6 +67,57 @@
   animation: fade-in 180ms ease-out;
 }
 
+/* Hebel-Szene: Bauteile blenden sich beim Laden gestaffelt ein (DESIGN.md:
+   „Bauteile zeichnen sich isometrisch ein", ein orchestrierter Moment, kein
+   Bounce). Boden → Keil → Balken → Vordergrund. */
+@keyframes lever-draw {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.lever-in {
+  animation: lever-draw 320ms ease-out both;
+}
+.lever-d1 {
+  animation-delay: 150ms;
+}
+.lever-d2 {
+  animation-delay: 240ms;
+}
+.lever-d3 {
+  animation-delay: 340ms;
+}
+.lever-d4 {
+  animation-delay: 400ms;
+}
+
+/* Sehr dezenter Puls am Drehwirkungs-Bogen (nur Opazität, kein Geometrie-Zappeln). */
+@keyframes lever-arc-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.lever-arc-pulse {
+  animation: lever-arc-pulse 2.4s ease-in-out infinite;
+}
+
+/* Barrierefreiheit: bei reduzierter Bewegung keine Einblend-/Puls-Animation. */
+@media (prefers-reduced-motion: reduce) {
+  .lever-in,
+  .lever-arc-pulse {
+    animation: none;
+  }
+}
+
 /* Slider-Griff (DESIGN.md): präziser Akzent-Knopf, dünne Schiene, kein Bounce. */
 .bl-range {
   height: 22px;

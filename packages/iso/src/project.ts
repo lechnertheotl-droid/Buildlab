@@ -39,6 +39,21 @@ export function project(p: Vec3, opts: IsoOptions = {}): Vec2 {
   };
 }
 
+/**
+ * Dreht einen Punkt um die Welt-y-Achse (die waagerechte Drehpunkt-Hinge durch
+ * den Ursprung). Positiver Winkel senkt die +x-Seite (z wird kleiner) — so kippt
+ * z. B. eine Wippe unter Last. y bleibt unverändert.
+ */
+export function rotateY(p: Vec3, angle: number): Vec3 {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: p.x * cos + p.z * sin,
+    y: p.y,
+    z: -p.x * sin + p.z * cos,
+  };
+}
+
 /** Projiziert mehrere Punkte (z. B. die Ecken einer Fläche). */
 export function projectAll(points: Vec3[], opts: IsoOptions = {}): Vec2[] {
   return points.map((p) => project(p, opts));

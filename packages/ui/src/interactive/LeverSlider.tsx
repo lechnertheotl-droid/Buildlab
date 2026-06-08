@@ -2,11 +2,12 @@
 //
 // Eiserne Regel 1: das Drehmoment M kommt aus packages/engine, nie aus dem
 // Markup. Die Slider treiben Kraft F und Hebelarm r; die Engine rechnet M = F·r;
-// die 2.5D-Szene (packages/iso) zeigt Kraftvektor und Drehwirkung live.
+// die 2.5D-Szene (packages/iso) zeigt Kraftvektor und Drehwirkung live — der
+// Balken neigt sich sichtbar unter Last, der Ampel-Pfeil zeigt den Kraftbetrag.
 
 import { useEffect, useMemo, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
-import { project, toPolygonPoints, shade, type Vec2, type Vec3 } from '@buildlab/iso';
+import { project, rotateY, toPolygonPoints, shade, type Vec2, type Vec3 } from '@buildlab/iso';
 import { Latex } from '../Latex';
 import { useContent } from '../content-context';
 import { useWorkspaceStore } from '../store';
@@ -39,6 +40,33 @@ const ARROW_MAX = 1.4; // maximale Vektorlänge (Welteinheiten)
 const GROUND_Z = -0.7;
 // Drehpunkt als 3D-Keil (Prisma): halbe Breite in x, halbe Tiefe in y.
 const FUL = { halfX: 0.5, halfY: 0.3 };
+// Maximale Balken-Neigung unter Last (an der Drehpunkt-Hinge). Bewusst dezent,
+// damit der Hebel kippt statt umzustürzen — sofort sichtbar, bleibt elegant.
+const MAX_TILT = (9 * Math.PI) / 180;
+// Perspektivische Bodenfläche (Bühne) unter der Szene.
+const FLOOR = {
+  x0: -1.0,
+  x1: BEAM.max.x + 0.4,
+  y0: -FUL.halfY - 0.4,
+  y1: FUL.halfY + 0.4,
+  step: 0.4,
+};
+
+// Token-abgeleitete Flächenfarben (BEAM_BASE ist konstant → einmal berechnet).
+const G = {
+  topHi: shade(BEAM_BASE, 0.3),
+  topLo: shade(BEAM_BASE, 0.08),
+  frontHi: shade(BEAM_BASE, -0.12),
+  frontLo: shade(BEAM_BASE, -0.3),
+  endHi: shade(BEAM_BASE, -0.02),
+  endLo: shade(BEAM_BASE, -0.18),
+  fulSideHi: shade(BEAM_BASE, -0.18),
+  fulSideLo: shade(BEAM_BASE, -0.34),
+  fulFrontHi: shade(BEAM_BASE, 0.04),
+  fulFrontLo: shade(BEAM_BASE, -0.16),
+  glanz: shade(BEAM_BASE, 0.5),
+  ridge: shade(BEAM_BASE, 0.2),
+};
 
 function fmt(n: number, digits = 1): string {
   return new Intl.NumberFormat('de-DE', { maximumFractionDigits: digits }).format(n);
@@ -61,38 +89,45 @@ function box(min: Vec3, max: Vec3): Vec3[] {
   ];
 }
 
-/** Sichtbare Flächen einer iso-Box als SVG-points, projiziert über `proj`. */
-function isoBox(min: Vec3, max: Vec3, proj: (p: Vec3) => Vec2) {
-  const top = [
+/**
+ * Sichtbare Flächen einer iso-Box, durch `tf` (Welt→Bild) transformiert.
+ * Gibt sowohl die <polygon>-Strings als auch die Eck-Vec2 zurück, damit
+ * Glanz- und Bevel-Kanten exakt auf den (ggf. gekippten) Kanten liegen.
+ */
+function isoBox(min: Vec3, max: Vec3, tf: (p: Vec3) => Vec2) {
+  const topV = [
     { x: min.x, y: min.y, z: max.z },
     { x: max.x, y: min.y, z: max.z },
     { x: max.x, y: max.y, z: max.z },
     { x: min.x, y: max.y, z: max.z },
-  ];
-  const front = [
+  ].map(tf);
+  const frontV = [
     { x: min.x, y: max.y, z: max.z },
     { x: max.x, y: max.y, z: max.z },
     { x: max.x, y: max.y, z: min.z },
     { x: min.x, y: max.y, z: min.z },
-  ];
-  const end = [
+  ].map(tf);
+  const endV = [
     { x: max.x, y: min.y, z: max.z },
     { x: max.x, y: max.y, z: max.z },
     { x: max.x, y: max.y, z: min.z },
     { x: max.x, y: min.y, z: min.z },
-  ];
+  ].map(tf);
   return {
-    top: toPolygonPoints(top.map(proj)),
-    front: toPolygonPoints(front.map(proj)),
-    end: toPolygonPoints(end.map(proj)),
+    topV,
+    frontV,
+    top: toPolygonPoints(topV),
+    front: toPolygonPoints(frontV),
+    end: toPolygonPoints(endV),
   };
 }
 
-// Konstante „Hülle": Balken + Drehpunkt + die Extremlagen von Pfeil/Hebelarm.
-// Daraus wird eine feste, randscharfe Rahmung berechnet — die Szene springt beim
-// Schieben nicht und nichts wird je abgeschnitten.
+// Konstante „Hülle": Balken (ruhend UND maximal gekippt) + Drehpunkt + Pfeil-
+// Extremlagen + Bodenfläche. Daraus wird eine feste, randscharfe Rahmung
+// berechnet — die Szene springt beim Schieben/Kippen nicht und nichts clippt.
 const ENVELOPE: Vec3[] = [
   ...box(BEAM.min, BEAM.max),
+  ...box(BEAM.min, BEAM.max).map((p) => rotateY(p, MAX_TILT)),
   // Drehpunkt-Keil (mit Tiefe), inkl. Kontaktschatten-Spielraum.
   { x: 0, y: FUL.halfY, z: 0 },
   { x: 0, y: -FUL.halfY, z: 0 },
@@ -100,6 +135,11 @@ const ENVELOPE: Vec3[] = [
   { x: FUL.halfX + 0.15, y: -FUL.halfY, z: GROUND_Z },
   { x: ARM_MIN_X, y: 0, z: BEAM.max.z + ARROW_MAX },
   { x: ARM_MIN_X + ARM_SPAN, y: 0, z: BEAM.max.z + ARROW_MAX },
+  // Bodenfläche (Bühne).
+  { x: FLOOR.x0, y: FLOOR.y0, z: GROUND_Z },
+  { x: FLOOR.x1, y: FLOOR.y0, z: GROUND_Z },
+  { x: FLOOR.x1, y: FLOOR.y1, z: GROUND_Z },
+  { x: FLOOR.x0, y: FLOOR.y1, z: GROUND_Z },
 ];
 
 const MARGIN = { l: 30, t: 30, r: 26, b: 16 };
@@ -126,6 +166,36 @@ function proj(p: Vec3): Vec2 {
   const q = project(p, { scale: FRAME.scale, angle: ANGLE });
   return { x: q.x + FRAME.tx, y: q.y + FRAME.ty };
 }
+
+// Perspektivischer Boden: Platte + projiziertes Welt-Gitter (statisch, hängt nur
+// an Konstanten → einmal erzeugt, null Render-Kosten).
+const FLOOR_PLATE = toPolygonPoints(
+  [
+    { x: FLOOR.x0, y: FLOOR.y0, z: GROUND_Z },
+    { x: FLOOR.x1, y: FLOOR.y0, z: GROUND_Z },
+    { x: FLOOR.x1, y: FLOOR.y1, z: GROUND_Z },
+    { x: FLOOR.x0, y: FLOOR.y1, z: GROUND_Z },
+  ].map(proj),
+);
+
+const FLOOR_GRID: { x1: number; y1: number; x2: number; y2: number }[] = (() => {
+  const lines: { x1: number; y1: number; x2: number; y2: number }[] = [];
+  const nx = Math.round((FLOOR.x1 - FLOOR.x0) / FLOOR.step);
+  const ny = Math.round((FLOOR.y1 - FLOOR.y0) / FLOOR.step);
+  for (let i = 0; i <= nx; i++) {
+    const x = FLOOR.x0 + i * FLOOR.step;
+    const a = proj({ x, y: FLOOR.y0, z: GROUND_Z });
+    const b = proj({ x, y: FLOOR.y1, z: GROUND_Z });
+    lines.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y });
+  }
+  for (let j = 0; j <= ny; j++) {
+    const y = FLOOR.y0 + j * FLOOR.step;
+    const a = proj({ x: FLOOR.x0, y, z: GROUND_Z });
+    const b = proj({ x: FLOOR.x1, y, z: GROUND_Z });
+    lines.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y });
+  }
+  return lines;
+})();
 
 export function LeverSlider({
   params,
@@ -182,7 +252,7 @@ export function LeverSlider({
   const maxTorque = forceRange[1] * armRange[1] || 1;
   const torqueFrac = torque ? Math.min(1, torque / maxTorque) : 0;
 
-  // Farbe des Kraftvektors nach Betrag (Viz-Skala, nur Sim-Overlay — DESIGN.md).
+  // Ampel-Farbe des Kraftvektors nach Betrag (Viz-Skala, nur Sim-Overlay).
   const vecColor =
     forceFrac < 0.5 ? 'var(--viz-low)' : forceFrac < 0.8 ? 'var(--viz-mid)' : 'var(--viz-high)';
 
@@ -190,9 +260,14 @@ export function LeverSlider({
   const armX = ARM_MIN_X + armFrac * ARM_SPAN; // Kraftposition entlang des Balkens
   const arrowLen = 0.3 + forceFrac * (ARROW_MAX - 0.3); // Vektorlänge ∝ Kraft
 
-  const beam = isoBox(BEAM.min, BEAM.max, proj);
+  // Der Balken kippt an der Drehpunkt-Hinge; die Neigung wächst mit dem Drehmoment.
+  const tilt = MAX_TILT * torqueFrac;
+  const tf = (p: Vec3): Vec2 => proj(rotateY(p, tilt));
+
+  const beam = isoBox(BEAM.min, BEAM.max, tf);
 
   // Drehpunkt als pseudo-3D-Keil: Stirndreieck (vorne) + rechte Schrägfläche (Tiefe).
+  // Der Keil steht fest (Stützpunkt) — er kippt nicht mit.
   const apexF = { x: 0, y: FUL.halfY, z: 0 };
   const apexB = { x: 0, y: -FUL.halfY, z: 0 };
   const baseLF = { x: -FUL.halfX, y: FUL.halfY, z: GROUND_Z };
@@ -206,16 +281,18 @@ export function LeverSlider({
   const shadow = proj({ x: 0, y: 0, z: GROUND_Z });
   const shadowRx = Math.abs(proj(baseRF).x - proj(baseLF).x) / 2 + 6;
 
-  const tip = proj({ x: armX, y: 0, z: BEAM.max.z });
-  const tail = proj({ x: armX, y: 0, z: BEAM.max.z + arrowLen });
-  const ah = 7; // Pfeilspitzen-Größe (Bildschirm-px)
+  // Kraft-Angriffspunkt auf der GEKIPPTEN Balken-Oberkante.
+  const tip = tf({ x: armX, y: 0, z: BEAM.max.z });
+  // Pfeil bleibt senkrecht (Schwerkraft): Schaft in Bildschirm-px über dem Fuß.
+  const tail = { x: tip.x, y: tip.y - arrowLen * FRAME.scale };
+  const ah = 9; // Pfeilspitzen-Größe (Bildschirm-px)
 
   const pivot = proj({ x: 0, y: 0, z: 0 });
   const arcR = 18 + torqueFrac * 22;
 
-  // Maßlinie für den Hebelarm r auf der Balken-Oberkante (DESIGN.md: Maßlinien-Stil).
-  const dimA = proj({ x: 0, y: 0, z: BEAM.max.z });
-  const dimB = proj({ x: armX, y: 0, z: BEAM.max.z });
+  // Maßlinie für den Hebelarm r auf der (gekippten) Balken-Oberkante.
+  const dimA = tf({ x: 0, y: 0, z: BEAM.max.z });
+  const dimB = tf({ x: armX, y: 0, z: BEAM.max.z });
 
   // Kraft-Label als Mess-Tag; Breite aus der Monospace-Zeichenzahl geschätzt.
   const labelText = `F = ${fmt(force)} N`;
@@ -239,6 +316,44 @@ export function LeverSlider({
           <pattern id="lever-grid-maj" width="50" height="50" patternUnits="userSpaceOnUse">
             <path d="M50 0H0V50" fill="none" stroke="#00000016" strokeWidth={0.8} />
           </pattern>
+          {/* Flächen-Farbverläufe (Licht von oben) — plastisch statt flach. */}
+          <linearGradient id="lever-top" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={G.topHi} />
+            <stop offset="1" stopColor={G.topLo} />
+          </linearGradient>
+          <linearGradient id="lever-front" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={G.frontHi} />
+            <stop offset="1" stopColor={G.frontLo} />
+          </linearGradient>
+          <linearGradient id="lever-end" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={G.endHi} />
+            <stop offset="1" stopColor={G.endLo} />
+          </linearGradient>
+          <linearGradient id="lever-ful-side" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={G.fulSideHi} />
+            <stop offset="1" stopColor={G.fulSideLo} />
+          </linearGradient>
+          <linearGradient id="lever-ful-front" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={G.fulFrontHi} />
+            <stop offset="1" stopColor={G.fulFrontLo} />
+          </linearGradient>
+          {/* Boden: zum vorderen Rand hin sanft eingedunkelt → Tiefe. */}
+          <linearGradient id="lever-floor" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--paper-sink)" stopOpacity={0} />
+            <stop offset="1" stopColor="var(--paper-sink)" stopOpacity={0.65} />
+          </linearGradient>
+          {/* Weicher, dezenter Tiefenschatten (kein dicker Schlagschatten). */}
+          <filter id="lever-soft" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" />
+            <feOffset dy="2" />
+            <feComponentTransfer>
+              <feFuncA type="linear" slope="0.18" />
+            </feComponentTransfer>
+            <feMerge>
+              <feMergeNode />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <marker id="lever-arc-head" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
             <path d="M0,0 L7,3.5 L0,7 Z" fill={vecColor} />
           </marker>
@@ -259,80 +374,134 @@ export function LeverSlider({
           strokeWidth={1}
         />
 
-        {/* Kontaktschatten unter dem Drehpunkt */}
-        <ellipse cx={r2(shadow.x)} cy={r2(shadow.y)} rx={r2(shadowRx)} ry={5} fill="#0000001f" />
+        {/* Perspektivischer Boden (Bühne): Platte + projiziertes Welt-Gitter */}
+        <g className="lever-in lever-d1">
+          <polygon points={FLOOR_PLATE} fill="url(#lever-floor)" />
+          {FLOOR_GRID.map((l, i) => (
+            <line
+              key={i}
+              x1={r2(l.x1)}
+              y1={r2(l.y1)}
+              x2={r2(l.x2)}
+              y2={r2(l.y2)}
+              stroke="#00000012"
+              strokeWidth={0.6}
+            />
+          ))}
+          {/* Kontaktschatten unter dem Drehpunkt */}
+          <ellipse cx={r2(shadow.x)} cy={r2(shadow.y)} rx={r2(shadowRx)} ry={5} fill="#0000001a" />
+        </g>
 
-        {/* Drehpunkt als pseudo-3D-Keil: Schrägfläche (dunkler) + Stirndreieck */}
-        <polygon points={fulSide} fill={shade(BEAM_BASE, -0.28)} />
-        <polygon points={fulFront} fill={shade(BEAM_BASE, -0.1)} stroke="#00000022" />
-        <line
-          x1={r2(fulRidge[0].x)}
-          y1={r2(fulRidge[0].y)}
-          x2={r2(fulRidge[1].x)}
-          y2={r2(fulRidge[1].y)}
-          stroke={shade(BEAM_BASE, 0.18)}
-          strokeWidth={1}
-        />
-
-        {/* Balken als pseudo-3D-Box: oben hell, Stirn/Seite dunkler (Schattierung) */}
-        <polygon points={beam.front} fill={shade(BEAM_BASE, -0.26)} />
-        <polygon points={beam.end} fill={shade(BEAM_BASE, -0.12)} />
-        <polygon points={beam.top} fill={shade(BEAM_BASE, 0.18)} stroke="#00000022" />
-
-        {/* Maßlinie für den Hebelarm r auf der Balken-Oberkante */}
-        {Math.hypot(dimB.x - dimA.x, dimB.y - dimA.y) > 14 && (
-          <g stroke="var(--ink-faint)" strokeOpacity={0.7}>
-            <line x1={r2(dimA.x)} y1={r2(dimA.y)} x2={r2(dimB.x)} y2={r2(dimB.y)} strokeDasharray="2 2" />
-            <circle cx={r2(dimA.x)} cy={r2(dimA.y)} r={1.6} fill="var(--ink-faint)" stroke="none" />
-            <circle cx={r2(dimB.x)} cy={r2(dimB.y)} r={1.6} fill="var(--ink-faint)" stroke="none" />
-          </g>
-        )}
-
-        {/* Drehwirkungs-Bogen über dem Drehpunkt (Betrag ∝ Drehmoment) */}
-        <path
-          d={`M ${r2(pivot.x - arcR)} ${r2(pivot.y - 2)} A ${r2(arcR)} ${r2(arcR)} 0 0 1 ${r2(pivot.x)} ${r2(pivot.y - arcR - 2)}`}
-          fill="none"
-          stroke={vecColor}
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          markerEnd="url(#lever-arc-head)"
-        />
-
-        {/* Kraftvektor (2.5D): farbige Linie + Pfeilspitze, Länge & Farbe ∝ Kraft */}
-        <line
-          x1={r2(tail.x)}
-          y1={r2(tail.y)}
-          x2={r2(tip.x)}
-          y2={r2(tip.y)}
-          stroke={vecColor}
-          strokeWidth={3.5}
-          strokeLinecap="round"
-        />
-        <polygon
-          points={`${r2(tip.x)},${r2(tip.y)} ${r2(tip.x - ah)},${r2(tip.y - ah * 1.6)} ${r2(tip.x + ah)},${r2(tip.y - ah * 1.6)}`}
-          fill={vecColor}
-        />
-
-        {/* Kraft-Label als dezentes Mess-Tag (Mono auf Papier-Chip) */}
-        <g pointerEvents="none">
-          <rect
-            x={r2(labelX - labelW / 2)}
-            y={r2(labelY - 11)}
-            width={r2(labelW)}
-            height={15}
-            rx={3}
-            fill="var(--paper-2)"
-            stroke="#00000014"
+        {/* Drehpunkt als pseudo-3D-Keil mit Farbverlauf + Glanz-Grat */}
+        <g className="lever-in lever-d2" filter="url(#lever-soft)">
+          <polygon points={fulSide} fill="url(#lever-ful-side)" />
+          <polygon points={fulFront} fill="url(#lever-ful-front)" stroke="#00000022" />
+          <line
+            x1={r2(fulRidge[0].x)}
+            y1={r2(fulRidge[0].y)}
+            x2={r2(fulRidge[1].x)}
+            y2={r2(fulRidge[1].y)}
+            stroke={G.ridge}
+            strokeWidth={1}
           />
-          <text
-            x={r2(labelX)}
-            y={r2(labelY)}
-            textAnchor="middle"
-            className="fill-ink font-mono"
-            style={{ fontSize: 11, userSelect: 'none' }}
-          >
-            {labelText}
-          </text>
+        </g>
+
+        {/* Balken als pseudo-3D-Box: Farbverläufe, Glanzkante oben, Bevel unten */}
+        <g className="lever-in lever-d3" filter="url(#lever-soft)">
+          <polygon points={beam.front} fill="url(#lever-front)" />
+          <polygon points={beam.end} fill="url(#lever-end)" />
+          <polygon points={beam.top} fill="url(#lever-top)" />
+          {/* Glanzkante: helle Linie entlang der oberen Vorder- und Stirnkante */}
+          <polyline
+            points={toPolygonPoints([beam.topV[3], beam.topV[2], beam.topV[1]])}
+            fill="none"
+            stroke={G.glanz}
+            strokeWidth={1}
+            strokeOpacity={0.7}
+            strokeLinecap="round"
+          />
+          {/* Bevel: dünne dunkle Linie an der unteren Vorderkante (Erdung) */}
+          <line
+            x1={r2(beam.frontV[3].x)}
+            y1={r2(beam.frontV[3].y)}
+            x2={r2(beam.frontV[2].x)}
+            y2={r2(beam.frontV[2].y)}
+            stroke="#00000022"
+            strokeWidth={0.8}
+          />
+        </g>
+
+        {/* Vordergrund: Maßlinie, Drehwirkungs-Bogen, Kraftvektor, Label */}
+        <g className="lever-in lever-d4">
+          {/* Maßlinie für den Hebelarm r auf der gekippten Balken-Oberkante */}
+          {Math.hypot(dimB.x - dimA.x, dimB.y - dimA.y) > 14 && (
+            <g stroke="var(--ink-faint)" strokeOpacity={0.7}>
+              <line x1={r2(dimA.x)} y1={r2(dimA.y)} x2={r2(dimB.x)} y2={r2(dimB.y)} strokeDasharray="2 2" />
+              <circle cx={r2(dimA.x)} cy={r2(dimA.y)} r={1.6} fill="var(--ink-faint)" stroke="none" />
+              <circle cx={r2(dimB.x)} cy={r2(dimB.y)} r={1.6} fill="var(--ink-faint)" stroke="none" />
+            </g>
+          )}
+
+          {/* Drehwirkungs-Bogen über dem Drehpunkt (Betrag ∝ Drehmoment) */}
+          <path
+            className="lever-arc-pulse"
+            d={`M ${r2(pivot.x - arcR)} ${r2(pivot.y - 2)} A ${r2(arcR)} ${r2(arcR)} 0 0 1 ${r2(pivot.x)} ${r2(pivot.y - arcR - 2)}`}
+            fill="none"
+            stroke={vecColor}
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            markerEnd="url(#lever-arc-head)"
+          />
+
+          {/* Kraftvektor (2.5D): Ampel-Farbe + Ink-Kontur für klare Lesbarkeit */}
+          <line
+            x1={r2(tail.x)}
+            y1={r2(tail.y)}
+            x2={r2(tip.x)}
+            y2={r2(tip.y)}
+            stroke="var(--ink)"
+            strokeWidth={6}
+            strokeLinecap="round"
+            strokeOpacity={0.9}
+          />
+          <line
+            x1={r2(tail.x)}
+            y1={r2(tail.y)}
+            x2={r2(tip.x)}
+            y2={r2(tip.y)}
+            stroke={vecColor}
+            strokeWidth={4}
+            strokeLinecap="round"
+          />
+          <polygon
+            points={`${r2(tip.x)},${r2(tip.y)} ${r2(tip.x - ah)},${r2(tip.y - ah * 1.5)} ${r2(tip.x + ah)},${r2(tip.y - ah * 1.5)}`}
+            fill={vecColor}
+            stroke="var(--ink)"
+            strokeWidth={1.2}
+            strokeLinejoin="round"
+          />
+
+          {/* Kraft-Label als dezentes Mess-Tag (Mono auf Papier-Chip) */}
+          <g pointerEvents="none">
+            <rect
+              x={r2(labelX - labelW / 2)}
+              y={r2(labelY - 11)}
+              width={r2(labelW)}
+              height={15}
+              rx={3}
+              fill="var(--paper-2)"
+              stroke="#00000014"
+            />
+            <text
+              x={r2(labelX)}
+              y={r2(labelY)}
+              textAnchor="middle"
+              className="fill-ink font-mono"
+              style={{ fontSize: 11, userSelect: 'none' }}
+            >
+              {labelText}
+            </text>
+          </g>
         </g>
       </svg>
 

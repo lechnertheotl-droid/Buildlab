@@ -78,11 +78,33 @@ Body 1rem, Zeilenhöhe 1.6. Headings eng (1.1), leicht negative Laufweite.
 - Formel-Variablen: Mono, antippbar, beim Tippen unterstrichen in `--accent-ink`.
 - Tiefen-Ebenen-Umschalter: drei segmentierte Tabs (verspielt / praxis / genau).
 
+## Pseudo-3D-Sims (Hebel/Kraft als Referenz)
+
+Die 2.5D-Simulationen folgen einer festen visuellen Sprache (Beispiel: Kraft/Hebel-
+Slider, `packages/ui/.../LeverSlider.tsx`). Sie nutzt **nur** die obigen Tokens:
+
+- **Plastische Körper:** jede sichtbare Fläche bekommt einen `--ink-2`-Farbverlauf
+  (oben hell → unten dunkel, Licht von oben) statt einer flachen Füllung. Dazu eine
+  helle **Glanzkante** an den Oberkanten und eine dünne dunkle **Bevel-Linie** unten.
+- **Weiche Tiefe:** ein dezenter Gauß-Blur-Schatten (`feGaussianBlur`, niedriges Alpha)
+  unter den Körpern — **kein** dicker Schlagschatten (siehe Verboten).
+- **Perspektivischer Boden:** eine isometrische Bühne mit projiziertem Welt-Gitter
+  (Konstruktionspapier in 3D) statt nur flachem Hintergrundraster. Der saubere
+  Hairline-Rahmen bleibt erhalten.
+- **Wirkung sichtbar machen:** physikalische Größen werden **geometrisch** gezeigt, nicht
+  nur eingefärbt. Der Hebel **neigt sich unter Last** (Drehwinkel ∝ Drehmoment); der
+  Kraftvektor ist ein **Ampel-Pfeil** (`--viz-low → --viz-mid → --viz-high`) mit
+  `--ink`-Kontur und kräftiger Spitze, damit der Betrag auch im grünen Bereich klar lesbar
+  ist. Zahlen kommen aus der Engine (Eiserne Regel 1).
+
 ## Motion (zurückhaltend, präzise)
 
 - Seiteneinstieg: gestaffeltes Erscheinen (`animation-delay`), Bauteile „zeichnen"
-  sich isometrisch ein. Ein gut orchestrierter Moment statt vieler Effekte.
-- Slider/Sim: sofortige, flüssige Reaktion (60 fps), kein Bounce.
+  sich isometrisch ein. Ein gut orchestrierter Moment statt vieler Effekte. In den Sims
+  blenden sich die Ebenen gestaffelt ein (Boden → Drehpunkt → Körper → Vordergrund,
+  `.lever-in`/`.lever-d1..d4`), `prefers-reduced-motion` schaltet das ab.
+- Slider/Sim: sofortige, flüssige Reaktion (60 fps), kein Bounce. Live-Werte fließen
+  direkt in die Geometrie (Neigung, Pfeil, Farbe) — keine CSS-Transition, kein Nachziehen.
 - Übergänge 150–250 ms, weiche Easing-Kurve. Keine verspielten Federn.
 
 ## Verboten (gegen den generischen KI-Look)
