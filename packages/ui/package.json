@@ -13,7 +13,10 @@
   },
   "dependencies": {
     "@buildlab/engine": "workspace:*",
-    "katex": "^0.16.22"
+    "@buildlab/iso": "workspace:*",
+    "katex": "^0.16.22",
+    "mathjs": "^13.2.0",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@types/katex": "^0.16.7"

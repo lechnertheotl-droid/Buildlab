@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   base: './',
   plugins: [react()],
-  // @buildlab/ui ist ein Workspace-Paket mit TSX-Quellen. Vom Dep-Optimizer
-  // ausnehmen, damit es durch die normale React/TS-Transform-Pipeline läuft.
-  optimizeDeps: { exclude: ['@buildlab/ui'] },
+  // @buildlab/ui und @buildlab/iso sind Workspace-Pakete mit TS(X)-Quellen. Vom
+  // Dep-Optimizer ausnehmen, damit sie durch die normale React/TS-Transform laufen.
+  optimizeDeps: { exclude: ['@buildlab/ui', '@buildlab/iso'] },
 });

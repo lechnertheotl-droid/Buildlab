@@ -59,3 +59,44 @@
 .animate-fade {
   animation: fade-in 180ms ease-out;
 }
+
+/* Slider-Griff (DESIGN.md): präziser Akzent-Knopf, dünne Schiene, kein Bounce. */
+.bl-range {
+  height: 22px;
+}
+.bl-range::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--paper-sink);
+}
+.bl-range::-moz-range-track {
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--paper-sink);
+}
+.bl-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -7px;
+  height: 17px;
+  width: 17px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid var(--paper-2);
+  box-shadow: 0 1px 2px #00000033;
+  cursor: pointer;
+}
+.bl-range::-moz-range-thumb {
+  height: 15px;
+  width: 15px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid var(--paper-2);
+  cursor: pointer;
+}
+.bl-range:focus-visible {
+  outline: none;
+}
+.bl-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px #c2562b55;
+}

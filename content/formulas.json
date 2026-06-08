@@ -70,6 +70,19 @@
     ]
   },
   {
+    "id": "torque_lever",
+    "latex": "M = F \\cdot r",
+    "expr": "F * r",
+    "conceptId": "drehmoment",
+    "result": { "symbol": "M", "name": "Drehmoment", "unit": "N*m" },
+    "variables": [
+      { "var": "F", "symbol": "F", "name": "Kraft", "unit": "N",
+        "explanation": "Die am Hebel angreifende Kraft. Doppelte Kraft = doppeltes Drehmoment.", "typicalRange": [0, 500] },
+      { "var": "r", "symbol": "r", "name": "Hebelarm", "unit": "m",
+        "explanation": "Senkrechter Abstand der Kraft von der Drehachse. Je länger der Hebel, desto größer die Drehwirkung.", "typicalRange": [0, 2] }
+    ]
+  },
+  {
     "id": "drag",
     "latex": "F_w = \\tfrac{1}{2}\\,\\rho\\,v^2 c_w A",
     "expr": "0.5 * rho * v^2 * cw * A",

@@ -2,7 +2,7 @@
 // Tokens stammen verbindlich aus DESIGN.md (Eiserne Regel 8). Werte werden als
 // CSS-Variablen in src/index.css gesetzt; hier nur referenziert.
 export default {
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  content: ['./index.html', './src/**/*.{ts,tsx}', './packages/*/src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {

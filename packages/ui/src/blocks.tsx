@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
+import { InteractiveRenderer } from './interactive/InteractiveRenderer';
 import { ConceptChip, VariableChip } from './TapExplain';
 import type {
   Block,
@@ -314,7 +315,7 @@ export function BlockRenderer({ block }: { block: Block }) {
     case 'check':
       return <CheckBlockView block={block} />;
     case 'interactive':
-      return <Placeholder label={`Interaktiv: ${block.componentId}`} />;
+      return <InteractiveRenderer block={block} />;
     case 'build':
       return <Placeholder label={`CAD-Bauteil: ${block.cadModel}`} />;
     default:

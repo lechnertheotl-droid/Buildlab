@@ -18,6 +18,6 @@
     "verbatimModuleSyntax": true,
     "types": ["node"]
   },
-  "include": ["src", "packages/ui/src", "packages/engine/golden", "packages/engine/index.d.ts"],
+  "include": ["src", "packages/ui/src", "packages/iso/src", "packages/engine/golden", "packages/engine/index.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
