@@ -303,6 +303,51 @@ export function LeverSlider({
 
   const pivot = proj({ x: 0, y: 0, z: 0 });
   const arcR = 18 + torqueFrac * 22;
+  // Drehwirkungs-Pfeil als EINE geschlossene Form (gekrümmtes Band, das in die
+  // Spitze ausläuft) → eine durchgehende Ink-Kontur, Spitze exakt tangential.
+  // Selbst parametrisiert (kein SVG-A-Arc), damit Tangente und Form zusammenpassen.
+  // P(φ) = C + R·(cosφ, −sinφ): φ=90° oben, 180° links; abnehmendes φ = im Uhrzeigersinn.
+  const arcPt = (phi: number, r: number): Vec2 => ({
+    x: pivot.x + r * Math.cos(phi),
+    y: pivot.y - r * Math.sin(phi),
+  });
+  const RAD = Math.PI / 180;
+  const arcPhi0 = 178 * RAD; // Schwanz (links)
+  const arcPhiHead = 92 * RAD; // Kopfbasis (kurz vor oben)
+  const arcSteps = 14;
+  const inner: Vec2[] = [];
+  const outer: Vec2[] = [];
+  for (let i = 0; i <= arcSteps; i++) {
+    const phi = arcPhi0 + ((arcPhiHead - arcPhi0) * i) / arcSteps;
+    const c = Math.cos(phi);
+    const s = Math.sin(phi);
+    const n = { x: c, y: -s }; // Normale = Radial
+    const p = arcPt(phi, arcR);
+    inner.push({ x: p.x - n.x * sw, y: p.y - n.y * sw });
+    outer.push({ x: p.x + n.x * sw, y: p.y + n.y * sw });
+  }
+  const cH = Math.cos(arcPhiHead);
+  const sH = Math.sin(arcPhiHead);
+  const nH = { x: cH, y: -sH }; // Radial an der Kopfbasis
+  const tH = { x: sH, y: cH }; // Tangente (Drehrichtung) an der Kopfbasis
+  const headBase = arcPt(arcPhiHead, arcR);
+  const arcTip = { x: headBase.x + tH.x * headLen, y: headBase.y + tH.y * headLen };
+  // Ein Pfad: Innenkante → innere Kopfecke → Spitze → äußere Kopfecke → Außenkante zurück → Z.
+  const arcPath =
+    `M ${r2(inner[0].x)} ${r2(inner[0].y)} ` +
+    inner
+      .slice(1)
+      .map((p) => `L ${r2(p.x)} ${r2(p.y)}`)
+      .join(' ') +
+    ` L ${r2(headBase.x - nH.x * ah)} ${r2(headBase.y - nH.y * ah)}` +
+    ` L ${r2(arcTip.x)} ${r2(arcTip.y)}` +
+    ` L ${r2(headBase.x + nH.x * ah)} ${r2(headBase.y + nH.y * ah)} ` +
+    outer
+      .slice()
+      .reverse()
+      .map((p) => `L ${r2(p.x)} ${r2(p.y)}`)
+      .join(' ') +
+    ' Z';
 
   // Maßlinie für den Hebelarm r auf der (gekippten) Balken-Oberkante.
   const dimA = tf({ x: 0, y: 0, z: BEAM.max.z });
@@ -366,15 +411,6 @@ export function LeverSlider({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <marker id="lever-arc-head" markerWidth="9" markerHeight="9" refX="4" refY="4.5" orient="auto">
-            <path
-              d="M0.6,0.6 L8,4.5 L0.6,8.4 Z"
-              fill={vecColor}
-              stroke="var(--ink)"
-              strokeWidth={1}
-              strokeLinejoin="round"
-            />
-          </marker>
         </defs>
 
         {/* Bildfüllender iso-Boden als Hintergrund (Bühne), auf das Feld beschnitten */}
@@ -460,15 +496,15 @@ export function LeverSlider({
             </g>
           )}
 
-          {/* Drehwirkungs-Bogen über dem Drehpunkt (Betrag ∝ Drehmoment) */}
+          {/* Drehwirkungs-Pfeil (Betrag ∝ Drehmoment): EINE geschlossene Form mit
+              einer durchgehenden Ink-Kontur — gleiche Sprache wie der Kraftpfeil. */}
           <path
             className="lever-arc-pulse"
-            d={`M ${r2(pivot.x - arcR)} ${r2(pivot.y - 2)} A ${r2(arcR)} ${r2(arcR)} 0 0 1 ${r2(pivot.x)} ${r2(pivot.y - arcR - 2)}`}
-            fill="none"
-            stroke={vecColor}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            markerEnd="url(#lever-arc-head)"
+            d={arcPath}
+            fill={vecColor}
+            stroke="var(--ink)"
+            strokeWidth={1.4}
+            strokeLinejoin="round"
           />
 
           {/* Kraftvektor (2.5D): EIN Polygon (Schaft + Spitze) mit durchgehender,
