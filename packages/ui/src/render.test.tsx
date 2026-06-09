@@ -7,8 +7,9 @@ import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ContentProvider } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
+import { BlockRenderer } from './blocks';
 import { Calculator } from './Calculator';
-import type { Concept, Formula, InteractiveBlock } from './types';
+import type { BuildBlock, Concept, Formula, InteractiveBlock } from './types';
 import formulas from '../../../content/formulas.json';
 import concepts from '../../../content/concepts.json';
 import registry from '../../../components.registry.json';
@@ -54,6 +55,34 @@ describe('LeverSlider (DoD Phase 2)', () => {
   it('zeigt für noch nicht implementierte Registry-Komponenten einen Platzhalter', () => {
     const block: InteractiveBlock = { type: 'interactive', componentId: 'gear-pair' };
     const html = wrap(<InteractiveRenderer block={block} />);
+    expect(html).toContain('folgt in einer späteren Phase');
+  });
+});
+
+describe('CadBuild (build-Block, DoD Phase 3)', () => {
+  it('rendert Slider, das Engine-Maß d=m·z und die SVG-Vorschau (SSR-sicher)', () => {
+    const block: BuildBlock = {
+      type: 'build',
+      cadModel: 'gear',
+      parameters: {
+        m: { min: 1, max: 4, default: 2, unit: 'mm' },
+        z: { min: 12, max: 40, default: 20, unit: '-' },
+      },
+      exports: ['stl'],
+    };
+    const html = wrap(<BlockRenderer block={block} />);
+    // Teilkreisdurchmesser kommt aus der Engine: d = m·z = 2·20 = 40 mm.
+    expect(html).toContain('40 mm');
+    expect(html).toContain('aus der Engine');
+    // Parameter-Slider + Vorschau-SVG + Export-Knopf sind da; kein Worker im SSR.
+    expect(html).toContain('bl-range');
+    expect(html).toContain('<svg');
+    expect(html).toContain('herunterladen');
+  });
+
+  it('zeigt für unbekannte CAD-Modelle einen Platzhalter', () => {
+    const block: BuildBlock = { type: 'build', cadModel: 'unbekannt', parameters: {} };
+    const html = wrap(<BlockRenderer block={block} />);
     expect(html).toContain('folgt in einer späteren Phase');
   });
 });

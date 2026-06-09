@@ -9,6 +9,7 @@ export { Calculator } from './Calculator';
 export { CalculatorDrawer } from './CalculatorDrawer';
 export { InteractiveRenderer } from './interactive/InteractiveRenderer';
 export { LeverSlider } from './interactive/LeverSlider';
+export { CadBuild } from './build/CadBuild';
 export { useWorkspaceStore } from './store';
 export type { ActiveContext } from './store';
 export type {

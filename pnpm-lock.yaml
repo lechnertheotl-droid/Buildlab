@@ -70,6 +70,15 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.20)
 
+  cad:
+    dependencies:
+      '@buildlab/iso':
+        specifier: workspace:*
+        version: link:../packages/iso
+      openscad-wasm:
+        specifier: 0.0.4
+        version: 0.0.4
+
   packages/engine:
     dependencies:
       mathjs:
@@ -80,6 +89,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@buildlab/cad':
+        specifier: workspace:*
+        version: link:../../cad
       '@buildlab/engine':
         specifier: workspace:*
         version: link:../engine
@@ -1188,6 +1200,9 @@ packages:
   object-hash@3.0.0:
     resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
     engines: {node: '>= 6'}
+
+  openscad-wasm@0.0.4:
+    resolution: {integrity: sha512-ChYe3cgL4JBstRVrR6XnhvF/4E9EsFR1kmGks7eTIT2awSMYVkoeYmFLt80h4V4J/DPIJw106MhIiIv6V9XpLA==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -2596,6 +2611,8 @@ snapshots:
   object-assign@4.1.1: {}
 
   object-hash@3.0.0: {}
+
+  openscad-wasm@0.0.4: {}
 
   optionator@0.9.4:
     dependencies:
