@@ -141,6 +141,35 @@
           "explanation": "M = F·r = 200·0,25 = 50 N·m. Gleiche Drehwirkung wie 100 N am doppelten Hebel — Kraft und Hebelarm tauschen sich gegeneinander aus."
         }
       ]
+    },
+    {
+      "id": "zahnrad-bauen",
+      "title": "Dein Zahnrad parametrisieren",
+      "goal": "Aus Modul und Zähnezahl ein druckbares Stirnrad erzeugen und als STL herunterladen.",
+      "estMinutes": 6,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["modul", "zaehnezahl", "teilkreisdurchmesser"],
+          "layers": {
+            "intuitive": "Genug gelesen – jetzt baust du. Schieb Modul und Zähnezahl und sieh zu, wie dein Zahnrad wächst und neue Zähne bekommt. Dreh es mit dem Ansicht-Slider und lade es als druckfertige Datei herunter.",
+            "practical": "Modul m und Zähnezahl z bestimmen den Teilkreisdurchmesser d = m·z – das Maß, an dem du das Rad auslegst. Vorschau und STL-Datei stammen aus genau demselben parametrischen Modell.",
+            "rigorous": "Das Bauteil entsteht parametrisch aus einem einzigen OpenSCAD-Modell (Addendum m, Dedendum 1,25·m, Eingriffswinkel 20°). Isometrische Vorschau und STL-Export leiten sich aus derselben Geometrie ab – es gibt kein zweites Modell."
+          }
+        },
+        {
+          "type": "build",
+          "cadModel": "gear",
+          "parameters": {
+            "m": { "min": 1, "max": 4, "default": 2, "unit": "mm", "label": "Modul" },
+            "z": { "min": 12, "max": 40, "default": 20, "unit": "-", "label": "Zähnezahl" },
+            "thickness": { "min": 3, "max": 16, "default": 8, "unit": "mm", "label": "Breite" },
+            "bore": { "min": 2, "max": 10, "default": 5, "unit": "mm", "label": "Bohrung" }
+          },
+          "exports": ["stl"],
+          "bom": ["1× Stirnrad (gedruckt)", "1× Achse"]
+        }
+      ]
     }
   ]
 }
