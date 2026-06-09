@@ -27,4 +27,21 @@ describe('OpenSCAD-WASM (echtes STL, DoD Phase 3)', () => {
     },
     60_000,
   );
+
+  it(
+    'rendert mehrfach hintereinander mit anderen Parametern (Instanz-Wiederverwendung)',
+    async () => {
+      // Regression: ein zweiter Render auf einer wiederverwendeten WASM-Instanz warf
+      // früher eine WASM-Ausnahme (roher Pointer als Fehlertext). Beide müssen valide
+      // sein, und mehr Zähne ⇒ mehr Facetten (das Modell ist wirklich parametrisch).
+      const a = await renderGearStl({ m: 2, z: 20, thickness: 8, bore: 5, fn: 16 });
+      const b = await renderGearStl({ m: 2, z: 32, thickness: 8, bore: 5, fn: 16 });
+      const ra = validateStl(a);
+      const rb = validateStl(b);
+      expect(ra.ok).toBe(true);
+      expect(rb.ok).toBe(true);
+      expect(rb.triangles ?? 0).toBeGreaterThan(ra.triangles ?? 0);
+    },
+    60_000,
+  );
 });
