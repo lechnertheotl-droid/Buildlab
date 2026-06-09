@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   project,
+  rotateY,
   toPolygonPoints,
   shade,
   faceShade,
@@ -35,6 +36,26 @@ describe('project', () => {
     const q = project({ x: 2, y: 1, z: 3 }, { scale: 1 });
     expect(p.x).toBeCloseTo(q.x * 10, 9);
     expect(p.y).toBeCloseTo(q.y * 10, 9);
+  });
+});
+
+describe('rotateY', () => {
+  it('lässt den Punkt bei Winkel 0 unverändert', () => {
+    const p = { x: 2, y: 3, z: 4 };
+    const r = rotateY(p, 0);
+    expect(r.x).toBeCloseTo(2, 9);
+    expect(r.y).toBeCloseTo(3, 9);
+    expect(r.z).toBeCloseTo(4, 9);
+  });
+
+  it('hält y invariant (Drehung nur in der x-z-Ebene)', () => {
+    expect(rotateY({ x: 1, y: 7, z: 2 }, 0.5).y).toBe(7);
+  });
+
+  it('senkt die +x-Seite bei positivem Winkel (z wird negativ, x = cosθ)', () => {
+    const r = rotateY({ x: 1, y: 0, z: 0 }, 0.3);
+    expect(r.z).toBeLessThan(0);
+    expect(r.x).toBeCloseTo(Math.cos(0.3), 9);
   });
 });
 
