@@ -1,0 +1,18 @@
+{
+  "name": "@buildlab/cad",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Parametrische CAD-Modelle (.scad) + OpenSCAD-WASM-Pipeline (clientseitig → STL). Eine geometrische Wahrheit: Vorschau UND Export leiten sich aus demselben STL ab (Eiserne Regel 4).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@buildlab/iso": "workspace:*",
+    "openscad-wasm": "0.0.4"
+  }
+}

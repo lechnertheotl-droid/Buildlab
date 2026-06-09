@@ -12,6 +12,7 @@
     }
   },
   "dependencies": {
+    "@buildlab/cad": "workspace:*",
     "@buildlab/engine": "workspace:*",
     "@buildlab/iso": "workspace:*",
     "katex": "^0.16.22",

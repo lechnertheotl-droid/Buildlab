@@ -51,6 +51,35 @@
           "explanation": "i = z₂/z₁ = 45/15 = 3. Same Spiel, andere Zahlen – die Übersetzung hängt nur vom Verhältnis ab, nicht von den absoluten Zähnezahlen."
         }
       ]
+    },
+    {
+      "id": "zahnrad-bauen",
+      "title": "Dein Zahnrad parametrisieren",
+      "goal": "Aus Modul und Zähnezahl ein druckbares Stirnrad erzeugen und als STL herunterladen.",
+      "estMinutes": 6,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["modul", "zaehnezahl", "teilkreisdurchmesser"],
+          "layers": {
+            "intuitive": "Genug gerechnet – jetzt baust du. Schiebe Modul und Zähnezahl und sieh zu, wie dein Zahnrad wächst und neue Zähne bekommt. Passt es? Dann lädst du es als druckfertige Datei herunter und baust weiter.",
+            "practical": "Das Modul m bestimmt die Zahngröße, die Zähnezahl z den Umfang. Beide zusammen ergeben den Teilkreisdurchmesser d = m·z – das Maß, an dem du das Rad auslegst. Die Vorschau und die STL-Datei stammen aus genau demselben parametrischen Modell.",
+            "rigorous": "Das Bauteil entsteht parametrisch aus einem einzigen OpenSCAD-Modell: m und z treiben Teil-, Kopf- und Fußkreis (Addendum m, Dedendum 1,25·m, Eingriffswinkel 20°). Vorschau (isometrische Projektion) und Export (STL) leiten sich aus derselben Geometrie ab – es gibt kein zweites Modell."
+          }
+        },
+        {
+          "type": "build",
+          "cadModel": "gear",
+          "parameters": {
+            "m": { "min": 1, "max": 4, "default": 2, "unit": "mm", "label": "Modul" },
+            "z": { "min": 12, "max": 40, "default": 20, "unit": "-", "label": "Zähnezahl" },
+            "thickness": { "min": 3, "max": 16, "default": 8, "unit": "mm", "label": "Breite" },
+            "bore": { "min": 2, "max": 10, "default": 5, "unit": "mm", "label": "Bohrung" }
+          },
+          "exports": ["stl"],
+          "bom": ["1× Stirnrad (gedruckt)", "1× Achse"]
+        }
+      ]
     }
   ]
 }

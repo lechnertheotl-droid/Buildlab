@@ -7,7 +7,10 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   base: './',
   plugins: [react()],
-  // @buildlab/ui und @buildlab/iso sind Workspace-Pakete mit TS(X)-Quellen. Vom
-  // Dep-Optimizer ausnehmen, damit sie durch die normale React/TS-Transform laufen.
-  optimizeDeps: { exclude: ['@buildlab/ui', '@buildlab/iso'] },
+  // OpenSCAD-WASM (Phase 3) läuft in einem Modul-Worker (cad/src/openscad.worker.ts);
+  // er wird lazy erzeugt → das ~14 MB große WASM bleibt aus dem Haupt-Bundle.
+  worker: { format: 'es' },
+  // Workspace-Pakete mit TS(X)-Quellen sowie das schwere openscad-wasm vom
+  // Dep-Optimizer ausnehmen (normale Transform; kein Prebundle des WASM-Moduls).
+  optimizeDeps: { exclude: ['@buildlab/ui', '@buildlab/iso', '@buildlab/cad', 'openscad-wasm'] },
 });

@@ -1,11 +1,11 @@
-// blocks.tsx — die Phase-1-Block-Renderer: text · formula · calc · check.
-// interactive & build sind Phase 2/3 und erscheinen hier nur als ruhiger Platzhalter.
+// blocks.tsx — die Block-Renderer: text · formula · calc · check · interactive · build.
 
 import { useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
+import { CadBuild } from './build/CadBuild';
 import { ConceptChip, VariableChip } from './TapExplain';
 import type {
   Block,
@@ -296,14 +296,6 @@ function Missing({ what }: { what: string }) {
   );
 }
 
-function Placeholder({ label }: { label: string }) {
-  return (
-    <p className="rounded border border-dashed border-black/15 px-3 py-2 font-mono text-xs uppercase tracking-wide text-ink-faint">
-      ▸ {label} · folgt in einer späteren Phase
-    </p>
-  );
-}
-
 export function BlockRenderer({ block }: { block: Block }) {
   switch (block.type) {
     case 'text':
@@ -317,7 +309,7 @@ export function BlockRenderer({ block }: { block: Block }) {
     case 'interactive':
       return <InteractiveRenderer block={block} />;
     case 'build':
-      return <Placeholder label={`CAD-Bauteil: ${block.cadModel}`} />;
+      return <CadBuild block={block} />;
     default:
       return null;
   }
