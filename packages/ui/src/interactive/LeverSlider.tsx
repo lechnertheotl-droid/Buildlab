@@ -167,31 +167,26 @@ function proj(p: Vec3): Vec2 {
   return { x: q.x + FRAME.tx, y: q.y + FRAME.ty };
 }
 
-// Perspektivischer Boden: Platte + projiziertes Welt-Gitter (statisch, hängt nur
-// an Konstanten → einmal erzeugt, null Render-Kosten).
-const FLOOR_PLATE = toPolygonPoints(
-  [
-    { x: FLOOR.x0, y: FLOOR.y0, z: GROUND_Z },
-    { x: FLOOR.x1, y: FLOOR.y0, z: GROUND_Z },
-    { x: FLOOR.x1, y: FLOOR.y1, z: GROUND_Z },
-    { x: FLOOR.x0, y: FLOOR.y1, z: GROUND_Z },
-  ].map(proj),
-);
-
-const FLOOR_GRID: { x1: number; y1: number; x2: number; y2: number }[] = (() => {
+// Bildfüllender perspektivischer Boden als Hintergrund: eine große Welt-Ebene
+// bei z = GROUND_Z, projiziert mit demselben proj() wie die Szene. Bewusst
+// UNABHÄNGIG von ENVELOPE/FRAME (die Linien dürfen über den Rand laufen, wir
+// beschneiden per clipPath) — so bleibt die Szenen-Rahmung unverändert.
+// Statisch (nur Konstanten) → einmal erzeugt, null Render-Kosten.
+const BG = { x0: -10, x1: 16, y0: -12, y1: 12, step: 0.5 };
+const BG_GRID: { x1: number; y1: number; x2: number; y2: number }[] = (() => {
   const lines: { x1: number; y1: number; x2: number; y2: number }[] = [];
-  const nx = Math.round((FLOOR.x1 - FLOOR.x0) / FLOOR.step);
-  const ny = Math.round((FLOOR.y1 - FLOOR.y0) / FLOOR.step);
+  const nx = Math.round((BG.x1 - BG.x0) / BG.step);
+  const ny = Math.round((BG.y1 - BG.y0) / BG.step);
   for (let i = 0; i <= nx; i++) {
-    const x = FLOOR.x0 + i * FLOOR.step;
-    const a = proj({ x, y: FLOOR.y0, z: GROUND_Z });
-    const b = proj({ x, y: FLOOR.y1, z: GROUND_Z });
+    const x = BG.x0 + i * BG.step;
+    const a = proj({ x, y: BG.y0, z: GROUND_Z });
+    const b = proj({ x, y: BG.y1, z: GROUND_Z });
     lines.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y });
   }
   for (let j = 0; j <= ny; j++) {
-    const y = FLOOR.y0 + j * FLOOR.step;
-    const a = proj({ x: FLOOR.x0, y, z: GROUND_Z });
-    const b = proj({ x: FLOOR.x1, y, z: GROUND_Z });
+    const y = BG.y0 + j * BG.step;
+    const a = proj({ x: BG.x0, y, z: GROUND_Z });
+    const b = proj({ x: BG.x1, y, z: GROUND_Z });
     lines.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y });
   }
   return lines;
@@ -285,7 +280,26 @@ export function LeverSlider({
   const tip = tf({ x: armX, y: 0, z: BEAM.max.z });
   // Pfeil bleibt senkrecht (Schwerkraft): Schaft in Bildschirm-px über dem Fuß.
   const tail = { x: tip.x, y: tip.y - arrowLen * FRAME.scale };
-  const ah = 9; // Pfeilspitzen-Größe (Bildschirm-px)
+
+  // Kraftvektor als EINE geschlossene Silhouette (Schaft + Spitze), senkrecht
+  // nach unten zeigend → eine durchgehende, gleichmäßige Kontur.
+  const ah = 8; // halbe Pfeilkopf-Breite (Bildschirm-px)
+  const headLen = 13; // Länge der Pfeilspitze
+  const sw = 2.2; // halbe Schaftbreite
+  const cx = tip.x;
+  const yHead = tip.y - headLen; // Kopfbasis
+  const yTail = Math.min(tail.y, yHead - 2); // immer etwas Schaft, nie invertiert
+  const arrowPts = [
+    [cx - sw, yTail],
+    [cx - sw, yHead],
+    [cx - ah, yHead],
+    [cx, tip.y],
+    [cx + ah, yHead],
+    [cx + sw, yHead],
+    [cx + sw, yTail],
+  ]
+    .map(([x, y]) => `${r2(x)},${r2(y)}`)
+    .join(' ');
 
   const pivot = proj({ x: 0, y: 0, z: 0 });
   const arcR = 18 + torqueFrac * 22;
@@ -309,13 +323,16 @@ export function LeverSlider({
         aria-label={`Hebel: Kraft ${fmt(force)} Newton am Hebelarm ${fmt(arm, 2)} Meter, Drehmoment ${torque === null ? 'unbestimmt' : fmt(torque)} Newtonmeter`}
       >
         <defs>
-          {/* Zeichenblatt-Raster: feines + grobes Gitter (DESIGN.md). */}
-          <pattern id="lever-grid-min" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M10 0H0V10" fill="none" stroke="#0000000d" strokeWidth={0.6} />
-          </pattern>
-          <pattern id="lever-grid-maj" width="50" height="50" patternUnits="userSpaceOnUse">
-            <path d="M50 0H0V50" fill="none" stroke="#00000016" strokeWidth={0.8} />
-          </pattern>
+          {/* Feld-Begrenzung (gerundetes Rechteck) für den bildfüllenden Boden. */}
+          <clipPath id="lever-field">
+            <rect x={0} y={0} width={VIEW_W} height={VIEW_H} rx={6} />
+          </clipPath>
+          {/* Boden-Verlauf: hinten/oben heller → vorne/unten dunkler (Horizont-Tiefe). */}
+          <linearGradient id="lever-floor-bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--paper-2)" />
+            <stop offset="0.55" stopColor="var(--paper)" />
+            <stop offset="1" stopColor="var(--paper-sink)" />
+          </linearGradient>
           {/* Flächen-Farbverläufe (Licht von oben) — plastisch statt flach. */}
           <linearGradient id="lever-top" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor={G.topHi} />
@@ -337,11 +354,6 @@ export function LeverSlider({
             <stop offset="0" stopColor={G.fulFrontHi} />
             <stop offset="1" stopColor={G.fulFrontLo} />
           </linearGradient>
-          {/* Boden: zum vorderen Rand hin sanft eingedunkelt → Tiefe. */}
-          <linearGradient id="lever-floor" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--paper-sink)" stopOpacity={0} />
-            <stop offset="1" stopColor="var(--paper-sink)" stopOpacity={0.65} />
-          </linearGradient>
           {/* Weicher, dezenter Tiefenschatten (kein dicker Schlagschatten). */}
           <filter id="lever-soft" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" />
@@ -354,15 +366,34 @@ export function LeverSlider({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <marker id="lever-arc-head" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
-            <path d="M0,0 L7,3.5 L0,7 Z" fill={vecColor} />
+          <marker id="lever-arc-head" markerWidth="9" markerHeight="9" refX="4" refY="4.5" orient="auto">
+            <path
+              d="M0.6,0.6 L8,4.5 L0.6,8.4 Z"
+              fill={vecColor}
+              stroke="var(--ink)"
+              strokeWidth={1}
+              strokeLinejoin="round"
+            />
           </marker>
         </defs>
 
-        {/* Gerahmtes Zeichenblatt: Papierfläche + Raster + sauberer Rand */}
-        <rect x={0} y={0} width={VIEW_W} height={VIEW_H} rx={6} fill="var(--paper-sink)" fillOpacity={0.5} />
-        <rect x={0} y={0} width={VIEW_W} height={VIEW_H} rx={6} fill="url(#lever-grid-min)" />
-        <rect x={0} y={0} width={VIEW_W} height={VIEW_H} rx={6} fill="url(#lever-grid-maj)" />
+        {/* Bildfüllender iso-Boden als Hintergrund (Bühne), auf das Feld beschnitten */}
+        <g clipPath="url(#lever-field)">
+          <rect x={0} y={0} width={VIEW_W} height={VIEW_H} fill="url(#lever-floor-bg)" />
+          {BG_GRID.map((l, i) => (
+            <line
+              key={i}
+              x1={r2(l.x1)}
+              y1={r2(l.y1)}
+              x2={r2(l.x2)}
+              y2={r2(l.y2)}
+              stroke="#00000014"
+              strokeWidth={0.6}
+            />
+          ))}
+        </g>
+
+        {/* Sauberer Hairline-Rahmen obenauf */}
         <rect
           x={4.5}
           y={4.5}
@@ -374,21 +405,8 @@ export function LeverSlider({
           strokeWidth={1}
         />
 
-        {/* Perspektivischer Boden (Bühne): Platte + projiziertes Welt-Gitter */}
+        {/* Kontaktschatten unter dem Drehpunkt */}
         <g className="lever-in lever-d1">
-          <polygon points={FLOOR_PLATE} fill="url(#lever-floor)" />
-          {FLOOR_GRID.map((l, i) => (
-            <line
-              key={i}
-              x1={r2(l.x1)}
-              y1={r2(l.y1)}
-              x2={r2(l.x2)}
-              y2={r2(l.y2)}
-              stroke="#00000012"
-              strokeWidth={0.6}
-            />
-          ))}
-          {/* Kontaktschatten unter dem Drehpunkt */}
           <ellipse cx={r2(shadow.x)} cy={r2(shadow.y)} rx={r2(shadowRx)} ry={5} fill="#0000001a" />
         </g>
 
@@ -453,31 +471,13 @@ export function LeverSlider({
             markerEnd="url(#lever-arc-head)"
           />
 
-          {/* Kraftvektor (2.5D): Ampel-Farbe + Ink-Kontur für klare Lesbarkeit */}
-          <line
-            x1={r2(tail.x)}
-            y1={r2(tail.y)}
-            x2={r2(tip.x)}
-            y2={r2(tip.y)}
-            stroke="var(--ink)"
-            strokeWidth={6}
-            strokeLinecap="round"
-            strokeOpacity={0.9}
-          />
-          <line
-            x1={r2(tail.x)}
-            y1={r2(tail.y)}
-            x2={r2(tip.x)}
-            y2={r2(tip.y)}
-            stroke={vecColor}
-            strokeWidth={4}
-            strokeLinecap="round"
-          />
+          {/* Kraftvektor (2.5D): EIN Polygon (Schaft + Spitze) mit durchgehender,
+              gleichmäßiger Ink-Kontur — Ampel-Farbe je Kraftbetrag. */}
           <polygon
-            points={`${r2(tip.x)},${r2(tip.y)} ${r2(tip.x - ah)},${r2(tip.y - ah * 1.5)} ${r2(tip.x + ah)},${r2(tip.y - ah * 1.5)}`}
+            points={arrowPts}
             fill={vecColor}
             stroke="var(--ink)"
-            strokeWidth={1.2}
+            strokeWidth={1.4}
             strokeLinejoin="round"
           />
 
