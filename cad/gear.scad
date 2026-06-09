@@ -39,15 +39,26 @@ module gear(m = 2, z = 20, thickness = 8, bore = 5) {
   tooth_half = ang_pitch / 4;       // halbe Zahndicke am Grundkreis (Näherung)
   half       = flank(r_base, r_add, steps);
 
+  // Fußpunkte etwas UNTER dem Fußkreis, damit jeder Zahn die Körperscheibe sicher
+  // überlappt und mit ihr verschmilzt (sonst hängen die Zähne lose, wenn r_base > r_root).
+  r_inner    = min(r_base, r_root) - 0.2;
+  base_l = [r_inner * cos( tooth_half), r_inner * sin( tooth_half)];
+  base_r = [r_inner * cos(-tooth_half), r_inner * sin(-tooth_half)];
+
   linear_extrude(height = thickness, center = true)
     difference() {
       union() {
         circle(r = r_root);
         for (k = [0 : z - 1])
           rotate(k * ang_pitch)
+            // Geschlossenes Zahnprofil: Fuß (innen) → linke Flanke hoch → Kopf →
+            // rechte Flanke runter → Fuß. Reicht bis unter den Fußkreis (r_inner),
+            // damit es mit circle(r_root) eine zusammenhängende Fläche bildet.
             polygon(points = concat(
+              [base_l],
               [for (p = half) rotate_pt(p,  tooth_half)],
-              [for (p = reverse_list(half)) rotate_pt(p, -tooth_half)]
+              [for (p = reverse_list(half)) rotate_pt(p, -tooth_half)],
+              [base_r]
             ));
       }
       circle(r = bore / 2);

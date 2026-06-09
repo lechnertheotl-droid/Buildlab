@@ -21,14 +21,15 @@ export interface GearParams {
   fn?: number;
 }
 
-let instancePromise: Promise<OpenSCADInstance> | null = null;
-
-function getInstance(): Promise<OpenSCADInstance> {
-  if (!instancePromise) {
-    // print/printErr stummschalten: OpenSCAD schreibt Cache-/Render-Statistik auf stderr.
-    instancePromise = createOpenSCAD({ noInitialRun: true, print: () => {}, printErr: () => {} });
-  }
-  return instancePromise;
+// WICHTIG: pro Render eine FRISCHE Instanz. Das WASM-Modul wird einmal pro callMain
+// ausgeführt; emscripten setzt den Stack zwischen Aufrufen nicht zurück, ein zweiter
+// renderToStl auf derselben Instanz wirft eine WASM-Ausnahme (roher Pointer als
+// „message", z. B. „1114200"). Eine neue Instanz je Aufruf ist robust; das WASM-Binary
+// ist nach dem ersten Fetch gecacht, die Neu-Instanziierung ist hinter dem UI-Debounce
+// unkritisch. Identische Parameter rendern wegen des compileGear-Caches gar nicht neu.
+function newInstance(): Promise<OpenSCADInstance> {
+  // print/printErr stummschalten: OpenSCAD schreibt Cache-/Render-Statistik auf stderr.
+  return createOpenSCAD({ noInitialRun: true, print: () => {}, printErr: () => {} });
 }
 
 /** Baut den vollständigen .scad-Quelltext: $fn + Modell + parametrisierter Aufruf. */
@@ -43,6 +44,8 @@ export function gearScadSource(p: GearParams): string {
 
 /** Rendert das Stirnrad zu ASCII-STL (Text). Wirft bei OpenSCAD-Fehlern. */
 export async function renderGearStl(p: GearParams): Promise<string> {
-  const oscad = await getInstance();
+  // Frische Instanz pro Render (siehe newInstance): nach dem renderToStl nicht weiter
+  // referenziert → GC-fähig.
+  const oscad = await newInstance();
   return oscad.renderToStl(gearScadSource(p));
 }
