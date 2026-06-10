@@ -2,11 +2,48 @@
 // (SCREENS.md §3). Schreibt persona/depth/onboardingDone und startet das
 // empfohlene Projekt.
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button, SegmentedControl, cardClass, focusRing } from '@buildlab/ui';
 import { personaStartProject } from '../content';
 import { setSetting } from '../db/repo';
 import type { Depth, Persona } from '../db/types';
+
+// Kleine Iso-Doodles je Tür (DESIGN.md §6: dieselbe Linien-Sprache wie die Bühnen).
+const DOODLES: Record<Persona, ReactNode> = {
+  studium: (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
+      <polygon points="5,19 19,19 19,7" fill="none" stroke="var(--ink-2)" strokeWidth="1.2" />
+      <line x1="5" y1="19" x2="19" y2="7" stroke="var(--accent)" strokeWidth="1.2" />
+      <line x1="9" y1="19" x2="9" y2="16.5" stroke="var(--ink-faint)" strokeWidth="1" />
+      <line x1="13" y1="19" x2="13" y2="13.5" stroke="var(--ink-faint)" strokeWidth="1" />
+    </svg>
+  ),
+  azubi: (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
+      <circle cx="12" cy="12" r="6" fill="none" stroke="var(--ink-2)" strokeWidth="1.2" />
+      <circle cx="12" cy="12" r="2" fill="none" stroke="var(--accent)" strokeWidth="1.2" />
+      {[0, 60, 120, 180, 240, 300].map((a) => (
+        <line
+          key={a}
+          x1={12 + 6 * Math.cos((a * Math.PI) / 180)}
+          y1={12 + 6 * Math.sin((a * Math.PI) / 180)}
+          x2={12 + 8 * Math.cos((a * Math.PI) / 180)}
+          y2={12 + 8 * Math.sin((a * Math.PI) / 180)}
+          stroke="var(--ink-2)"
+          strokeWidth="1.2"
+        />
+      ))}
+    </svg>
+  ),
+  maker: (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
+      <polygon points="12,4 20,8 12,12 4,8" fill="none" stroke="var(--accent)" strokeWidth="1.2" />
+      <polygon points="4,8 12,12 12,20 4,16" fill="none" stroke="var(--ink-2)" strokeWidth="1.2" />
+      <polygon points="20,8 12,12 12,20 20,16" fill="none" stroke="var(--ink-2)" strokeWidth="1.2" />
+    </svg>
+  ),
+};
 
 const PERSONAS: { id: Persona; title: string; sub: string }[] = [
   { id: 'studium', title: 'Studium verstehen', sub: 'Klausuren knacken, Statik & Co. wirklich begreifen' },
@@ -50,7 +87,9 @@ export default function Onboarding() {
 
         {step === 0 && (
           <section aria-labelledby="ob-h1">
-            <h1 id="ob-h1" className="mb-6 font-display text-2xl">Worauf hast du Lust?</h1>
+            <h1 id="ob-h1" className="mb-6 font-display text-display-sm text-ink-strong">
+              Worauf hast du Lust?
+            </h1>
             <div className="grid gap-3 md:grid-cols-3">
               {PERSONAS.map((p) => (
                 <button
@@ -60,9 +99,12 @@ export default function Onboarding() {
                     setDepth(PERSONA_DEPTH[p.id]);
                     setStep(1);
                   }}
-                  className="rounded border border-black/10 bg-paper-2 p-4 text-left shadow outline-none transition hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
+                  className={`${cardClass()} ${focusRing} text-left transition hover:-translate-y-px hover:border-rule-strong active:translate-y-px`}
                 >
-                  <span className="font-display text-lg">{p.title}</span>
+                  {DOODLES[p.id]}
+                  <span className="mt-2 block font-display text-lg font-semibold text-ink">
+                    {p.title}
+                  </span>
                   <span className="mt-1 block text-sm text-ink-2">{p.sub}</span>
                 </button>
               ))}
@@ -72,57 +114,49 @@ export default function Onboarding() {
 
         {step === 1 && (
           <section aria-labelledby="ob-h2">
-            <h1 id="ob-h2" className="mb-6 font-display text-2xl">Wie soll Buildlab mit dir reden?</h1>
-            <div className="mb-4 inline-flex rounded border border-black/10" role="radiogroup" aria-label="Erklärtiefe">
-              {DEPTHS.map((d) => (
-                <button
-                  key={d.id}
-                  role="radio"
-                  aria-checked={depth === d.id}
-                  onClick={() => setDepth(d.id)}
-                  className={`min-h-11 px-4 py-2 text-sm outline-none first:rounded-l last:rounded-r focus-visible:ring-2 focus-visible:ring-accent ${
-                    depth === d.id ? 'bg-accent text-paper' : 'bg-paper-2 text-ink-2 hover:text-ink'
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
+            <h1 id="ob-h2" className="mb-6 font-display text-display-sm text-ink-strong">
+              Wie soll Buildlab mit dir reden?
+            </h1>
+            <div className="mb-4">
+              <SegmentedControl
+                value={depth}
+                onChange={setDepth}
+                options={DEPTHS.map(({ id, label }) => ({ id, label }))}
+                ariaLabel="Erklärtiefe"
+              />
             </div>
-            <blockquote className="rounded border border-black/10 bg-paper-2 p-4 text-sm leading-relaxed shadow">
+            <blockquote
+              key={depth}
+              className="bl-wechsel rounded border border-black/10 bg-paper-2 p-4 text-sm leading-relaxed shadow"
+            >
               „{DEPTHS.find((d) => d.id === depth)!.sample}“
             </blockquote>
             <p className="mt-2 text-xs text-ink-faint">Du kannst das jederzeit umstellen — global in den Einstellungen, lokal an jedem Text.</p>
             <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setStep(2)}
-                className="min-h-11 rounded bg-accent px-5 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
-              >
-                Weiter ›
-              </button>
+              <Button onClick={() => setStep(2)}>Weiter ›</Button>
             </div>
           </section>
         )}
 
         {step === 2 && (
           <section aria-labelledby="ob-h3">
-            <h1 id="ob-h3" className="mb-6 font-display text-2xl">Dein erstes Projekt</h1>
-            <div className="rounded border border-black/10 bg-paper-2 p-5 shadow">
-              <p className="font-display text-xl">
+            <h1 id="ob-h3" className="mb-6 font-display text-display-sm text-ink-strong">
+              Dein erstes Projekt
+            </h1>
+            <div className="rounded-lg border border-black/10 bg-paper-2 p-6 shadow">
+              <p className="font-display text-title text-ink-strong">
                 <span aria-hidden className="mr-2">{start.icon}</span>
                 {start.title}
               </p>
               <p className="mt-2 text-sm text-ink-2">{start.buildResult}</p>
               <p className="mt-1 font-mono text-xs text-ink-faint">~{start.durationMin ?? 45} min</p>
-              <button
-                onClick={() => finish(`/projekt/${start.id}/schritt/1`)}
-                className="mt-4 min-h-11 w-full rounded bg-accent px-5 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
-              >
+              <Button className="mt-4 w-full" onClick={() => finish(`/projekt/${start.id}/schritt/1`)}>
                 Los geht's →
-              </button>
+              </Button>
             </div>
             <button
               onClick={() => finish('/projekte')}
-              className="mt-3 min-h-11 text-sm text-ink-2 underline decoration-black/20 underline-offset-4 outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-accent"
+              className={`mt-3 min-h-11 text-sm text-ink-2 underline decoration-black/20 underline-offset-4 hover:text-ink ${focusRing}`}
             >
               lieber selbst aussuchen
             </button>
@@ -132,7 +166,7 @@ export default function Onboarding() {
         <div className="mt-8">
           <button
             onClick={() => finish('/')}
-            className="min-h-11 text-xs text-ink-faint underline decoration-black/20 underline-offset-4 outline-none hover:text-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
+            className={`min-h-11 text-xs text-ink-faint underline decoration-black/20 underline-offset-4 hover:text-ink-2 ${focusRing}`}
           >
             Erstmal umsehen →
           </button>

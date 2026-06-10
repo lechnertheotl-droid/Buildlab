@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BlockRenderer } from '@buildlab/ui';
+import { BlockRenderer, SegmentedControl, buttonClass } from '@buildlab/ui';
 import { conceptById, conceptIndex, projectById } from '../content';
 import { useConceptStates, useSettings } from '../db/repo';
 import type { Depth } from '../db/types';
@@ -62,33 +62,28 @@ export default function ConceptPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
       <div className="flex flex-wrap items-baseline gap-3">
-        <h1 className="font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">{concept.name}</h1>
+        <h1 className="font-display text-display-sm text-ink-strong md:text-display">
+          {concept.name}
+        </h1>
         {concept.symbol && <span className="font-mono text-xl text-ink-2">{concept.symbol}</span>}
         {concept.unit && concept.unit !== '-' && (
           <span className="font-mono text-sm text-ink-faint">[{concept.unit}]</span>
         )}
-        <span className="ml-auto rounded border border-black/10 bg-paper-2 px-2 py-0.5 font-mono text-xs text-ink-2">
+        <span className="ml-auto rounded-sm border border-black/10 bg-paper-2 px-2 py-0.5 font-mono text-xs text-ink-2">
           {STATUS_LABEL[state?.status ?? 'neu']}
         </span>
       </div>
 
-      <div className="mt-5 inline-flex rounded border border-black/10" role="radiogroup" aria-label="Erklärtiefe">
-        {DEPTH_LABELS.map((d) => (
-          <button
-            key={d.id}
-            role="radio"
-            aria-checked={activeDepth === d.id}
-            onClick={() => setDepth(d.id)}
-            className={`min-h-11 px-4 text-sm outline-none first:rounded-l last:rounded-r focus-visible:ring-2 focus-visible:ring-accent ${
-              activeDepth === d.id ? 'bg-accent text-paper' : 'bg-paper-2 text-ink-2 hover:text-ink'
-            }`}
-          >
-            {d.label}
-          </button>
-        ))}
+      <div className="mt-5">
+        <SegmentedControl
+          value={activeDepth}
+          onChange={setDepth}
+          options={DEPTH_LABELS}
+          ariaLabel="Erklärtiefe"
+        />
       </div>
 
-      <p className="mt-4 leading-relaxed">{explanation}</p>
+      <p key={activeDepth} className="bl-wechsel mt-4 leading-relaxed">{explanation}</p>
 
       {(concept.relatedFormulas?.length ?? 0) > 0 && (
         <section aria-label="Formeln" className="mt-8">
@@ -109,7 +104,7 @@ export default function ConceptPage() {
               <Link
                 key={p}
                 to={`/konzept/${p}`}
-                className="rounded border border-black/10 bg-paper-2 px-3 py-1.5 text-sm text-accent-ink outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
+                className="rounded-sm border border-black/10 bg-paper-2 px-3 py-1.5 text-sm text-accent-ink outline-none transition-colors hover:border-rule-strong focus-visible:ring-2 focus-visible:ring-accent"
               >
                 {conceptById.get(p)?.name ?? p}
               </Link>
@@ -150,10 +145,7 @@ export default function ConceptPage() {
         <p className="mt-2 text-sm text-ink-2">
           Eine kurze Aufgabe zu „{concept.name}“ wartet im Training.
         </p>
-        <Link
-          to="/training"
-          className="mt-3 inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
-        >
+        <Link to="/training" className={`mt-3 ${buttonClass({ variant: 'secondary' })}`}>
           Üben →
         </Link>
       </section>

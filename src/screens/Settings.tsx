@@ -1,9 +1,11 @@
 // src/screens/Settings.tsx — Einstellungen (SCREENS.md §13): Tiefe, Bewegung,
 // Backup-Export/-Import (mit Diff-Bestätigung), Speicher-Status, Daten löschen.
+// Import-Bestätigung und Lösch-Fluss laufen über das Dialog-Primitiv
+// (Fokus-Falle, Esc, Fokus-Rückgabe — DESIGN.md §7).
 
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ScreenSkeleton } from '@buildlab/ui';
+import { Button, Dialog, ScreenSkeleton, SegmentedControl } from '@buildlab/ui';
 import { requestPersistentStorage } from '../db/db';
 import { setSetting, useSettings, wipeAll } from '../db/repo';
 import {
@@ -37,7 +39,7 @@ export default function Settings() {
   const [pending, setPending] = useState<BackupFile | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [wipeWord, setWipeWord] = useState('');
-  const [wipeStage, setWipeStage] = useState(0);
+  const [wipeOpen, setWipeOpen] = useState(false);
 
   useEffect(() => {
     requestPersistentStorage().then(setPersisted);
@@ -61,27 +63,24 @@ export default function Settings() {
   };
 
   const summary = pending ? summarizeBackup(pending) : null;
+  const closeWipe = () => {
+    setWipeOpen(false);
+    setWipeWord('');
+  };
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="mb-8 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Einstellungen</h1>
+    <div className="mx-auto max-w-2xl px-4 py-6 md:px-6 md:py-10">
+      <h1 className="mb-8 font-display text-display-sm text-ink-strong md:text-display">
+        Einstellungen
+      </h1>
 
       <Section title="Erklärtiefe">
-        <div className="inline-flex rounded border border-black/10" role="radiogroup" aria-label="Erklärtiefe">
-          {DEPTHS.map((d) => (
-            <button
-              key={d.id}
-              role="radio"
-              aria-checked={settings.depth === d.id}
-              onClick={() => setSetting('depth', d.id)}
-              className={`min-h-11 px-4 text-sm outline-none first:rounded-l last:rounded-r focus-visible:ring-2 focus-visible:ring-accent ${
-                settings.depth === d.id ? 'bg-accent text-paper' : 'bg-paper-2 text-ink-2 hover:text-ink'
-              }`}
-            >
-              {d.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          value={settings.depth}
+          onChange={(d) => void setSetting('depth', d)}
+          options={DEPTHS}
+          ariaLabel="Erklärtiefe"
+        />
         <p className="mt-2 text-xs text-ink-faint">
           Gilt überall als Voreinstellung; an jedem Text kannst du lokal umschalten.
         </p>
@@ -104,18 +103,12 @@ export default function Settings() {
 
       <Section title="Sicherung">
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={async () => downloadBackup(await exportBackup())}
-            className="inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
-          >
+          <Button variant="secondary" onClick={async () => downloadBackup(await exportBackup())}>
             Sicherung exportieren
-          </button>
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
-          >
+          </Button>
+          <Button variant="secondary" onClick={() => fileRef.current?.click()}>
             Sicherung importieren
-          </button>
+          </Button>
           <input
             ref={fileRef}
             type="file"
@@ -128,40 +121,44 @@ export default function Settings() {
             }}
           />
         </div>
-        {importError && <p className="mt-2 text-sm text-[color:var(--viz-high)]">{importError}</p>}
-        {pending && summary && (
-          <div role="dialog" aria-label="Import bestätigen" className="mt-3 rounded border border-black/10 bg-paper-sink p-4">
-            <p className="text-sm">
-              Ersetzt deinen Stand durch: Fortschritt von <strong>{summary.projects}</strong> Projekt(en),{' '}
-              <strong>{summary.concepts}</strong> Konzept(en), <strong>{summary.builds}</strong> gebaute(n)
-              Teil(en), {summary.calcEntries} Rechner-Einträge.
-            </p>
-            <div className="mt-3 flex gap-3">
-              <button
-                onClick={() => setPending(null)}
-                className="inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                Abbrechen
-              </button>
-              <button
-                onClick={async () => {
-                  await importBackup(pending);
-                  setPending(null);
-                }}
-                className="inline-flex min-h-11 items-center rounded bg-accent px-4 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
-              >
-                Ja, ersetzen
-              </button>
-            </div>
-          </div>
+        {importError && (
+          <p role="alert" className="mt-2 text-sm text-fehl">
+            <span aria-hidden="true">✗ </span>
+            {importError}
+          </p>
         )}
+        <Dialog
+          open={pending !== null && summary !== null}
+          onClose={() => setPending(null)}
+          title="Sicherung einspielen?"
+        >
+          <p className="text-sm leading-relaxed text-ink-2">
+            Ersetzt deinen Stand durch: Fortschritt von <strong>{summary?.projects}</strong>{' '}
+            Projekt(en), <strong>{summary?.concepts}</strong> Konzept(en),{' '}
+            <strong>{summary?.builds}</strong> gebaute(n) Teil(en), {summary?.calcEntries}{' '}
+            Rechner-Einträge.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button
+              onClick={async () => {
+                if (pending) await importBackup(pending);
+                setPending(null);
+              }}
+            >
+              Ja, ersetzen
+            </Button>
+            <Button variant="secondary" onClick={() => setPending(null)}>
+              Abbrechen
+            </Button>
+          </div>
+        </Dialog>
       </Section>
 
       <Section title="Speicher">
         <p className="font-mono text-sm">
           Dauerhafter Speicher:{' '}
           {persisted === null ? '…' : persisted ? (
-            <span className="text-[color:var(--viz-low)]">gewährt ✓</span>
+            <span className="text-ok">gewährt ✓</span>
           ) : (
             <span className="text-ink-2">nicht gewährt — Backup empfohlen</span>
           )}
@@ -170,49 +167,38 @@ export default function Settings() {
       </Section>
 
       <Section title="Daten">
-        {wipeStage === 0 && (
-          <button
-            onClick={() => setWipeStage(1)}
-            className="inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm text-[color:var(--viz-high)] outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            Alles löschen …
-          </button>
-        )}
-        {wipeStage === 1 && (
-          <div role="dialog" aria-label="Löschen bestätigen" className="rounded border border-black/10 bg-paper-sink p-4">
-            <p className="text-sm">
-              Das löscht <strong>allen</strong> Fortschritt, alle gebauten Teile und alle Einstellungen —
-              endgültig. Tippe <span className="font-mono">LÖSCHEN</span>, um fortzufahren.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <input
-                value={wipeWord}
-                onChange={(e) => setWipeWord(e.target.value)}
-                className="min-h-11 rounded border border-black/10 bg-paper px-3 font-mono text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                aria-label="Bestätigungswort"
-              />
-              <button
-                onClick={() => {
-                  setWipeStage(0);
-                  setWipeWord('');
-                }}
-                className="inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                Abbrechen
-              </button>
-              <button
-                disabled={wipeWord !== 'LÖSCHEN'}
-                onClick={async () => {
-                  await wipeAll();
-                  navigate('/onboarding');
-                }}
-                className="inline-flex min-h-11 items-center rounded bg-[color:var(--viz-high)] px-4 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Endgültig löschen
-              </button>
-            </div>
+        <Button variant="secondary" className="text-fehl" onClick={() => setWipeOpen(true)}>
+          Alles löschen …
+        </Button>
+        <Dialog open={wipeOpen} onClose={closeWipe} title="Wirklich alles löschen?" danger>
+          <p className="text-sm leading-relaxed text-ink-2">
+            Das löscht <strong>allen</strong> Fortschritt, alle gebauten Teile und alle
+            Einstellungen — endgültig. Tippe <span className="font-mono">LÖSCHEN</span>, um
+            fortzufahren.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <input
+              value={wipeWord}
+              onChange={(e) => setWipeWord(e.target.value)}
+              className="min-h-11 rounded border border-black/10 bg-paper-sink px-3 font-mono text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-label="Bestätigungswort"
+            />
+            <Button
+              variant="danger"
+              disabled={wipeWord !== 'LÖSCHEN'}
+              title={wipeWord !== 'LÖSCHEN' ? 'Tippe LÖSCHEN ins Feld' : undefined}
+              onClick={async () => {
+                await wipeAll();
+                navigate('/onboarding');
+              }}
+            >
+              Endgültig löschen
+            </Button>
+            <Button variant="secondary" onClick={closeWipe}>
+              Abbrechen
+            </Button>
           </div>
-        )}
+        </Dialog>
       </Section>
 
       <Section title="Über">
