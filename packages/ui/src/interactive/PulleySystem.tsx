@@ -158,7 +158,13 @@ export function PulleySystem({ params, caption }: { params: PulleySystemParams; 
 
   return (
     <div className="rounded border border-black/10 bg-paper-2 p-4 shadow">
-      <IsoStage label={label} height={320} origin={{ x: 230, y: 196 }} floor={110}>
+      <IsoStage
+        label={label}
+        desc="Ein Flaschenzug an einem Gestell: Seil über Rollen, Last am Haken; der Ampel-Pfeil am Seilende zeigt die nötige Zugkraft."
+        height={320}
+        origin={{ x: 230, y: 196 }}
+        floor={110}
+      >
         {/* weicher Schatten unter der Last */}
         <ellipse cx={r2(loadShadow.x)} cy={r2(loadShadow.y)} rx={34} ry={12} fill="var(--ink)" opacity={0.12} filter="url(#iso-soft)" />
 

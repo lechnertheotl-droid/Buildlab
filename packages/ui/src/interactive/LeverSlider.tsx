@@ -344,6 +344,10 @@ export function LeverSlider({
         role="img"
         aria-label={`Hebel: Kraft ${fmt(force)} Newton am Hebelarm ${fmt(arm, 2)} Meter, Drehmoment ${torque === null ? 'unbestimmt' : fmt(torque)} Newtonmeter`}
       >
+        <desc>
+          Ein Balken auf einem Keil-Drehpunkt neigt sich unter Last; der senkrechte
+          Ampel-Pfeil zeigt den Kraftbetrag, ein gebogener Pfeil die Drehwirkung.
+        </desc>
         <defs>
           {/* Feld-Begrenzung (gerundetes Rechteck) für den bildfüllenden Boden. */}
           <clipPath id="lever-field">

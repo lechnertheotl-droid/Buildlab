@@ -7,6 +7,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { evaluateById } from '@buildlab/engine';
 import { Latex } from '../Latex';
 import { useContent } from '../content-context';
+import { useAnnounce } from '../primitives/announce';
 import { buttonClass } from '../primitives/Button';
 import { Collapse } from '../primitives/Collapse';
 import { SegmentedControl } from '../primitives/SegmentedControl';
@@ -359,6 +360,7 @@ function NumericBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType
 function EstimateBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<typeof useFlow> }) {
   const { flow, fail, succeed } = flowApi;
   const { formulas } = useContent();
+  const announce = useAnnounce();
   const scale = block.scale!;
   const [pos, setPos] = useState(0.5);
   const reference = useMemo(() => {
@@ -398,9 +400,14 @@ function EstimateBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnTyp
           max={1000}
           value={Math.round(pos * 1000)}
           disabled={flow.solved}
-          onChange={(e) => setPos(Number(e.target.value) / 1000)}
+          onChange={(e) => {
+            const t = Number(e.target.value) / 1000;
+            setPos(t);
+            // Debounced ansagen — Screenreader nicht mit Zwischenwerten fluten.
+            announce(`Schätzung ${fmt(toValue(t))}`);
+          }}
           className="bl-range w-full"
-          aria-label={`Schätzung: ${fmt(value)}`}
+          aria-label="Schätzung"
           aria-valuetext={fmt(value)}
         />
         <span className="font-mono text-xs text-ink-faint">{fmt(scale.max)}</span>
