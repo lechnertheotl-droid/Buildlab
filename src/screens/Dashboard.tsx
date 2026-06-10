@@ -3,6 +3,7 @@
 // maximal zwei „Als Nächstes“-Empfehlungen.
 
 import { Link } from 'react-router-dom';
+import { ScreenSkeleton } from '@buildlab/ui';
 import {
   conceptById, projectById, projects, recommendNext, remainingMinutes, personaStartProject,
 } from '../content';
@@ -22,7 +23,7 @@ export default function Dashboard() {
   const settings = useSettings();
 
   if (!allProgress || !conceptStates || !settings) {
-    return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+    return <ScreenSkeleton layout="list" />;
   }
 
   const current = projects

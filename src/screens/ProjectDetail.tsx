@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ScreenSkeleton } from '@buildlab/ui';
 import { conceptById, missingPrerequisites, projectById } from '../content';
 import { useAllProgress } from '../db/repo';
 
@@ -25,7 +26,7 @@ export default function ProjectDetail() {
       </div>
     );
   }
-  if (!allProgress) return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+  if (!allProgress) return <ScreenSkeleton layout="detail" />;
 
   const progress = allProgress[project.id];
   const missing = missingPrerequisites(project, allProgress);

@@ -2,6 +2,7 @@
 // vier Niveau-Sektionen, Statuskarten, Soft-Lock nur als Optik (immer antippbar).
 
 import { Link } from 'react-router-dom';
+import { ScreenSkeleton } from '@buildlab/ui';
 import { projects, projectStatus, recommendNext, type ProjectMeta, type ProjectStatus } from '../content';
 import { useAllProgress, useConceptStates } from '../db/repo';
 import type { ProjectProgress } from '../db/types';
@@ -50,7 +51,7 @@ export default function ProjectList() {
   const allProgress = useAllProgress();
   const conceptStates = useConceptStates();
   if (!allProgress || !conceptStates) {
-    return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+    return <ScreenSkeleton layout="list" />;
   }
 
   const mastered = new Set(

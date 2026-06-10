@@ -3,6 +3,7 @@
 // Blobs, DATENMODELL.md §1) und Projekt-Laufzettel.
 
 import { useState } from 'react';
+import { ScreenSkeleton } from '@buildlab/ui';
 import { Link } from 'react-router-dom';
 import { compileGear } from '@buildlab/cad';
 import { projectById, projects, personaStartProject } from '../content';
@@ -76,7 +77,7 @@ export default function Werkstatt() {
   const settings = useSettings();
 
   if (!builds || !allProgress) {
-    return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+    return <ScreenSkeleton layout="list" />;
   }
 
   const completed = projects.filter((p) => allProgress[p.id]?.completedAt);

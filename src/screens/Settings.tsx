@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ScreenSkeleton } from '@buildlab/ui';
 import { requestPersistentStorage } from '../db/db';
 import { setSetting, useSettings, wipeAll } from '../db/repo';
 import {
@@ -42,7 +43,7 @@ export default function Settings() {
     requestPersistentStorage().then(setPersisted);
   }, []);
 
-  if (!settings) return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+  if (!settings) return <ScreenSkeleton layout="detail" />;
 
   const onImportFile = async (file: File) => {
     setImportError(null);

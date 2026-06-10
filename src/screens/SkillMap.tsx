@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ScreenSkeleton } from '@buildlab/ui';
 import { conceptById, concepts, skillmapLayout } from '../content';
 import { useConceptStates } from '../db/repo';
 import type { ConceptStateEntry } from '../db/types';
@@ -44,7 +45,7 @@ function NodeCircle({ status }: { status: string }) {
 export default function SkillMap() {
   const states = useConceptStates();
   const [selected, setSelected] = useState<string | null>(null);
-  if (!states) return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+  if (!states) return <ScreenSkeleton layout="detail" />;
 
   const anySeen = Object.values(states).some((s) => s.status !== 'neu');
   const nodePos = new Map(skillmapLayout.nodes.map((n) => [n.conceptId, n]));

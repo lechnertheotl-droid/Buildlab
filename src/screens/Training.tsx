@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ContentProvider, TaskView,
+  ContentProvider, ScreenSkeleton, TaskView,
   type Concept, type Formula, type TaskBlock, type TaskResult,
 } from '@buildlab/ui';
 import {
@@ -60,7 +60,7 @@ export default function Training() {
   }, [states === undefined, allProgress === undefined]);
 
   if (!states || !allProgress || session === null) {
-    return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+    return <ScreenSkeleton layout="detail" />;
   }
 
   const done = sessionIndex >= session.length;
