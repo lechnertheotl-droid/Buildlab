@@ -5,11 +5,12 @@
 // Callbacks nach draußen (src/db verdrahtet das in der App).
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { evaluateFormula } from '@buildlab/engine';
 import { BlockRenderer } from '../blocks';
 import { useContent } from '../content-context';
 import { useWorkspaceStore } from '../store';
 import { CadBuild } from '../build/CadBuild';
-import type { Block, Layer, Project, TaskResult } from '../types';
+import type { Block, Layer, Project, Step, TaskResult } from '../types';
 
 export interface WorkspaceStepProps {
   project: Project;
@@ -33,6 +34,53 @@ export interface WorkspaceStepProps {
 
 function isCanvasBlock(block: Block): boolean {
   return block.type === 'interactive' || block.type === 'build';
+}
+
+function fmt(n: number): string {
+  return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 4 }).format(n);
+}
+
+/** 64-px-Ergebniszeile der eingeklappten Mobile-Canvas (SCREENS.md §6.4):
+    zeigt das Live-Ergebnis der aktiven Formel (Engine rechnet, Eiserne Regel 1). */
+function CanvasResultLine({ project, step }: { project: Project; step: Step }) {
+  const { formulas } = useContent();
+  const active = useWorkspaceStore((s) => s.active);
+  let result: { symbol: string; value: number; unit: string } | null = null;
+  if (active) {
+    const formula = formulas.get(active.formulaId);
+    if (formula) {
+      try {
+        result = {
+          symbol: formula.result.symbol,
+          value: evaluateFormula(formula, active.values),
+          unit: formula.result.unit,
+        };
+      } catch {
+        result = null;
+      }
+    }
+  }
+  return (
+    <p
+      className="flex h-16 items-center justify-center gap-2 rounded-t border border-b-0 border-black/10 bg-paper-2 px-4 font-mono text-sm"
+      aria-live="polite"
+    >
+      {result ? (
+        <>
+          <span className="text-ink-2">{result.symbol} =</span>
+          <span className="text-accent-ink">
+            {fmt(result.value)}
+            {result.unit && result.unit !== '-' ? ` ${result.unit}` : ''}
+          </span>
+        </>
+      ) : (
+        <span className="truncate text-ink-2">
+          <span aria-hidden className="mr-2">{project.icon}</span>
+          {step.title}
+        </span>
+      )}
+    </p>
+  );
 }
 
 /** Auffrisch-Karte: Quereinsteiger-Netz für ungesehene `uses`-Konzepte. */
@@ -124,6 +172,10 @@ export function WorkspaceStep({
   const step = project.steps[stepIndex];
   const clearCanvasInputs = useWorkspaceStore((s) => s.clearCanvasInputs);
 
+  // Mobile: Canvas per Griff-Leiste auf die Ergebniszeile kollabierbar
+  // (SCREENS.md §6.4). Flüchtiger UI-Zustand, Desktop unberührt.
+  const [canvasCollapsed, setCanvasCollapsed] = useState(false);
+
   const canvasIndex = useMemo(() => {
     if (step.canvas !== undefined && step.canvas < step.blocks.length) return step.canvas;
     const i = step.blocks.findIndex(isCanvasBlock);
@@ -145,6 +197,7 @@ export function WorkspaceStep({
   const completedRef = useRef(false);
   useEffect(() => {
     completedRef.current = false;
+    setCanvasCollapsed(false);
   }, [stepIndex]);
   useEffect(() => {
     if (stepDone && !completedRef.current) {
@@ -221,23 +274,51 @@ export function WorkspaceStep({
           aria-label="Interaktive Ansicht"
           className="order-1 md:order-2 md:self-start md:sticky md:top-4"
         >
-          <div className="sticky top-0 z-10 max-h-[45vh] overflow-auto md:static md:max-h-none">
-            {canvasBlock ? (
-              canvasBlock.type === 'build' ? (
-                <CadBuild block={canvasBlock} onExport={onExport} />
-              ) : (
-                <BlockRenderer block={canvasBlock} depth={depth} />
-              )
-            ) : step.kind === 'meilenstein' ? (
-              <MilestoneFinale project={project} />
-            ) : (
-              <div className="flex min-h-40 items-center justify-center rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
-                <p className="font-display text-xl text-ink-2">
-                  <span aria-hidden className="mr-2 font-mono">{project.icon}</span>
-                  {project.title}
-                </p>
+          <div className="sticky top-0 z-10 bg-paper md:static md:bg-transparent">
+            {canvasCollapsed && (
+              <div className="md:hidden">
+                <CanvasResultLine project={project} step={step} />
               </div>
             )}
+            <div
+              id="canvas-inhalt"
+              className={
+                canvasCollapsed
+                  ? 'hidden md:block'
+                  : 'max-h-[45vh] overflow-auto md:max-h-none'
+              }
+            >
+              {canvasBlock ? (
+                canvasBlock.type === 'build' ? (
+                  <CadBuild block={canvasBlock} onExport={onExport} />
+                ) : (
+                  <BlockRenderer block={canvasBlock} depth={depth} />
+                )
+              ) : step.kind === 'meilenstein' ? (
+                <MilestoneFinale project={project} />
+              ) : (
+                <div className="flex min-h-40 items-center justify-center rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
+                  <p className="font-display text-xl text-ink-2">
+                    <span aria-hidden className="mr-2 font-mono">{project.icon}</span>
+                    {project.title}
+                  </p>
+                </div>
+              )}
+            </div>
+            {/* Griff-Leiste (Doppel-Strich): klappt die Ansicht auf die Ergebniszeile. */}
+            <button
+              type="button"
+              onClick={() => setCanvasCollapsed((c) => !c)}
+              aria-expanded={!canvasCollapsed}
+              aria-controls="canvas-inhalt"
+              aria-label={canvasCollapsed ? 'Ansicht ausklappen' : 'Ansicht einklappen'}
+              className="flex min-h-11 w-full items-center justify-center rounded-b border border-t-0 border-black/10 bg-paper-2 outline-none hover:bg-paper-sink/60 focus-visible:ring-2 focus-visible:ring-accent md:hidden"
+            >
+              <span aria-hidden className="flex w-10 flex-col gap-1">
+                <span className="h-px bg-ink-faint" />
+                <span className="h-px bg-ink-faint" />
+              </span>
+            </button>
           </div>
         </section>
 

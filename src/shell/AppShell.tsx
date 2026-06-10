@@ -29,8 +29,10 @@ function MasteryRing() {
   const r = 9;
   const c = 2 * Math.PI * r;
   return (
+    // Mobil ausgeblendet (SCREENS.md §2): globaler Fortschritt ist dort nicht
+    // aufgaben-relevant — die Skill-Map zeigt ihn vollständig.
     <div
-      className="flex items-center gap-2"
+      className="hidden items-center gap-2 md:flex"
       role="img"
       aria-label={`Gesamtfortschritt ${pct} Prozent der Konzepte angewendet`}
       title="Anteil der Konzepte, die du schon angewendet hast"

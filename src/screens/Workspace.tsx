@@ -73,8 +73,11 @@ export default function Workspace() {
     >
       <div className="border-b border-black/10 px-4 py-2 md:px-6">
         <p className="mx-auto max-w-6xl font-mono text-xs uppercase tracking-widest text-ink-faint">
-          <span aria-hidden className="mr-1">{project.icon}</span>
-          {project.title} · Schritt {stepIndex + 1}/{project.steps.length} „{step.title}“
+          <span className="hidden md:inline">
+            <span aria-hidden className="mr-1">{project.icon}</span>
+            {project.title} ·{' '}
+          </span>
+          Schritt {stepIndex + 1}/{project.steps.length} „{step.title}“
         </p>
       </div>
       <WorkspaceStep
