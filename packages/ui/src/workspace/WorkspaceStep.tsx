@@ -214,7 +214,7 @@ export function WorkspaceStep({
   const canvasBlock = canvasIndex !== null ? step.blocks[canvasIndex] : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
+    <div className="mx-auto max-w-6xl px-4 pb-24 pt-6 md:px-6 md:pb-6">
       <div className="grid gap-6 md:grid-cols-[38fr_62fr]">
         {/* Canvas: mobil zuerst (sticky oben), Desktop rechts */}
         <section
@@ -258,17 +258,21 @@ export function WorkspaceStep({
             )}
           </div>
 
-          {/* Navigation: ‹ Zurück · Punkte · Weiter › */}
-          <nav aria-label="Schritte" className="mt-8 flex items-center gap-3 border-t border-black/10 pt-4">
+          {/* Navigation: mobil fixe Leiste über der Bottom-Bar (SCREENS.md §6.4),
+              Desktop inline am Lektion-Ende. */}
+          <nav
+            aria-label="Schritte"
+            className="fixed bottom-14 left-0 right-0 z-30 flex items-center gap-3 border-t border-black/10 bg-paper-2 px-4 py-2 md:static md:mt-8 md:border-t md:bg-transparent md:px-0 md:pt-4"
+          >
             <button
               type="button"
               onClick={() => onNavigate(stepIndex - 1)}
               disabled={stepIndex === 0}
-              className="min-h-11 rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-11 whitespace-nowrap rounded border border-black/10 px-3 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 md:px-4"
             >
               ‹ Zurück
             </button>
-            <div className="flex flex-1 items-center justify-center gap-2" role="list">
+            <div className="flex flex-1 items-center justify-center gap-1.5 md:gap-2" role="list">
               {project.steps.map((s, i) => {
                 const reachable = i <= maxStepReached;
                 const current = i === stepIndex;
@@ -297,7 +301,7 @@ export function WorkspaceStep({
               onClick={() => onNavigate(stepIndex + 1)}
               disabled={!stepDone || stepIndex >= project.steps.length - 1}
               title={stepDone ? undefined : 'Noch eine Aufgabe offen — sie ist direkt über mir.'}
-              className="min-h-11 rounded bg-accent px-4 text-sm text-paper outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-11 whitespace-nowrap rounded bg-accent px-3 text-sm text-paper outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 md:px-4"
             >
               Weiter ›
             </button>
