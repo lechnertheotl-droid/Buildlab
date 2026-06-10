@@ -1,0 +1,330 @@
+{
+  "id": "hebel-flaschenzug",
+  "title": "Hebel & Flaschenzug",
+  "version": 2,
+  "level": 1,
+  "icon": "⚖",
+  "durationMin": 35,
+  "difficulty": 1,
+  "buildResult": "Ein fertig ausgelegter Mini-Flaschenzug mit vier tragenden Strängen — samt Bauanleitung für Schnur, Karabiner und Haken.",
+  "challenge": "Hebe eine Last von 2 kg (G = 19,62 N) mit höchstens 8 N Zugkraft — und erkläre, woher der Kraft-Rabatt kommt.",
+  "conceptsIntroduced": ["kraft", "hebelarm", "drehmoment", "gleichgewicht", "rolle_fest_lose", "kraftuebersetzung"],
+  "steps": [
+    {
+      "id": "was-ist-kraft",
+      "title": "Was ist eine Kraft?",
+      "goal": "Ein Gefühl dafür bekommen, was eine Kraft ist und warum ihr Angriffspunkt zählt.",
+      "kind": "lernen",
+      "canvas": 2,
+      "estMinutes": 5,
+      "blocks": [
+        {
+          "type": "text",
+          "variant": "hook",
+          "layers": {
+            "intuitive": "Du drückst die Tür am Griff auf, nie am Scharnier — warum eigentlich? Gleiche Tür, gleicher Schwung, aber nah an der Angel fühlst du dich plötzlich schwach."
+          }
+        },
+        {
+          "type": "text",
+          "introduces": ["kraft"],
+          "layers": {
+            "intuitive": "Eine Kraft ist ein gerichteter Schubs: Sie hat einen Betrag (wie fest), eine Richtung (wohin) — und einen Angriffspunkt (wo). Und genau der Angriffspunkt ist der heimliche Star. Dieselben 40 Newton wirken am Türgriff wie ein Türöffner und am Scharnier wie ein müdes Anklopfen.",
+            "practical": "Kräfte misst du in Newton (N); als Faustregel wiegt eine Tafel Schokolade etwa 1 N. Für alles, was sich drehen kann, zählt neben Betrag und Richtung vor allem, wo die Kraft angreift: Je weiter weg von der Drehachse, desto mehr richtet sie aus.",
+            "rigorous": "Eine Kraft ist eine vektorielle Größe (Betrag, Richtung, Angriffspunkt), Einheit Newton: 1 N = 1 kg·m/s². Bei drehbar gelagerten Körpern bestimmt die Lage der Wirkungslinie zur Drehachse die Drehwirkung — das formalisiert der nächste Schritt als Drehmoment M = F·r."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "lever-slider",
+          "params": { "formulaId": "torque_lever", "force": 100, "arm": 0.5, "forceRange": [0, 500], "armRange": [0, 2] },
+          "caption": "Spiel einfach: Schiebe Kraft und Abstand — und schau, wann der Hebel kippt."
+        },
+        {
+          "type": "task",
+          "kind": "estimate",
+          "question": "Am Türgriff, 80 cm von der Angel, reichen 40 N. Wie viel Kraft brauchst du direkt neben dem Scharnier, nur 10 cm von der Angel — dein Bauchgefühl?",
+          "concepts": ["kraft"],
+          "source": { "formulaId": "torque_balance", "inputs": { "F1": 40, "r1": 0.8, "r2": 0.1 } },
+          "scale": { "min": 40, "max": 2000, "log": true, "bands": [2, 5] },
+          "hint": "Der Abstand schrumpft von 80 cm auf 10 cm — auf ein Achtel. Die Kraft muss das ausgleichen.",
+          "explanation": "Achtmal näher an der Angel heißt achtmal mehr Kraft: 320 N statt 40 N. Darum öffnet niemand Türen am Scharnier — der Angriffspunkt entscheidet."
+        }
+      ]
+    },
+    {
+      "id": "hebelarm-drehmoment",
+      "title": "Hebelarm & Drehmoment",
+      "goal": "Die Drehwirkung einer Kraft mit M = F·r berechnen und gezielt einstellen.",
+      "kind": "lernen",
+      "canvas": 2,
+      "estMinutes": 7,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["hebelarm", "drehmoment"],
+          "uses": ["kraft"],
+          "layers": {
+            "intuitive": "Jetzt bekommt dein Türgefühl Namen: Der Abstand zur Drehachse heißt Hebelarm, und Kraft mal Hebelarm ergibt das Drehmoment — die Währung fürs Drehen. Doppelter Hebelarm, doppelte Drehwirkung. Deshalb sind Schraubenschlüssel lang und Türgriffe weit weg vom Scharnier.",
+            "practical": "Das Drehmoment M = F·r sagt dir, wie stark eine Kraft dreht. F in Newton, r in Metern, M in Newtonmetern (N·m). Wichtig: r ist der senkrechte Abstand der Kraft zur Drehachse. In der Werkstatt steckst du ein Rohr auf den Schlüssel, wenn die Schraube klemmt — mehr r statt mehr F.",
+            "rigorous": "Das Drehmoment ist M = F·r, mit r als senkrechtem Abstand der Wirkungslinie von der Drehachse (allgemein M = r×F, hier skalar für den ebenen Fall). Einheit N·m. Greift die Kraft schräg an, zählt nur die Komponente senkrecht zum Hebel — der wirksame Hebelarm ist die Projektion."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "torque_lever",
+          "note": "Tippe auf F oder r, um zu sehen, was die Variablen bedeuten."
+        },
+        {
+          "type": "interactive",
+          "componentId": "lever-slider",
+          "params": { "formulaId": "torque_lever", "force": 30, "arm": 0.3, "forceRange": [0, 100], "armRange": [0, 1] },
+          "caption": "Gleiches Drehmoment, viele Wege: viel Kraft am kurzen Arm — oder wenig Kraft am langen."
+        },
+        {
+          "type": "calc",
+          "formulaId": "torque_lever",
+          "inputs": { "F": 100, "r": 0.5 },
+          "expected": { "value": 50, "unit": "N*m" },
+          "narrative": "100 N am halben Meter Hebelarm: M = 100·0,5 = 50 N·m. Genug, um eine festgerostete Radschraube zu überreden."
+        },
+        {
+          "type": "task",
+          "kind": "target",
+          "question": "Die alte Schraube braucht genau 25 N·m. Stell Kraft und Hebelarm auf der Bühne so ein, dass M = 25 N·m wird.",
+          "concepts": ["drehmoment", "hebelarm"],
+          "target": {
+            "formulaId": "torque_lever",
+            "vars": ["F", "r"],
+            "goal": { "value": 25, "tolerance": 0.02 },
+            "proof": {
+              "pass": { "F": 50, "r": 0.5 },
+              "fail": { "F": 100, "r": 0.5 }
+            }
+          },
+          "hint": "M = F·r — bei r = 0,5 m brauchst du F = 25/0,5. Oder du machst den Arm länger und die Kraft kleiner.",
+          "explanation": "Zum Beispiel F = 50 N am Hebelarm r = 0,5 m: M = 50·0,5 = 25 N·m. Auch 25 N an 1 m treffen das Ziel — es zählt nur das Produkt."
+        }
+      ]
+    },
+    {
+      "id": "hebelgesetz",
+      "title": "Das Hebelgesetz",
+      "goal": "Mit dem Hebelgesetz F₁·r₁ = F₂·r₂ fehlende Kräfte berechnen.",
+      "kind": "lernen",
+      "estMinutes": 5,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["gleichgewicht"],
+          "uses": ["drehmoment", "hebelarm"],
+          "layers": {
+            "intuitive": "Eine Wippe steht still, wenn beide Seiten gleich stark drehen — das ist Gleichgewicht. Links dreht F₁ mal r₁, rechts hält F₂ mal r₂ dagegen. Sind beide Drehmomente gleich, bewegt sich nichts. Und das ist dein Werkzeug: Wer den längeren Hebelarm hat, kommt mit weniger Kraft davon.",
+            "practical": "Im Gleichgewicht gilt F₁·r₁ = F₂·r₂ — das Hebelgesetz. Aufgelöst nach der gesuchten Kraft: F₂ = F₁·r₁/r₂. Merkregel: Kraft mal Kraftarm gleich Last mal Lastarm. Damit rechnest du Brecheisen, Wippen, Zangen und Schubkarren in einer Zeile durch.",
+            "rigorous": "Statisches Gleichgewicht verlangt ΣF = 0 und ΣM = 0. Am zweiseitigen Hebel liefert die Momentensumme um den Drehpunkt F₁·r₁ − F₂·r₂ = 0, also F₂ = F₁·r₁/r₂. Die Auflagerkraft im Drehpunkt folgt aus ΣF = 0 — sie dreht nicht mit, weil ihr Hebelarm null ist."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "torque_balance"
+        },
+        {
+          "type": "calc",
+          "formulaId": "torque_balance",
+          "inputs": { "F1": 20, "r1": 0.3, "r2": 0.2 },
+          "expected": { "value": 30, "unit": "N" },
+          "narrative": "Links ziehen 20 N an 0,3 m. Rechts, am kürzeren Arm von 0,2 m, braucht es 30 N — beide Seiten drehen mit 6 N·m, nichts bewegt sich."
+        },
+        {
+          "type": "task",
+          "kind": "numeric",
+          "question": "Eine Wippe: Links sitzt ein Kind mit F₁ = 300 N bei r₁ = 1,2 m. Du drückst rechts bei r₂ = 1,8 m. Wie viel Kraft brauchst du fürs Gleichgewicht?",
+          "concepts": ["gleichgewicht", "hebelarm"],
+          "answer": 200,
+          "tolerance": 0.01,
+          "unit": "N",
+          "source": { "formulaId": "torque_balance", "inputs": { "F1": 300, "r1": 1.2, "r2": 1.8 } },
+          "hint": "F₂ = F₁·r₁/r₂ — dein längerer Hebelarm steht im Nenner und spart dir Kraft.",
+          "explanation": "F₂ = 300·1,2/1,8 = 200 N. Der längere Hebelarm erledigt ein Drittel der Arbeit für dich — Hebelgesetz in Aktion."
+        }
+      ]
+    },
+    {
+      "id": "rollen-fest-lose",
+      "title": "Rollen: fest & lose",
+      "goal": "Verstehen, wie Rollen die Last auf mehrere Seilstränge verteilen.",
+      "kind": "lernen",
+      "canvas": 2,
+      "estMinutes": 6,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["rolle_fest_lose", "kraftuebersetzung"],
+          "uses": ["kraft", "gleichgewicht"],
+          "layers": {
+            "intuitive": "Eine feste Rolle hängt an der Decke und lenkt dein Seil nur um — du ziehst bequem nach unten, aber die volle Last bleibt. Der Trick beginnt mit der losen Rolle: Sie hängt in der Last und wird von zwei Seilsträngen getragen. Jeder Strang übernimmt die Hälfte. Mehr Rollen, mehr Stränge, weniger Kraft — geschenkt ist das aber nicht: Du ziehst dafür entsprechend mehr Seil. Kraft gegen Weg, das ist Kraftübersetzung.",
+            "practical": "Zählregel: n ist die Zahl der Seilstränge, die die Last wirklich tragen — dann gilt F = G/n. Eine feste Rolle ändert nur die Richtung (n bleibt gleich), jede lose Rolle hängt die Last an zusätzliche Stränge. Der Preis: Für einen Meter Hub ziehst du n Meter Seil. Kraft mal Weg bleibt konstant — die Goldene Regel der Mechanik.",
+            "rigorous": "Im idealen (masselosen, reibungsfreien) Seil ist die Seilkraft überall gleich. Das Kräftegleichgewicht am Unterkloben liefert n·F − G = 0, also F = G/n, mit n als Zahl der tragenden Stränge. Die Energiebilanz bestätigt es: F·s_Seil = G·h mit s_Seil = n·h — die Arbeit bleibt gleich, nur die Kraft verteilt sich."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "pulley_force",
+          "note": "Tippe auf G oder n — n zählt nur die Stränge, die wirklich tragen."
+        },
+        {
+          "type": "interactive",
+          "componentId": "pulley-system",
+          "params": { "G": 19.62, "n": 1, "nRange": [1, 6], "massLabel": "2 kg" },
+          "caption": "Schalte Stränge dazu und schau, wie sich das Seil neu fädelt — und der Pfeil am Seilende schrumpft."
+        },
+        {
+          "type": "task",
+          "kind": "single",
+          "question": "Eine einzelne feste Rolle an der Decke — was bringt sie dir beim Heben?",
+          "concepts": ["rolle_fest_lose"],
+          "options": [
+            { "text": "Sie lenkt die Kraft nur um: Ich ziehe bequem nach unten, brauche aber die volle Gewichtskraft." },
+            { "text": "Sie halbiert die nötige Zugkraft.", "why": "Verlockend — aber halbieren kann nur eine lose Rolle, die in der Last hängt und von zwei Strängen getragen wird. Die feste Rolle ändert nur die Richtung." },
+            { "text": "Sie verdoppelt die Geschwindigkeit der Last.", "why": "Das Seil läuft über eine feste Rolle genauso schnell wie deine Hand — übersetzt wird hier nichts, weder Kraft noch Tempo." }
+          ],
+          "answer": 0,
+          "hint": "Hängt die Rolle fest an der Decke — oder bewegt sie sich mit der Last nach oben? Nur Letzteres verteilt die Last auf mehrere Stränge.",
+          "explanation": "Die feste Rolle ist ein reiner Umlenker: n bleibt 1, also F = G. Erst die lose Rolle hängt die Last an zwei Stränge — dann gilt F = G/2, und mit jedem weiteren tragenden Strang sinkt die Zugkraft weiter."
+        }
+      ]
+    },
+    {
+      "id": "wirkungsgrad-in-echt",
+      "title": "Wirkungsgrad in echt",
+      "goal": "Einschätzen, wo im realen Flaschenzug Kraft verloren geht.",
+      "kind": "lernen",
+      "estMinutes": 4,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["wirkungsgrad", "kraftuebersetzung"],
+          "layers": {
+            "intuitive": "F = G/n ist die Rechnung für die Traumwelt: Rollen ohne Reibung, Seile so geschmeidig wie Seide. In echt knirscht es ein bisschen — jede Rolle kassiert eine kleine Gebühr. Du ziehst also immer etwas mehr als die Theorie verspricht. Wie viel mehr, das beschreibt der Wirkungsgrad.",
+            "practical": "Drei Verlustquellen solltest du kennen: die Lagerreibung jeder Rolle, die Seilsteifigkeit (das Seil will sich nicht um die Rolle biegen) und schlicht die Zahl der Umlenkungen — die Verluste stapeln sich Rolle für Rolle. Faustregel: Pro Umlenkung ein paar Prozent Aufschlag auf die Zugkraft einplanen. Deshalb lohnt es sich nicht, n beliebig hochzutreiben.",
+            "rigorous": "Real gilt F = G/(n·η_ges) mit η_ges = η^k über k Umlenkungen — der Wirkungsgrad einer Rollenstufe liegt je nach Lager bei η ≈ 0,91–0,98. Mit wachsendem n sinkt der ideale Kraftbedarf wie 1/n, während η^k exponentiell fällt: Ab einer gewissen Rollenzahl frisst die Reibung den Gewinn auf."
+          }
+        },
+        {
+          "type": "text",
+          "variant": "merksatz",
+          "layers": {
+            "intuitive": "F = G/n gilt für den idealen Flaschenzug — die Reibung verlangt in echt ein paar Newton Aufpreis."
+          }
+        },
+        {
+          "type": "calc",
+          "formulaId": "pulley_force",
+          "inputs": { "G": 19.62, "n": 4 },
+          "expected": { "value": 4.905, "unit": "N" },
+          "narrative": "Ideal gerechnet: 19,62 N auf vier tragende Stränge verteilt sind 4,905 N. Real liegt deine Zugkraft etwas darüber — jede Rolle nimmt sich ihren Reibungs-Anteil."
+        },
+        {
+          "type": "task",
+          "kind": "match",
+          "question": "Ordne zu: Welcher Effekt sorgt im realen Flaschenzug für welchen Verlust?",
+          "concepts": ["wirkungsgrad"],
+          "pairs": [
+            { "left": "Lagerreibung der Rollen", "right": "bremst jede Drehung der Rolle ein wenig" },
+            { "left": "Seilsteifigkeit", "right": "das Seil wehrt sich gegen das Biegen um die Rolle" },
+            { "left": "Viele Umlenkungen", "right": "die Verluste stapeln sich Rolle für Rolle" }
+          ],
+          "hint": "Eines passiert im Lager, eines im Seil selbst — und eines ist schlicht Arithmetik der Anzahl.",
+          "explanation": "Lager reiben beim Drehen, steife Seile kosten Kraft beim Umbiegen, und jede zusätzliche Umlenkung multipliziert beide Effekte. Darum ist mehr n nicht automatisch besser."
+        }
+      ]
+    },
+    {
+      "id": "auslegung",
+      "title": "Deine Auslegung",
+      "goal": "Die Strangzahl n so wählen, dass die Challenge-Zugkraft erreicht wird.",
+      "kind": "lernen",
+      "canvas": 1,
+      "estMinutes": 5,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["kraftuebersetzung", "rolle_fest_lose", "wirkungsgrad"],
+          "layers": {
+            "intuitive": "Jetzt legst du aus: 2 kg wollen nach oben, deine Challenge erlaubt höchstens 8 N am Seil. Wie viele tragende Stränge brauchst du? Stell es auf der Bühne ein — und denk daran: Jeder Strang macht das Ziehen leichter, aber auch länger.",
+            "practical": "Auslegen heißt rückwärts rechnen: Aus F ≤ 8 N und G = 19,62 N folgt die nötige Strangzahl n ≥ G/F. Wähle n nicht knapper als nötig (die Reibung will ihren Anteil), aber auch nicht größer — jeder Strang kostet Seilweg und eine Umlenkung. Für dieses Projekt brauchst du übrigens keinen 3D-Drucker: Schnur und Karabiner reichen, die Anleitung kommt im Meilenstein.",
+            "rigorous": "Dimensionierung: n ≥ G/F_max = 19,62/8 = 2,45 → nächstgrößere ganze Strangzahl n = 3; mit Reibungsreserve (η^k < 1) ist n = 4 die robuste Wahl. Kontrolle über die Engine: F(n) = G/n muss unter 8 N liegen, der Seilweg wächst dabei auf das n-Fache des Hubs."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "pulley-system",
+          "params": { "G": 19.62, "n": 2, "nRange": [1, 6], "massLabel": "2 kg" },
+          "caption": "Deine Auslegungs-Bühne: Stell n so ein, dass der Pfeil am Seilende grün wird."
+        },
+        {
+          "type": "task",
+          "kind": "error-find",
+          "question": "Drei Auslegungen, eine Rechnung lügt — welche?",
+          "concepts": ["kraftuebersetzung", "rolle_fest_lose"],
+          "rows": [
+            { "label": "Flaschenzug A: G = 19,62 N, n = 2  →  F = 9,81 N", "formulaId": "pulley_force", "inputs": { "G": 19.62, "n": 2 }, "shown": 9.81 },
+            { "label": "Flaschenzug B: G = 19,62 N, n = 3  →  F = 9,81 N", "formulaId": "pulley_force", "inputs": { "G": 19.62, "n": 3 }, "shown": 9.81 },
+            { "label": "Flaschenzug C: G = 19,62 N, n = 4  →  F = 4,905 N", "formulaId": "pulley_force", "inputs": { "G": 19.62, "n": 4 }, "shown": 4.905 }
+          ],
+          "hint": "F = G/n: Teile 19,62 N einmal durch 2, durch 3 und durch 4 — eine Zeile passt nicht.",
+          "explanation": "B lügt: 19,62/3 = 6,54 N, nicht 9,81 N. Da hat jemand die Zeile von A kopiert, statt neu zu teilen."
+        },
+        {
+          "type": "task",
+          "kind": "target",
+          "question": "Die Challenge verlangt höchstens 8 N Zugkraft bei G = 19,62 N. Stell die Strangzahl n auf der Bühne so ein, dass dein Flaschenzug das schafft.",
+          "concepts": ["kraftuebersetzung"],
+          "target": {
+            "formulaId": "pulley_force",
+            "vars": ["n"],
+            "goal": { "value": 4.905, "tolerance": 0.5 },
+            "proof": {
+              "pass": { "G": 19.62, "n": 4 },
+              "fail": { "G": 19.62, "n": 2 }
+            }
+          },
+          "hint": "F = G/n — wie oft musst du 19,62 N teilen, bis weniger als 8 N übrig bleiben?",
+          "explanation": "Ab n = 3 fällt die Zugkraft unter 8 N (6,54 N); mit n = 4 liegst du bei 4,905 N komfortabel im Ziel — mit Reserve für die Reibung. Der Preis: Du ziehst viermal so viel Seil, wie die Last steigt."
+        }
+      ]
+    },
+    {
+      "id": "meilenstein",
+      "title": "Meilenstein: Challenge-Check",
+      "goal": "Die Engine bestätigt deine Auslegung — und dein Flaschenzug wandert in die Werkstatt.",
+      "kind": "meilenstein",
+      "estMinutes": 3,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["kraft", "kraftuebersetzung", "wirkungsgrad"],
+          "layers": {
+            "intuitive": "Moment der Wahrheit: 2 kg Last, höchstens 8 N am Seil — das war die Challenge. Deine Auslegung mit vier tragenden Strängen tritt jetzt zum Check an. Und danach geht es in die echte Welt: Dieser Flaschenzug entsteht aus Schnur und Karabinern, nicht aus dem Drucker.",
+            "practical": "Der Challenge-Check rechnet deine gewählte Strangzahl durch dieselbe Formel, mit der du ausgelegt hast: F = G/n. Liegt das Ergebnis unter 8 N, ist die Auslegung bestätigt — die Reserve bis 8 N ist dein Puffer für die Rollenreibung.",
+            "rigorous": "Verifikation gegen die Anforderung: F = G/n = 19,62/4 N muss ≤ 8 N sein. Die Reserve von rund 3 N deckt die realen Verluste (η^k der Umlenkungen) ab. Jede Zahl stammt aus der Engine, nicht aus dem Text — Kraftübersetzung heißt hier: Viertel-Kraft gegen vierfachen Seilweg."
+          }
+        },
+        {
+          "type": "calc",
+          "formulaId": "pulley_force",
+          "inputs": { "G": 19.62, "n": 4 },
+          "expected": { "value": 4.905, "unit": "N" },
+          "narrative": "Challenge-Check: 19,62 N auf vier tragende Stränge — die Engine bestätigt 4,905 N Zugkraft. Gefordert waren höchstens 8 N: geschafft, mit Luft für die Reibung."
+        },
+        {
+          "type": "text",
+          "variant": "hinweis",
+          "layers": {
+            "intuitive": "So baust du ihn in echt: Du brauchst 3–4 m reißfeste Schnur, zwei Karabiner (oder kleine Umlenkrollen), einen stabilen Haken oben — Türreck, Ast oder Besenstiel zwischen zwei Stühlen — und deine 2-kg-Last mit Schlaufe. Karabiner 1 hängt oben am Haken (feste Rollen), Karabiner 2 an der Last (lose Rollen). Knote die Schnur oben am Haken fest und fädle sie wie auf der Bühne: runter durch Karabiner 2, hoch durch Karabiner 1, wieder runter und hoch — bis vier Stränge die Last tragen. Zieh am freien Ende: Eine Federwaage sollte dort knapp über den gerechneten 4,905 N zeigen — der Aufpreis ist die Reibung, und genau die hast du in Schritt 5 kennengelernt."
+          }
+        }
+      ]
+    }
+  ]
+}

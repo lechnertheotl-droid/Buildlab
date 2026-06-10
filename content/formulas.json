@@ -83,6 +83,34 @@
     ]
   },
   {
+    "id": "pulley_force",
+    "latex": "F = \\dfrac{G}{n}",
+    "expr": "G / n",
+    "conceptId": "kraftuebersetzung",
+    "result": { "symbol": "F", "name": "Zugkraft am Seil", "unit": "N" },
+    "variables": [
+      { "var": "G", "symbol": "G", "name": "Gewichtskraft der Last", "unit": "N",
+        "explanation": "Die Kraft, mit der die Last nach unten zieht. Sie verteilt sich gleichmäßig auf alle tragenden Seilstränge.", "typicalRange": [1, 10000] },
+      { "var": "n", "symbol": "n", "name": "Anzahl tragender Seilstränge", "unit": "-",
+        "explanation": "Wie viele Seilabschnitte die Last gemeinsam halten. Jeder Strang übernimmt den gleichen Anteil — mehr Stränge, weniger Zugkraft.", "typicalRange": [1, 8] }
+    ]
+  },
+  {
+    "id": "torque_balance",
+    "latex": "F_2 = \\dfrac{F_1 \\cdot r_1}{r_2}",
+    "expr": "F1 * r1 / r2",
+    "conceptId": "gleichgewicht",
+    "result": { "symbol": "F_2", "name": "Gleichgewichtskraft am zweiten Hebelarm", "unit": "N" },
+    "variables": [
+      { "var": "F1", "symbol": "F_1", "name": "Kraft am ersten Hebelarm", "unit": "N",
+        "explanation": "Die bekannte Kraft auf der einen Seite des Hebels.", "typicalRange": [0, 5000] },
+      { "var": "r1", "symbol": "r_1", "name": "Hebelarm der ersten Kraft", "unit": "m",
+        "explanation": "Senkrechter Abstand der ersten Kraft von der Drehachse.", "typicalRange": [0.01, 5] },
+      { "var": "r2", "symbol": "r_2", "name": "Hebelarm der gesuchten Kraft", "unit": "m",
+        "explanation": "Senkrechter Abstand der gesuchten Kraft von der Drehachse. Je länger, desto weniger Kraft ist nötig.", "typicalRange": [0.01, 5] }
+    ]
+  },
+  {
     "id": "drag",
     "latex": "F_w = \\tfrac{1}{2}\\,\\rho\\,v^2 c_w A",
     "expr": "0.5 * rho * v^2 * cw * A",

@@ -18,8 +18,15 @@
       ]
     },
     "drehmoment": {
-      "introducedIn": null,
+      "introducedIn": {
+        "project": "hebel-flaschenzug",
+        "step": "hebelarm-drehmoment"
+      },
       "usedIn": [
+        {
+          "project": "hebel-flaschenzug",
+          "step": "hebelgesetz"
+        },
         {
           "project": "stirnradgetriebe",
           "step": "warum-zahnraeder"
@@ -34,6 +41,70 @@
         }
       ]
     },
+    "gleichgewicht": {
+      "introducedIn": {
+        "project": "hebel-flaschenzug",
+        "step": "hebelgesetz"
+      },
+      "usedIn": [
+        {
+          "project": "hebel-flaschenzug",
+          "step": "rollen-fest-lose"
+        }
+      ]
+    },
+    "hebelarm": {
+      "introducedIn": {
+        "project": "hebel-flaschenzug",
+        "step": "hebelarm-drehmoment"
+      },
+      "usedIn": [
+        {
+          "project": "hebel-flaschenzug",
+          "step": "hebelgesetz"
+        }
+      ]
+    },
+    "kraft": {
+      "introducedIn": {
+        "project": "hebel-flaschenzug",
+        "step": "was-ist-kraft"
+      },
+      "usedIn": [
+        {
+          "project": "hebel-flaschenzug",
+          "step": "hebelarm-drehmoment"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "rollen-fest-lose"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "meilenstein"
+        }
+      ]
+    },
+    "kraftuebersetzung": {
+      "introducedIn": {
+        "project": "hebel-flaschenzug",
+        "step": "rollen-fest-lose"
+      },
+      "usedIn": [
+        {
+          "project": "hebel-flaschenzug",
+          "step": "wirkungsgrad-in-echt"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "auslegung"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "meilenstein"
+        }
+      ]
+    },
     "modul": {
       "introducedIn": {
         "project": "stirnradgetriebe",
@@ -43,6 +114,18 @@
         {
           "project": "stirnradgetriebe",
           "step": "getriebe-bauen"
+        }
+      ]
+    },
+    "rolle_fest_lose": {
+      "introducedIn": {
+        "project": "hebel-flaschenzug",
+        "step": "rollen-fest-lose"
+      },
+      "usedIn": [
+        {
+          "project": "hebel-flaschenzug",
+          "step": "auslegung"
         }
       ]
     },
@@ -84,6 +167,18 @@
         "step": "wirkungsgrad"
       },
       "usedIn": [
+        {
+          "project": "hebel-flaschenzug",
+          "step": "wirkungsgrad-in-echt"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "auslegung"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "meilenstein"
+        },
         {
           "project": "stirnradgetriebe",
           "step": "meilenstein"

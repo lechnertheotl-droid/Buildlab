@@ -12,6 +12,7 @@ import type { InteractiveBlock } from '../types';
 import { LeverSlider, type LeverSliderParams } from './LeverSlider';
 import { ValueSlider, type ValueSliderParams } from './ValueSlider';
 import { GearPair, type GearPairParams } from './GearPair';
+import { PulleySystem, type PulleySystemParams } from './PulleySystem';
 
 // Implementierte Komponenten (Registry: status "implementiert"). Einträge mit
 // status "geplant" erscheinen als ruhiger Platzhalter — und sind per Verifier
@@ -25,6 +26,9 @@ const IMPLEMENTED: Record<string, (block: InteractiveBlock) => ReactNode> = {
   ),
   'gear-pair': (block) => (
     <GearPair params={(block.params ?? {}) as GearPairParams} caption={block.caption} />
+  ),
+  'pulley-system': (block) => (
+    <PulleySystem params={(block.params ?? {}) as PulleySystemParams} caption={block.caption} />
   ),
 };
 

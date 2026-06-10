@@ -23,6 +23,13 @@
       "computedBy": "engine"
     },
     {
+      "id": "pulley-system",
+      "status": "implementiert",
+      "purpose": "2.5D-Flaschenzug auf der IsoStage: Gestell, 1-6 tragende Seilstraenge (feste + lose Rollen), Seil faedelt sich beim Aendern von n sichtbar neu; Zugkraft F = G/n live aus der Engine als Ampel-Pfeil am Seilende.",
+      "params": { "G": "number", "n": "number", "nRange": "array", "massLabel": "string" },
+      "computedBy": "engine"
+    },
+    {
       "id": "vector-drag",
       "status": "geplant",
       "purpose": "Ziehbarer 2.5D-Kraftvektor; zeigt Betrag und Richtung in Mono.",

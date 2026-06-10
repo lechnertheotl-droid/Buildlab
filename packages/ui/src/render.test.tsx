@@ -20,9 +20,11 @@ import formulas from '../../../content/formulas.json';
 import concepts from '../../../content/concepts.json';
 import registry from '../../../components.registry.json';
 import getriebe from '../../../content/stirnradgetriebe.json';
+import flaschenzug from '../../../content/hebel-flaschenzug.json';
 
 const componentIds = registry.components.map((c) => c.id);
 const project = getriebe as unknown as Project;
+const hebel = flaschenzug as unknown as Project;
 
 function wrap(node: React.ReactNode): string {
   return renderToStaticMarkup(
@@ -71,6 +73,36 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     const html = wrap(<InteractiveRenderer block={block} />);
     expect(html).toContain('M1 = 10');
     expect(html).toContain('aria-live');
+  });
+
+  it('PulleySystem zeigt die Zugkraft aus der Engine (G=19.62, n=4 → 4,905 N)', () => {
+    const block: InteractiveBlock = {
+      type: 'interactive',
+      componentId: 'pulley-system',
+      params: { G: 19.62, n: 4, nRange: [1, 6], massLabel: '2 kg' },
+    };
+    const html = wrap(<InteractiveRenderer block={block} />);
+    expect(html).toContain('4,905'); // F = G/n aus der Engine
+    expect(html).toContain('aus der Engine');
+    expect(html).toContain('<polyline'); // das Seil über die Rollen
+    expect(html).toContain('Flaschenzug: 4 tragende Seilstränge');
+    expect(html).toContain('2 kg'); // Masse-Beschriftung der Last
+  });
+
+  it('PulleySystem fädelt das Seil bei anderem n sichtbar neu', () => {
+    const render = (n: number) =>
+      wrap(
+        <InteractiveRenderer
+          block={{ type: 'interactive', componentId: 'pulley-system', params: { G: 19.62, n } }}
+        />,
+      );
+    const one = render(1);
+    const four = render(4);
+    expect(one).toContain('19,62 N'); // n=1: feste Rolle, volle Gewichtskraft
+    expect(four).not.toBe(one); // andere Seilführung, andere Rollen
+    // n=4 hat mehr Rollen → mehr Scheiben-Polygone in der Szene.
+    const discs = (html: string) => (html.match(/<polygon/g) ?? []).length;
+    expect(discs(four)).toBeGreaterThan(discs(one));
   });
 
   it('lehnt componentIds ab, die nicht in der Registry stehen', () => {
@@ -209,6 +241,39 @@ describe('WorkspaceStep (SCREENS.md §6)', () => {
       />,
     );
     expect(html).not.toContain('Kurz auffrischen');
+  });
+});
+
+describe('Projekt hebel-flaschenzug (R7-Content)', () => {
+  const baseProps = {
+    project: hebel,
+    maxStepReached: 7,
+    depth: 'practical' as const,
+    seenConcepts: new Set<string>(),
+    onTaskResult: () => {},
+    onNavigate: () => {},
+    onStepComplete: () => {},
+  };
+
+  it('jeder Schritt rendert ohne Bruch durch den WorkspaceStep', () => {
+    hebel.steps.forEach((step, i) => {
+      const html = wrap(<WorkspaceStep {...baseProps} stepIndex={i} taskStates={{}} />);
+      expect(html).toContain(step.goal);
+    });
+  });
+
+  it('Schritt „Rollen" zeigt den Flaschenzug als Canvas mit Engine-Zugkraft', () => {
+    const html = wrap(<WorkspaceStep {...baseProps} stepIndex={3} taskStates={{}} />);
+    expect(html).toContain('Flaschenzug'); // pulley-system auf der Bühne
+    expect(html).toContain('19,62 N'); // n=1 → F = G aus der Engine
+  });
+
+  it('die target-Aufgabe der Auslegung koppelt an die pulley-Canvas', () => {
+    const targetTask = hebel.steps[5].blocks[3] as TaskBlock;
+    expect(targetTask.kind).toBe('target');
+    const html = wrap(<TaskView block={targetTask} />);
+    expect(html).toContain('Ziel:');
+    expect(html).toContain('4,905');
   });
 });
 

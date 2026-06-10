@@ -13,6 +13,7 @@ export { InteractiveRenderer } from './interactive/InteractiveRenderer';
 export { LeverSlider } from './interactive/LeverSlider';
 export { ValueSlider } from './interactive/ValueSlider';
 export { GearPair } from './interactive/GearPair';
+export { PulleySystem } from './interactive/PulleySystem';
 export { CadBuild } from './build/CadBuild';
 export { IsoStage, isoBox, groundRotationMatrix, useEngineValue } from './iso-scene';
 export { useWorkspaceStore } from './store';
