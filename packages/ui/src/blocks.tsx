@@ -132,20 +132,19 @@ function FormulaBlockView({ block }: { block: FormulaBlock }) {
   const formula = formulas.get(block.formulaId);
   if (!formula) return <Missing what={`Formel „${block.formulaId}"`} />;
 
+  // Kompakt (Nutzer-Feedback): nur die antippbaren Symbole — Name, Einheit
+  // und Erklärung liefert das Popover beim Tippen/Hovern (TapExplain).
   return (
-    <div className="rounded border border-black/10 bg-paper-2 p-5 shadow">
-      <Latex className="text-2xl text-ink" src={formula.latex} />
-      {block.note && <p className="mt-3 text-sm text-ink-2">{block.note}</p>}
+    <div className="rounded border border-black/10 bg-paper-2 p-4 shadow">
+      <Latex className="text-xl text-ink md:text-2xl" src={formula.latex} />
+      {block.note && <p className="mt-2 text-sm text-ink-2">{block.note}</p>}
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-black/10 pt-3 text-sm">
-        <span className="font-mono text-xs uppercase tracking-wide text-ink-faint">
-          Variablen
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-black/10 pt-2 text-sm">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+          antippen erklärt
         </span>
         {formula.variables.map((v) => (
-          <span key={v.var} className="text-ink-2">
-            <VariableChip v={v} />
-            <span className="ml-1 text-ink-faint">{v.name}</span>
-          </span>
+          <VariableChip key={v.var} v={v} />
         ))}
       </div>
     </div>
