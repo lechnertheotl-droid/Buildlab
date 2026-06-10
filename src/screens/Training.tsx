@@ -124,8 +124,7 @@ export default function Training() {
               className="text-accent-ink underline decoration-black/20 underline-offset-2 outline-none hover:decoration-current focus-visible:ring-2 focus-visible:ring-accent"
             >
               {conceptById.get(current.conceptId)?.name}
-            </Link>{' '}
-            <span aria-hidden>⟳</span> Box {states[current.conceptId]?.box ?? 1}
+            </Link>
           </p>
           <div key={`${current.conceptId}-${sessionIndex}`} className="bl-wechsel">
             <TaskView
