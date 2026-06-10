@@ -1,9 +1,13 @@
-// CadBuild.tsx — Renderer für den build-Block (Phase 3): parametrisches Bauteil.
+// CadBuild.tsx — Renderer für den build-Block: parametrisches Bauteil.
 //
 // Eine geometrische Wahrheit (cad/gear.scad → OpenSCAD-WASM → STL): aus DEMSELBEN STL
 // entstehen Vorschau (meshToIso) UND Download (Eiserne Regel 4). Die angezeigten Maße
-// kommen aus packages/engine (Eiserne Regel 1), nie aus dem Markup. WASM wird nur im
-// Effekt angefasst → SSR-sicher.
+// kommen aus packages/engine (Eiserne Regel 1), nie aus dem Markup.
+//
+// Redesign: build.constraints werden live über die Engine geprüft (✓/✗ je Zeile,
+// SCREENS.md §6.2); der STL-Download ist erst aktiv, wenn alle erfüllt sind.
+// Ein Radpaar (Parameter z1 UND z2) bekommt einen „Rad 1 / Rad 2"-Umschalter —
+// beide Räder stammen aus demselben parametrischen Modell.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -14,7 +18,7 @@ import {
   type Triangle,
   type GearParams,
 } from '@buildlab/cad';
-import { evaluateFormula } from '@buildlab/engine';
+import { evaluateExpr, evaluateFormula } from '@buildlab/engine';
 import { Latex } from '../Latex';
 import { Slider } from '../Slider';
 import { useContent } from '../content-context';
@@ -35,14 +39,14 @@ interface ParamConfig {
   step: number;
 }
 
-// Defaults für das Stirnrad; aus dem build-Block übersteuerbar (parameters{min,max,…}).
 const GEAR_DEFAULTS: Record<string, ParamConfig> = {
   m: { min: 1, max: 4, default: 2, unit: 'mm', label: 'Modul', step: 0.5 },
   z: { min: 12, max: 40, default: 20, unit: '-', label: 'Zähnezahl', step: 1 },
+  z1: { min: 12, max: 40, default: 20, unit: '-', label: 'Zähne Antrieb', step: 1 },
+  z2: { min: 30, max: 120, default: 60, unit: '-', label: 'Zähne Abtrieb', step: 1 },
   thickness: { min: 3, max: 16, default: 8, unit: 'mm', label: 'Breite', step: 1 },
   bore: { min: 2, max: 10, default: 5, unit: 'mm', label: 'Bohrung', step: 0.5 },
 };
-const GEAR_KEYS = ['m', 'z', 'thickness', 'bore'] as const;
 
 function fmt(n: number, digits = 1): string {
   return new Intl.NumberFormat('de-DE', { maximumFractionDigits: digits }).format(n);
@@ -62,7 +66,13 @@ function mergeConfig(key: string, raw: unknown): ParamConfig {
   };
 }
 
-export function CadBuild({ block }: { block: BuildBlock }) {
+export interface CadBuildProps {
+  block: BuildBlock;
+  /** Wird beim erfolgreichen STL-Export gerufen (Werkstatt-Eintrag, SCREENS.md §9). */
+  onExport?: (params: Record<string, number>, label: string) => void;
+}
+
+export function CadBuild({ block, onExport }: CadBuildProps) {
   if (block.cadModel !== 'gear') {
     return (
       <p className="rounded border border-dashed border-black/15 px-3 py-2 font-mono text-xs uppercase tracking-wide text-ink-faint">
@@ -70,22 +80,26 @@ export function CadBuild({ block }: { block: BuildBlock }) {
       </p>
     );
   }
-  return <GearBuild block={block} />;
+  return <GearBuild block={block} onExport={onExport} />;
 }
 
-function GearBuild({ block }: { block: BuildBlock }) {
+function GearBuild({ block, onExport }: CadBuildProps) {
   const { formulas } = useContent();
   const setActive = useWorkspaceStore((s) => s.setActive);
   const clearActive = useWorkspaceStore((s) => s.clearActive);
+  const setCanvasInputs = useWorkspaceStore((s) => s.setCanvasInputs);
 
+  const paramKeys = useMemo(() => Object.keys(block.parameters), [block.parameters]);
+  const isPair = paramKeys.includes('z1') && paramKeys.includes('z2');
   const configs = useMemo(
-    () => GEAR_KEYS.map((k) => [k, mergeConfig(k, block.parameters[k])] as const),
-    [block.parameters],
+    () => paramKeys.map((k) => [k, mergeConfig(k, block.parameters[k])] as const),
+    [paramKeys, block.parameters],
   );
 
   const [values, setValues] = useState<Record<string, number>>(() =>
     Object.fromEntries(configs.map(([k, c]) => [k, c.default])),
   );
+  const [wheel, setWheel] = useState<1 | 2>(1);
   const [rotation, setRotation] = useState(0);
   const [triangles, setTriangles] = useState<Triangle[]>([]);
   const [stl, setStl] = useState<string | null>(null);
@@ -93,9 +107,10 @@ function GearBuild({ block }: { block: BuildBlock }) {
   const [error, setError] = useState<string | null>(null);
   const reqRef = useRef(0);
 
+  const activeZ = isPair ? (wheel === 1 ? values.z1 : values.z2) : values.z;
   const params: GearParams = {
     m: values.m,
-    z: values.z,
+    z: activeZ,
     thickness: values.thickness,
     bore: values.bore,
     fn: PREVIEW_FN,
@@ -111,6 +126,20 @@ function GearBuild({ block }: { block: BuildBlock }) {
       return null;
     }
   }, [pitch, params.m, params.z]);
+
+  // Constraints live prüfen (Engine-Auswertung über die aktuellen Parameter).
+  const constraints = useMemo(
+    () =>
+      (block.constraints ?? []).map((c) => {
+        try {
+          return { label: c.label, ok: evaluateExpr(c.expr, values) === true };
+        } catch {
+          return { label: c.label, ok: false };
+        }
+      }),
+    [block.constraints, values],
+  );
+  const allConstraintsOk = constraints.every((c) => c.ok);
 
   // Vorschau aus DEMSELBEN STL: kompilieren (debounced), validieren, parsen.
   useEffect(() => {
@@ -138,6 +167,7 @@ function GearBuild({ block }: { block: BuildBlock }) {
         });
     }, 250);
     return () => clearTimeout(timer);
+    // params ist aus values abgeleitet — die Einzelfelder sind die echten Deps.
   }, [params.m, params.z, params.thickness, params.bore]);
 
   // Drehung ändert nur die Projektion — kein Neu-Kompilieren (gleiche Dreiecke).
@@ -146,33 +176,62 @@ function GearBuild({ block }: { block: BuildBlock }) {
     [triangles, rotation],
   );
 
-  // Aktuellen Kontext für den Universal-Rechner bereitstellen (SCREENS.md §7).
+  // Kontext für Rechner + target-Aufgaben bereitstellen.
+  const valuesKey = JSON.stringify(values);
   useEffect(() => {
     setActive({
       formulaId: 'pitch_d',
       label: 'Teilkreisdurchmesser',
-      values: { m: params.m, z: params.z },
+      values: { m: values.m, z: activeZ },
     });
+    setCanvasInputs(values);
     return () => clearActive('pitch_d');
-  }, [setActive, clearActive, params.m, params.z]);
+    // valuesKey repräsentiert values inhaltlich.
+  }, [setActive, clearActive, setCanvasInputs, valuesKey, activeZ]);
 
-  const exportable = stl !== null && validateStl(stl).ok;
+  const exportable = stl !== null && validateStl(stl).ok && allConstraintsOk;
 
   const download = () => {
     if (!stl) return;
     const blob = new Blob([stl], { type: 'model/stl' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const name = isPair
+      ? `stirnrad_rad${wheel}_z${activeZ}_m${fmt(values.m, 2).replace(',', '-')}`
+      : `stirnrad_z${activeZ}_m${fmt(values.m, 2).replace(',', '-')}`;
     a.href = url;
-    a.download = `stirnrad_z${values.z}_m${fmt(values.m, 2).replace(',', '-')}.stl`;
+    a.download = `${name}.stl`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+    onExport?.(
+      { ...values },
+      isPair ? `Stirnrad ${wheel === 1 ? 'Antrieb' : 'Abtrieb'} z=${activeZ}` : `Stirnrad z=${activeZ}`,
+    );
   };
 
   return (
     <figure className="rounded border border-black/10 bg-paper-2 p-4 shadow">
+      {isPair && (
+        <div className="mb-3 inline-flex rounded border border-black/10" role="radiogroup" aria-label="Welches Rad anzeigen?">
+          {([1, 2] as const).map((w) => (
+            <button
+              key={w}
+              type="button"
+              role="radio"
+              aria-checked={wheel === w}
+              onClick={() => setWheel(w)}
+              className={`min-h-11 px-4 font-mono text-sm outline-none first:rounded-l last:rounded-r focus-visible:ring-2 focus-visible:ring-accent ${
+                wheel === w ? 'bg-accent text-paper' : 'bg-paper-sink/40 text-ink-2 hover:text-ink'
+              }`}
+            >
+              Rad {w} · z={w === 1 ? values.z1 : values.z2}
+            </button>
+          ))}
+        </div>
+      )}
+
       <MeshPreview
         polygons={iso.polygons}
         width={VIEW_W}
@@ -182,18 +241,18 @@ function GearBuild({ block }: { block: BuildBlock }) {
       />
 
       {/* Engine-Maß: Teilkreisdurchmesser */}
-      <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-sm">
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-sm" aria-live="polite">
         <span className="flex items-baseline gap-2">
           <Latex className="text-ink" src="d" />
           <span className="text-ink">=</span>
           {d === null ? (
-            <span className="text-viz-high">—</span>
+            <span className="text-fehl">—</span>
           ) : (
             <span className="text-accent-ink">{fmt(d)} mm</span>
           )}
           <span className="ml-1 text-xs text-ink-faint">aus der Engine</span>
         </span>
-        {error && <span className="text-xs text-viz-high">⚠ {error}</span>}
+        {error && <span className="text-xs text-fehl">⚠ Das Modell mag diese Werte nicht — stell einen Parameter zurück.</span>}
       </div>
 
       {/* Parameter-Slider */}
@@ -220,15 +279,42 @@ function GearBuild({ block }: { block: BuildBlock }) {
         />
       </div>
 
-      {/* Export */}
+      {/* Anforderungen (build.constraints) — jede Zeile engine-geprüft */}
+      {constraints.length > 0 && (
+        <ul className="mt-4 space-y-1 border-t border-black/10 pt-3" aria-label="Anforderungen">
+          {constraints.map((c, idx) => (
+            <li key={idx} className={`flex items-center gap-2 font-mono text-sm ${c.ok ? 'text-ok' : 'text-fehl'}`}>
+              <span aria-hidden>{c.ok ? '✓' : '✗'}</span>
+              <span className="text-ink-2">{c.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Stückliste zugeklappt (SCREENS.md §6.2) */}
+      {(block.bom?.length ?? 0) > 0 && (
+        <details className="mt-3 text-sm text-ink-2">
+          <summary className="cursor-pointer font-mono text-xs uppercase tracking-wider text-ink-faint outline-none focus-visible:ring-2 focus-visible:ring-accent">
+            ▸ Stückliste
+          </summary>
+          <ul className="mt-1 list-inside list-disc">
+            {block.bom!.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {/* Export — erst wenn alle Anforderungen erfüllt sind */}
       <div className="mt-4">
         <button
           type="button"
           onClick={download}
           disabled={!exportable}
-          className="rounded border border-black/10 bg-accent px-3 py-1.5 text-sm text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
+          title={allConstraintsOk ? undefined : 'Erst alle Anforderungen erfüllen — die Liste oben zeigt, wo es hakt.'}
+          className="min-h-11 rounded border border-black/10 bg-accent px-4 text-sm text-paper outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
         >
-          ⤓ herunterladen &amp; weiterbauen
+          ⤓ STL herunterladen
         </button>
       </div>
     </figure>

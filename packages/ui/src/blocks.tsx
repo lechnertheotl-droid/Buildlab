@@ -1,4 +1,4 @@
-// blocks.tsx — die Block-Renderer: text · formula · calc · check · interactive · build.
+// blocks.tsx — die Block-Renderer: text · formula · calc · task · interactive · build.
 
 import { useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
@@ -7,12 +7,13 @@ import { useContent } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
 import { CadBuild } from './build/CadBuild';
 import { ConceptChip, VariableChip } from './TapExplain';
+import { TaskView } from './task/TaskView';
 import type {
   Block,
   CalcBlock,
-  CheckBlock,
   FormulaBlock,
   Layer,
+  TaskResult,
   TextBlock,
 } from './types';
 
@@ -30,35 +31,83 @@ function unitLabel(unit: string): string {
   return unit && unit !== '-' ? ` ${unit}` : '';
 }
 
-// ── text ─────────────────────────────────────────────────────────────────────
+// ── text (mit Varianten + globaler Tiefe, lokal überschreibbar) ──────────────
 
-function TextBlockView({ block }: { block: TextBlock }) {
+function TextBlockView({ block, depth }: { block: TextBlock; depth?: Layer }) {
   const available = LAYER_LABELS.filter(({ key }) => block.layers[key]);
-  const [layer, setLayer] = useState<Layer>(available[0]?.key ?? 'intuitive');
+  // Lokaler Umschalter überschreibt die globale Ebene nur für diesen Block
+  // und nur für diese Session (LERNMODELL.md §4).
+  const [override, setOverride] = useState<Layer | null>(null);
+  const globalLayer: Layer =
+    depth && block.layers[depth] ? depth : (available[0]?.key ?? 'intuitive');
+  const layer = override && block.layers[override] ? override : globalLayer;
   const text = block.layers[layer] ?? block.layers.intuitive;
   const terms = [...new Set([...(block.introduces ?? []), ...(block.uses ?? [])])];
+
+  // Varianten (LERNMODELL.md §2.2): hook = Frage-Karte, merksatz = Akzent-Karte,
+  // hinweis = dezente Karte. Varianten haben genau eine Stimme — kein Umschalter.
+  if (block.variant === 'hook') {
+    return (
+      <div className="bl-einzeichnen rounded border border-black/10 bg-paper-2 p-4 shadow">
+        <p className="flex gap-3">
+          <span aria-hidden className="font-display text-2xl leading-none text-accent">?</span>
+          <span className="font-display text-lg leading-snug text-ink">{block.layers.intuitive}</span>
+        </p>
+      </div>
+    );
+  }
+  if (block.variant === 'merksatz') {
+    return (
+      <p className="rounded border-l-4 border-accent bg-paper-2 py-2 pl-4 pr-3 font-display text-ink shadow">
+        {block.layers.intuitive}
+      </p>
+    );
+  }
+  if (block.variant === 'hinweis') {
+    return (
+      <p className="rounded border border-black/10 bg-paper-sink/60 p-3 text-sm leading-relaxed text-ink-2">
+        <span className="font-mono text-xs uppercase tracking-wider text-ink-faint">Hinweis · </span>
+        {block.layers.intuitive}
+      </p>
+    );
+  }
 
   return (
     <div>
       {available.length > 1 && (
-        <div className="mb-3 inline-flex rounded border border-black/10 bg-paper-sink p-0.5 text-xs">
-          {available.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setLayer(key)}
-              className={[
-                'rounded-[4px] px-3 py-1 font-mono uppercase tracking-wide transition-colors',
-                layer === key ? 'bg-accent text-paper' : 'text-ink-2 hover:text-ink',
-              ].join(' ')}
-            >
-              {label}
-            </button>
-          ))}
+        <div
+          className="mb-3 inline-flex rounded border border-black/10 bg-paper-sink p-0.5 text-xs"
+          role="radiogroup"
+          aria-label="Erklärtiefe für diesen Text"
+        >
+          {available.map(({ key, label }) => {
+            const active = layer === key;
+            const isGlobal = key === globalLayer;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setOverride(key === globalLayer ? null : key)}
+                title={isGlobal ? 'deine globale Einstellung' : 'nur für diesen Text'}
+                className={[
+                  'rounded-[4px] px-3 py-1 font-mono uppercase tracking-wide outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent',
+                  active
+                    ? isGlobal
+                      ? 'bg-accent text-paper'
+                      : 'border border-accent bg-transparent text-accent-ink'
+                    : 'text-ink-2 hover:text-ink',
+                ].join(' ')}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      <p key={layer} className="animate-fade max-w-prose leading-relaxed text-ink">
+      <p key={layer} className="bl-wechsel max-w-prose leading-relaxed text-ink">
         {text}
       </p>
 
@@ -134,14 +183,14 @@ function CalcBlockView({ block }: { block: CalcBlock }) {
         <Latex className="text-ink" src={formula.result.symbol} />
         <span className="text-ink">=</span>
         {value === null ? (
-          <span className="text-viz-high">—</span>
+          <span className="text-fehl">—</span>
         ) : (
           <span className="text-accent-ink">
             {fmt(value)}
             {unitLabel(formula.result.unit)}
           </span>
         )}
-        {value !== null && <span className="text-viz-low" aria-hidden>✓</span>}
+        {value !== null && <span className="text-ok" aria-hidden>✓</span>}
       </div>
 
       {block.narrative && (
@@ -151,161 +200,35 @@ function CalcBlockView({ block }: { block: CalcBlock }) {
   );
 }
 
-// ── check ──────────────────────────────────────────────────────────────────--
-
-function CheckBlockView({ block }: { block: CheckBlock }) {
-  return (
-    <div className="rounded border border-black/10 bg-paper-2 p-5 shadow">
-      <p className="font-display text-base text-ink">{block.question}</p>
-      <div className="mt-3">
-        {block.kind === 'numeric' ? (
-          <NumericCheck block={block} />
-        ) : (
-          <ChoiceCheck block={block} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function Verdict({ ok, explanation }: { ok: boolean; explanation?: string }) {
-  return (
-    <div className="mt-3 text-sm">
-      <span className={ok ? 'font-mono text-viz-low' : 'font-mono text-viz-high'}>
-        {ok ? '✓ Sitzt!' : '✗ Noch nicht — schau nochmal.'}
-      </span>
-      {explanation && <p className="mt-1 max-w-prose leading-relaxed text-ink-2">{explanation}</p>}
-    </div>
-  );
-}
-
-function NumericCheck({ block }: { block: CheckBlock }) {
-  const [raw, setRaw] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const answer = typeof block.answer === 'number' ? block.answer : NaN;
-  const tol = block.tolerance ?? 0;
-  const parsed = Number(raw.replace(',', '.'));
-  const ok =
-    Number.isFinite(parsed) &&
-    Math.abs(parsed - answer) <= Math.max(tol * Math.abs(answer), Number.EPSILON);
-
-  return (
-    <div>
-      <div className="flex items-center gap-2">
-        <input
-          inputMode="decimal"
-          value={raw}
-          onChange={(e) => {
-            setRaw(e.target.value);
-            setSubmitted(false);
-          }}
-          onKeyDown={(e) => e.key === 'Enter' && setSubmitted(true)}
-          className="w-32 rounded border border-black/15 bg-paper-sink px-2 py-1 font-mono text-ink outline-none focus:border-accent"
-          placeholder="Wert"
-        />
-        {block.unit && block.unit !== '-' && (
-          <span className="font-mono text-sm text-ink-faint">{block.unit}</span>
-        )}
-        <button
-          type="button"
-          onClick={() => setSubmitted(true)}
-          className="rounded border border-black/10 bg-accent px-3 py-1 text-sm text-paper transition-opacity hover:opacity-90"
-        >
-          Prüfen
-        </button>
-      </div>
-      {submitted && raw !== '' && <Verdict ok={ok} explanation={block.explanation} />}
-    </div>
-  );
-}
-
-function ChoiceCheck({ block }: { block: CheckBlock }) {
-  const multi = block.kind === 'multi';
-  const [picked, setPicked] = useState<number[]>([]);
-  const [submitted, setSubmitted] = useState(false);
-  const options = block.options ?? [];
-
-  const correct = new Set(
-    multi
-      ? Array.isArray(block.answer)
-        ? block.answer
-        : []
-      : typeof block.answer === 'number'
-        ? [block.answer]
-        : [],
-  );
-
-  const toggle = (i: number) => {
-    setSubmitted(false);
-    setPicked((prev) =>
-      multi ? (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]) : [i],
-    );
-  };
-
-  const ok =
-    picked.length === correct.size && picked.every((i) => correct.has(i));
-
-  return (
-    <div>
-      <div className="flex flex-col gap-2">
-        {options.map((opt, i) => {
-          const sel = picked.includes(i);
-          const reveal = submitted && (correct.has(i) || sel);
-          const tone = !reveal
-            ? sel
-              ? 'border-accent text-ink'
-              : 'border-black/10 text-ink-2 hover:border-black/25'
-            : correct.has(i)
-              ? 'border-viz-low text-ink'
-              : 'border-viz-high text-ink-2';
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => toggle(i)}
-              className={`flex items-center gap-2 rounded border bg-paper-sink/40 px-3 py-2 text-left text-sm transition-colors ${tone}`}
-            >
-              <span className="font-mono text-xs text-ink-faint">
-                {multi ? (sel ? '☑' : '☐') : sel ? '◉' : '○'}
-              </span>
-              {opt}
-            </button>
-          );
-        })}
-      </div>
-      <button
-        type="button"
-        onClick={() => setSubmitted(true)}
-        disabled={picked.length === 0}
-        className="mt-3 rounded border border-black/10 bg-accent px-3 py-1 text-sm text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
-      >
-        Prüfen
-      </button>
-      {submitted && <Verdict ok={ok} explanation={block.explanation} />}
-    </div>
-  );
-}
-
 // ── Dispatcher ────────────────────────────────────────────────────────────────
 
 function Missing({ what }: { what: string }) {
   return (
-    <p className="rounded border border-viz-high/40 bg-paper-2 p-3 font-mono text-sm text-viz-high">
+    <p className="rounded border border-fehl/40 bg-paper-2 p-3 font-mono text-sm text-fehl">
       {what} nicht gefunden.
     </p>
   );
 }
 
-export function BlockRenderer({ block }: { block: Block }) {
+export interface BlockRendererProps {
+  block: Block;
+  /** Globale Tiefen-Ebene (Einstellungen); Blöcke können lokal überschreiben. */
+  depth?: Layer;
+  /** Persistierter Aufgaben-Zustand (nur für task-Blöcke relevant). */
+  taskState?: TaskResult;
+  onTaskResult?: (result: TaskResult) => void;
+}
+
+export function BlockRenderer({ block, depth, taskState, onTaskResult }: BlockRendererProps) {
   switch (block.type) {
     case 'text':
-      return <TextBlockView block={block} />;
+      return <TextBlockView block={block} depth={depth} />;
     case 'formula':
       return <FormulaBlockView block={block} />;
     case 'calc':
       return <CalcBlockView block={block} />;
-    case 'check':
-      return <CheckBlockView block={block} />;
+    case 'task':
+      return <TaskView block={block} state={taskState} onResult={onTaskResult} depth={depth} />;
     case 'interactive':
       return <InteractiveRenderer block={block} />;
     case 'build':

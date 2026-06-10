@@ -27,6 +27,13 @@
   --viz-mid: #c9a227;
   --viz-high: #b23a2e;
 
+  /* Semantische Feedback-Aliasse (DESIGN.md §5) — fürs Aufgaben-Feedback
+     immer diese verwenden, nie --accent für richtig/falsch. */
+  --ok: var(--viz-low);
+  --warn: var(--viz-mid);
+  --fehl: var(--viz-high);
+  --focus: var(--accent);
+
   /* Radius & Schatten */
   --radius: 6px;
   --shadow: 0 1px 0 #00000010, 0 8px 24px -16px #00000033;
@@ -110,12 +117,61 @@
   animation: lever-arc-pulse 2.4s ease-in-out infinite;
 }
 
-/* Barrierefreiheit: bei reduzierter Bewegung keine Einblend-/Puls-Animation. */
+/* Motion-Vokabular (DESIGN.md §8): genau vier benannte Bewegungen. */
+@keyframes bl-einzeichnen {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bl-einzeichnen {
+  animation: bl-einzeichnen 400ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+.bl-einzeichnen-d1 { animation-delay: 80ms; }
+.bl-einzeichnen-d2 { animation-delay: 160ms; }
+.bl-einzeichnen-d3 { animation-delay: 240ms; }
+
+@keyframes bl-quittung {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bl-quittung {
+  animation: bl-quittung 180ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.bl-wechsel {
+  animation: fade-in 200ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Barrierefreiheit: bei reduzierter Bewegung keine Einblend-/Puls-Animation.
+   Gilt per Media-Query UND per App-Einstellung (html.bl-reduced-motion). */
 @media (prefers-reduced-motion: reduce) {
   .lever-in,
-  .lever-arc-pulse {
+  .lever-arc-pulse,
+  .bl-einzeichnen,
+  .bl-quittung,
+  .bl-wechsel,
+  .animate-fade {
     animation: none;
   }
+}
+.bl-reduced-motion .lever-in,
+.bl-reduced-motion .lever-arc-pulse,
+.bl-reduced-motion .bl-einzeichnen,
+.bl-reduced-motion .bl-quittung,
+.bl-reduced-motion .bl-wechsel,
+.bl-reduced-motion .animate-fade {
+  animation: none;
 }
 
 /* Slider-Griff (DESIGN.md): präziser Akzent-Knopf, dünne Schiene, kein Bounce. */

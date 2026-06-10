@@ -38,8 +38,8 @@ export interface ConceptStateEntry {
 
 export interface CalcHistoryEntry {
   expr: string;
-  result: number;
-  unit: string;
+  /** Formatiertes Ergebnis inkl. Einheit (z. B. "29,43 N·m"). */
+  display: string;
   at: string;
 }
 

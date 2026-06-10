@@ -56,43 +56,49 @@ Claude Code arbeitet immer nur **eine** Phase.
 **DoD:** Onboarding → Dashboard-Flow läuft; Reload erhält Zustand;
 Backup-Roundtrip funktioniert; `pnpm verify` grün.
 
-## Phase R4 — Workspace-Redesign ⏳ (in Arbeit)
+## Phase R4 — Workspace-Redesign ✅
 **Ziel:** Der Kern-Screen setzt das Lernmodell um.
-- [ ] `packages/ui/src/workspace/`: StepView (ein Schritt sichtbar),
+- [x] `packages/ui/src/workspace/WorkspaceStep`: ein Schritt sichtbar,
       sanftes Gating, Canvas-Split (sticky), Feedback-Momente, Meilenstein.
-- [ ] `packages/ui/src/task/`: Renderer für alle 9 Aufgabenarten inkl.
-      dreistufigem Feedback (`LERNMODELL.md` §7).
-- [ ] `packages/ui/src/iso-scene/`: `IsoStage`, `isoBox`, `AmpelArrow`,
-      `useEngineValue` (aus LeverSlider extrahiert).
-- [ ] `value-slider` und `gear-pair` implementieren (Registry → `implementiert`).
-- [ ] Auffrisch-Karten (Quereinstieg), Tiefen-Präferenz global + lokal.
-- [ ] Route `/projekt/:id/schritt/:n` von ProjectView-Übergang auf
-      WorkspaceStep + Persistenz umstellen (`src/screens/Workspace.tsx`).
-**DoD:** Getriebe Schritt 1–8 komplett durchspielbar; target-Task koppelt an
-gear-pair; STL-Download hinter Constraints; `pnpm verify` grün.
+- [x] `packages/ui/src/task/`: Renderer für alle 9 Aufgabenarten inkl.
+      dreistufigem Feedback (`LERNMODELL.md` §7) + Heuristiken (ENGINE_SPEC §4).
+- [x] `packages/ui/src/iso-scene/`: `IsoStage`, `isoBox`, `groundRotationMatrix`,
+      `useEngineValue`. (LeverSlider bleibt vorerst eigenständig; der
+      Ampel-Pfeil wandert bei der nächsten Berührung in iso-scene.)
+- [x] `value-slider` und `gear-pair` implementiert (Registry: `implementiert`;
+      gear-pair dreht im echten Drehzahlverhältnis, Werte aus der Engine).
+- [x] Auffrisch-Karten (Quereinstieg), Tiefen-Präferenz global + lokal.
+- [x] Route `/projekt/:id/schritt/:n` auf WorkspaceStep + Persistenz
+      umgestellt (`src/screens/Workspace.tsx`).
+**DoD:** Getriebe Schritt 1–8 durchspielbar; target-Task koppelt an gear-pair;
+STL-Download hinter Constraints; `pnpm verify` grün.
 
-## Phase R5 — Übrige Screens ⏳ (in Arbeit)
+## Phase R5 — Übrige Screens ✅
 **Ziel:** Die volle Informationsarchitektur aus `SCREENS.md`.
 - [x] Dashboard (Fortsetzen / Auffrischen / Als Nächstes).
 - [x] Projektliste + Projekt-Detail (Soft-Lock-Kasten).
-- [x] Konzept-Seite (3 Ebenen, Formeln, „kommt vor in"); Inline-Übung +
-      Overlay-Variante folgen mit den Task-Renderern aus R4.
+- [x] Konzept-Seite (3 Ebenen, Formeln, „kommt vor in"). Offen: Inline-Übung
+      direkt auf der Seite + Overlay-Variante aus dem Workspace (derzeit
+      Link ins Training bzw. Routenwechsel) → R8.
 - [x] Werkstatt (Parameter-Karten, STL-Rekompilierung, Laufzettel).
-- [ ] Training (Karten-Stapel mit Inline-Aufgaben; aktuell Fälligkeitsliste —
-      Vollausbau folgt mit den Task-Renderern aus R4).
+- [x] Training (Karten-Stapel mit Inline-Aufgaben, Leitner-Buchung,
+      Abschluss-Karte).
 - [x] Skill-Map V1 (statisches SVG aus `skillmap.layout.json`,
       mobile Gruppen-Listen).
 **DoD:** alle Routen erreichbar, Leerzustände nach `SCREENS.md`;
 `pnpm verify` grün.
 
-## Phase R6 — Politur & Gate
+## Phase R6 — Politur & Gate ⏳ (fast fertig)
 **Ziel:** A11y und Motion verbindlich, Gesamtdurchlauf.
-- [ ] Fokus-Ringe überall, aria-labels + Range-Inputs auf allen Sims,
-      `aria-live` auf Ergebniszeilen, Tap-Targets ≥ 44 px.
-- [ ] Motion-Vokabular (`einzeichnen`/`quittung`/`wechsel`/`zaehlen`)
-      + reduzierte Bewegung (System ODER Einstellung).
-- [ ] Rechner-Verlauf persistent (`calcHistory`) + „in Aufgabe einsetzen".
-- [ ] Manueller Gesamtdurchlauf nach `VERIFICATION.md`-DoD.
+- [x] Fokus-Ringe (`:focus-visible`), aria-labels auf Sims, `aria-live` auf
+      Ergebniszeilen, native Range-Inputs + −/+-Stepper, Tap-Targets ≥ 44 px.
+- [x] Motion-Vokabular (`einzeichnen`/`quittung`/`wechsel`) + reduzierte
+      Bewegung (System ODER Einstellung, `html.bl-reduced-motion`).
+      Offen: `zaehlen` (rAF-Hochzählen der Ergebniszahl).
+- [x] Rechner-Verlauf persistent (`calcHistory`) + „⇥ in Aufgabe einsetzen".
+- [ ] Manueller Gesamtdurchlauf im Browser nach `VERIFICATION.md`-DoD
+      (automatisiert geprüft: 74 Tests, SSR-Smoke aller Kernkomponenten,
+      Dev-Server bootet; der klickende Durchlauf steht noch aus).
 **DoD:** `pnpm verify` grün; Durchlauf Onboarding → Meilenstein ohne Bruch.
 
 ## Phase R7 — Content-Ausbau (laufend, nach dem Redesign)

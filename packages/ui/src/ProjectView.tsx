@@ -1,51 +1,53 @@
-// ProjectView.tsx — rendert ein Projekt-JSON statisch (Phase 1).
-// Der echte „eine-Aufgabe-pro-Screen"-Workspace (SCREENS.md §5) kommt mit der
-// Interaktivität in Phase 2; hier zeigen wir die Schritte gestapelt als Beleg,
-// dass die Block-Renderer ein vollständiges Projekt korrekt darstellen.
+// ProjectView.tsx — dünner Wrapper um den Schritt-Workspace (SCREENS.md §6)
+// mit In-Memory-Zustand. Die App verdrahtet WorkspaceStep direkt mit der
+// Persistenz (src/db); dieser Wrapper dient als eigenständige Vorschau
+// (Tests, Storybook-artige Nutzung) ohne Speicher.
 
-import { BlockRenderer } from './blocks';
-import type { Project, Step } from './types';
+import { useState } from 'react';
+import { WorkspaceStep } from './workspace/WorkspaceStep';
+import type { Layer, Project, TaskResult } from './types';
 
-function StepView({ step, index, total }: { step: Step; index: number; total: number }) {
+export function ProjectView({ project, depth = 'practical' }: { project: Project; depth?: Layer }) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [maxStepReached, setMaxStepReached] = useState(0);
+  const [taskStates, setTaskStates] = useState<Record<string, TaskResult>>({});
+
+  const stepKey = (i: number, blockIndex: number) => `${i}/${blockIndex}`;
+  const statesFor = (i: number): Record<number, TaskResult> => {
+    const out: Record<number, TaskResult> = {};
+    for (const [key, value] of Object.entries(taskStates)) {
+      const [s, b] = key.split('/');
+      if (Number(s) === i) out[Number(b)] = value;
+    }
+    return out;
+  };
+
   return (
-    <section className="border-t border-black/10 pt-10">
-      <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
-        Schritt {index + 1} / {total}
-        {step.estMinutes ? ` · ~${step.estMinutes} min` : ''}
-      </p>
-      <h2 className="mt-2 font-display text-2xl tracking-tight text-ink">{step.title}</h2>
-      <p className="mt-1 max-w-prose text-sm italic text-ink-2">{step.goal}</p>
-
-      <div className="mt-6 flex flex-col gap-6">
-        {step.blocks.map((block, i) => (
-          <BlockRenderer key={i} block={block} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-export function ProjectView({ project }: { project: Project }) {
-  return (
-    <article className="flex flex-col gap-12">
-      <header>
+    <article>
+      <header className="mx-auto max-w-6xl px-4 md:px-6">
         <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
-          Projekt · Level {project.level}
-        </p>
-        <h1 className="mt-2 font-display text-4xl leading-[1.1] tracking-tight text-ink">
-          {project.title}
-        </h1>
-        <p className="mt-4 max-w-prose leading-relaxed text-ink-2">
-          <span className="font-medium text-ink">Challenge:</span> {project.challenge}
-        </p>
-        <p className="mt-1 max-w-prose leading-relaxed text-ink-2">
-          <span className="font-medium text-ink">Am Ende hast du:</span> {project.buildResult}
+          <span aria-hidden className="mr-1">{project.icon}</span>
+          {project.title} · Schritt {stepIndex + 1}/{project.steps.length} „
+          {project.steps[stepIndex].title}“
         </p>
       </header>
-
-      {project.steps.map((step, i) => (
-        <StepView key={step.id} step={step} index={i} total={project.steps.length} />
-      ))}
+      <WorkspaceStep
+        project={project}
+        stepIndex={stepIndex}
+        maxStepReached={maxStepReached}
+        depth={depth}
+        taskStates={statesFor(stepIndex)}
+        seenConcepts={new Set(project.conceptsIntroduced ?? [])}
+        onTaskResult={(blockIndex, result) =>
+          setTaskStates((prev) => ({ ...prev, [stepKey(stepIndex, blockIndex)]: result }))
+        }
+        onNavigate={(i) => {
+          const clamped = Math.max(0, Math.min(project.steps.length - 1, i));
+          setStepIndex(clamped);
+          setMaxStepReached((m) => Math.max(m, clamped));
+        }}
+        onStepComplete={(i) => setMaxStepReached((m) => Math.max(m, Math.min(i + 1, project.steps.length - 1)))}
+      />
     </article>
   );
 }

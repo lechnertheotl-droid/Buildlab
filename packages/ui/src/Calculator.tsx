@@ -15,9 +15,22 @@ const math = create(all, {});
 
 type Tab = 'numbers' | 'units' | 'formulas';
 
-interface HistoryItem {
+export interface CalcHistoryItem {
   expr: string;
-  result: string;
+  /** Formatiertes Ergebnis inkl. Einheit. */
+  display: string;
+}
+
+interface HistoryItem extends CalcHistoryItem {
+  /** Roher Zahlenwert (nur bei dimensionslosen Ergebnissen, fürs Einsetzen). */
+  value?: number;
+}
+
+export interface CalculatorProps {
+  /** Persistierter Verlauf (DATENMODELL.md §2: calcHistory), neueste zuerst. */
+  initialHistory?: CalcHistoryItem[];
+  /** Wird bei jedem „=" gerufen (Persistenz-Anbindung). */
+  onEvaluate?: (entry: CalcHistoryItem) => void;
 }
 
 // Konstanten, die ein Maschinenbau-Lernender braucht (SCREENS.md §7).
@@ -64,15 +77,16 @@ const KEYS: { label: string; insert?: string; action?: 'eval' | 'clear' | 'back'
 
 const UNITS = ['N', 'mm', 'm', 'kg', 'MPa', 'N*m', 'deg', 'm/s^2'];
 
-export function Calculator() {
+export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {}) {
   const { formulas } = useContent();
   const active = useWorkspaceStore((s) => s.active);
+  const answerSink = useWorkspaceStore((s) => s.answerSink);
 
   const [tab, setTab] = useState<Tab>('numbers');
   const [expr, setExpr] = useState('');
   const [ans, setAns] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>(() => initialHistory ?? []);
 
   const preview = useMemo(() => {
     if (!expr.trim()) return '';
@@ -94,9 +108,12 @@ export function Calculator() {
     try {
       const scope = { ...SCOPE_CONSTANTS, ...(ans !== null ? { ans } : {}) };
       const value = math.evaluate(expr, scope);
-      const result = formatResult(value);
+      const display = formatResult(value);
       setAns(value);
-      setHistory((h) => [{ expr, result }, ...h].slice(0, 20));
+      setHistory((h) =>
+        [{ expr, display, value: typeof value === 'number' ? value : undefined }, ...h].slice(0, 50),
+      );
+      onEvaluate?.({ expr, display });
       setError(null);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -126,15 +143,26 @@ export function Calculator() {
         ) : (
           <ul className="flex flex-col gap-1">
             {history.map((h, i) => (
-              <li key={i}>
+              <li key={i} className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => append(h.result.replace(/\s/g, ' '))}
+                  onClick={() => append(h.display.replace(/\s/g, ' '))}
                   title="Ergebnis übernehmen"
-                  className="w-full truncate text-left font-mono text-xs text-ink-2 hover:text-accent-ink"
+                  className="min-w-0 flex-1 truncate text-left font-mono text-xs text-ink-2 outline-none hover:text-accent-ink focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  {h.expr} = <span className="text-ink">{h.result}</span>
+                  {h.expr} = <span className="text-ink">{h.display}</span>
                 </button>
+                {answerSink && h.value !== undefined && (
+                  <button
+                    type="button"
+                    onClick={() => answerSink(h.value!)}
+                    title="In das aktive Antwortfeld einsetzen"
+                    aria-label={`${h.display} in die Aufgabe einsetzen`}
+                    className="shrink-0 rounded border border-black/10 px-1.5 font-mono text-xs text-accent-ink outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    ⇥
+                  </button>
+                )}
               </li>
             ))}
           </ul>

@@ -5,9 +5,9 @@
 // Fenster herausziehen. Schiebt sich über die Canvas, nie über die Lektion.
 
 import { useRef, useState } from 'react';
-import { Calculator } from './Calculator';
+import { Calculator, type CalculatorProps } from './Calculator';
 
-export function CalculatorDrawer() {
+export function CalculatorDrawer(calcProps: CalculatorProps = {}) {
   const [open, setOpen] = useState(false);
   const [floating, setFloating] = useState(false);
   const [pos, setPos] = useState({ x: 80, y: 80 });
@@ -84,7 +84,7 @@ export function CalculatorDrawer() {
         </span>
       </header>
       <div className={floating ? 'max-h-[70vh] overflow-auto' : 'flex-1 overflow-auto'}>
-        <Calculator />
+        <Calculator {...calcProps} />
       </div>
     </aside>
   );
