@@ -32,6 +32,7 @@ export default {
       },
       boxShadow: {
         DEFAULT: 'var(--shadow)',
+        2: 'var(--shadow-2)',
       },
     },
   },

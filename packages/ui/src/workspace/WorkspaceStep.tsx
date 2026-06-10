@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { BlockRenderer } from '../blocks';
 import { useContent } from '../content-context';
+import { useCountUp } from '../useCountUp';
 import { useWorkspaceStore } from '../store';
 import { CadBuild } from '../build/CadBuild';
 import type { Block, Layer, Project, Step, TaskResult } from '../types';
@@ -36,10 +37,6 @@ function isCanvasBlock(block: Block): boolean {
   return block.type === 'interactive' || block.type === 'build';
 }
 
-function fmt(n: number): string {
-  return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 4 }).format(n);
-}
-
 /** 64-px-Ergebniszeile der eingeklappten Mobile-Canvas (SCREENS.md §6.4):
     zeigt das Live-Ergebnis der aktiven Formel (Engine rechnet, Eiserne Regel 1). */
 function CanvasResultLine({ project, step }: { project: Project; step: Step }) {
@@ -60,6 +57,10 @@ function CanvasResultLine({ project, step }: { project: Project; step: Step }) {
       }
     }
   }
+  // Motion „zaehlen" (DESIGN.md §8): der Wert zählt zum neuen Ergebnis.
+  // Stellenzahl des Ziels beibehalten — keine Layout-Verschiebung beim Zählen.
+  const animated = useCountUp(result?.value ?? 0);
+  const decimals = result ? Math.min(4, (`${result.value}`.split('.')[1] ?? '').length) : 0;
   return (
     <p
       className="flex h-16 items-center justify-center gap-2 rounded-t border border-b-0 border-black/10 bg-paper-2 px-4 font-mono text-sm"
@@ -69,7 +70,10 @@ function CanvasResultLine({ project, step }: { project: Project; step: Step }) {
         <>
           <span className="text-ink-2">{result.symbol} =</span>
           <span className="text-accent-ink">
-            {fmt(result.value)}
+            {new Intl.NumberFormat('de-DE', {
+              minimumFractionDigits: decimals,
+              maximumFractionDigits: decimals,
+            }).format(animated)}
             {result.unit && result.unit !== '-' ? ` ${result.unit}` : ''}
           </span>
         </>
@@ -324,7 +328,10 @@ export function WorkspaceStep({
 
         {/* Lektion */}
         <section aria-label="Lektion" className="order-2 min-w-0 md:order-1">
-          <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">Ziel</p>
+          <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
+            <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
+            Ziel
+          </p>
           <h2 className="mt-1 font-display text-xl leading-snug">{step.goal}</h2>
 
           <div key={stepIndex} className="bl-wechsel mt-5 space-y-5">

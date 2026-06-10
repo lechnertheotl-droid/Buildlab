@@ -59,7 +59,7 @@ export default function SkillMap() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
-      <h1 className="mb-2 font-display text-2xl">Skill-Map</h1>
+      <h1 className="mb-2 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Skill-Map</h1>
       {!anySeen && (
         <p className="mb-4 rounded border border-black/10 bg-paper-2 p-3 text-sm text-ink-2 shadow">
           Deine Karte ist noch unbeschriftet — das erste Projekt zeichnet die ersten Knoten ein.

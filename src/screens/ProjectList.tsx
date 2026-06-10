@@ -67,10 +67,15 @@ export default function ProjectList() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="mb-6 font-display text-2xl">Projekte</h1>
-      {[...byLevel.entries()].map(([level, list]) => (
-        <section key={level} aria-label={LEVEL_LABELS[level]} className="mb-8">
+      <h1 className="mb-6 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Projekte</h1>
+      {[...byLevel.entries()].map(([level, list], si) => (
+        <section
+          key={level}
+          aria-label={LEVEL_LABELS[level]}
+          className={`bl-einzeichnen mb-8 ${si > 0 ? `bl-einzeichnen-d${Math.min(si, 3)}` : ''}`}
+        >
           <h2 className="mb-3 border-b border-black/10 pb-1 font-mono text-xs uppercase tracking-widest text-ink-2">
+            <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
             {LEVEL_LABELS[level] ?? `Niveau ${level}`}
           </h2>
           <div className="grid gap-3 md:grid-cols-2">
@@ -81,7 +86,7 @@ export default function ProjectList() {
                 <Link
                   key={p.id}
                   to={`/projekt/${p.id}`}
-                  className={`rounded border border-black/10 bg-paper-2 p-4 shadow outline-none transition hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px ${
+                  className={`rounded border border-black/10 bg-paper-2 p-4 shadow outline-none transition hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px active:shadow-none ${
                     soft ? 'opacity-60' : ''
                   }`}
                 >

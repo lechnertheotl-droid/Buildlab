@@ -62,7 +62,7 @@ export default function ConceptPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
       <div className="flex flex-wrap items-baseline gap-3">
-        <h1 className="font-display text-3xl">{concept.name}</h1>
+        <h1 className="font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">{concept.name}</h1>
         {concept.symbol && <span className="font-mono text-xl text-ink-2">{concept.symbol}</span>}
         {concept.unit && concept.unit !== '-' && (
           <span className="font-mono text-sm text-ink-faint">[{concept.unit}]</span>
