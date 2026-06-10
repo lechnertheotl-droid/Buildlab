@@ -174,9 +174,14 @@
 
 /* aufklappen: jede Höhen-Expansion (Canvas-Collapse, Hinweis/Lösungsweg,
    Disclosures). Technik: display:grid + grid-template-rows 1fr↔0fr,
-   Kind mit min-height:0 + overflow:hidden. */
+   Kind mit min-height:0 + overflow:hidden. Zugeklappter Inhalt bleibt im
+   DOM (SSR/ARIA), wird aber nach dem Übergang unsichtbar und unfokussierbar. */
 .bl-aufklappen {
   transition: grid-template-rows 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+.bl-aufklappen[data-open='false'] > * {
+  visibility: hidden;
+  transition: visibility 0s 300ms;
 }
 
 /* gleiten: Drawer, Bottom-Sheet, Dialog, Trainings-Kartenwechsel. */

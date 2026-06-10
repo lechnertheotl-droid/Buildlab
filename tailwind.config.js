@@ -17,6 +17,8 @@ export default {
         'ink-faint': 'var(--ink-faint)',
         accent: 'var(--accent)',
         'accent-ink': 'var(--accent-ink)',
+        rule: 'var(--rule)',
+        'rule-strong': 'var(--rule-strong)',
         'viz-low': 'var(--viz-low)',
         'viz-mid': 'var(--viz-mid)',
         'viz-high': 'var(--viz-high)',

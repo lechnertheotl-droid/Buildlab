@@ -1,5 +1,6 @@
 // Öffentliche API von @buildlab/ui.
 
+export * from './primitives';
 export { ContentProvider } from './content-context';
 export { ProjectView } from './ProjectView';
 export { WorkspaceStep, type WorkspaceStepProps } from './workspace/WorkspaceStep';
