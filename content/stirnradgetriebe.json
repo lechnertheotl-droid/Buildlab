@@ -6,10 +6,20 @@
   "icon": "⚙",
   "durationMin": 45,
   "difficulty": 2,
-  "recommendedAfter": ["hebel-flaschenzug"],
+  "recommendedAfter": [
+    "hebel-flaschenzug"
+  ],
   "buildResult": "Ein 3D-gedrucktes, drehbares Getriebe mit der Ziel-Übersetzung i = 3.",
   "challenge": "Baue ein Getriebe, das die Motordrehzahl auf ein Drittel senkt (3000 → 1000 1/min) und das Drehmoment fast verdreifacht.",
-  "conceptsIntroduced": ["zahnrad", "zaehnezahl", "uebersetzung", "modul", "teilkreisdurchmesser", "achsabstand", "wirkungsgrad"],
+  "conceptsIntroduced": [
+    "zahnrad",
+    "zaehnezahl",
+    "uebersetzung",
+    "modul",
+    "teilkreisdurchmesser",
+    "achsabstand",
+    "wirkungsgrad"
+  ],
   "steps": [
     {
       "id": "warum-zahnraeder",
@@ -28,8 +38,12 @@
         },
         {
           "type": "text",
-          "introduces": ["zahnrad"],
-          "uses": ["drehmoment"],
+          "introduces": [
+            "zahnrad"
+          ],
+          "uses": [
+            "drehmoment"
+          ],
           "layers": {
             "intuitive": "Ein Zahnrad ist ein Rad mit Zähnen, die formschlüssig in ein zweites Rad greifen. Nichts rutscht, nichts schlupft: Jede Umdrehung wird sauber weitergegeben. Und sobald die beiden Räder unterschiedlich groß sind, passiert das Spannende – das kleine flitzt, das große drückt.",
             "practical": "Zahnräder übertragen Drehung formschlüssig – ohne Schlupf, anders als Riemen. Unterschiedlich große Räder ändern dabei Drehzahl und Drehmoment. Genau das brauchst du, wenn Motor und Last nicht zusammenpassen.",
@@ -39,16 +53,48 @@
         {
           "type": "interactive",
           "componentId": "gear-pair",
-          "params": { "z1": 20, "z2": 60, "m": 2, "z1Range": [12, 80], "z2Range": [12, 120], "mRange": [1, 4] },
+          "params": {
+            "z1": 20,
+            "z2": 60,
+            "m": 2,
+            "z1Range": [
+              12,
+              80
+            ],
+            "z2Range": [
+              12,
+              120
+            ],
+            "mRange": [
+              1,
+              4
+            ]
+          },
           "caption": "Spiel einfach: Schiebe die Zähnezahlen und schau, wie die Räder sich drehen."
         },
         {
           "type": "task",
           "kind": "estimate",
           "question": "Das kleine Rad hat 20 Zähne, das große 60. Wie oft dreht sich das kleine Rad für eine volle Umdrehung des großen – dein Bauchgefühl?",
-          "concepts": ["zahnrad"],
-          "source": { "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 } },
-          "scale": { "min": 1, "max": 20, "log": true, "bands": [1.5, 4] },
+          "concepts": [
+            "zahnrad"
+          ],
+          "source": {
+            "formulaId": "ratio",
+            "inputs": {
+              "z1": 20,
+              "z2": 60
+            }
+          },
+          "scale": {
+            "min": 1,
+            "max": 20,
+            "log": true,
+            "bands": [
+              1.5,
+              4
+            ]
+          },
           "hint": "Jeder Zahn des kleinen Rads trifft genau eine Zahnlücke des großen. Vergleich die Zähnezahlen.",
           "explanation": "Das große Rad hat dreimal so viele Zähne – also muss das kleine dreimal durchdrehen, bis das große einmal herum ist."
         }
@@ -64,8 +110,13 @@
       "blocks": [
         {
           "type": "text",
-          "introduces": ["zaehnezahl", "uebersetzung"],
-          "uses": ["drehmoment"],
+          "introduces": [
+            "zaehnezahl",
+            "uebersetzung"
+          ],
+          "uses": [
+            "drehmoment"
+          ],
           "layers": {
             "intuitive": "Zwei Zahnräder, ein Tauschgeschäft: Tempo gegen Kraft. Dreht das kleine flink zehnmal, schafft das große vielleicht nur dreimal. Klingt nach einem schlechten Deal? Ist es nicht: Dafür drückt das große mit viel mehr Kraft. Wie viel getauscht wird, verraten dir die Zähnezahlen.",
             "practical": "Die Übersetzung i sagt dir, um welchen Faktor sich Drehzahl und Drehmoment ändern. Du liest sie direkt aus den Zähnezahlen ab: i = z₂/z₁. Ist i = 3, dreht das Abtriebsrad dreimal langsamer und liefert (fast) das dreifache Drehmoment.",
@@ -80,25 +131,61 @@
         {
           "type": "interactive",
           "componentId": "gear-pair",
-          "params": { "z1": 20, "z2": 60, "m": 2, "z1Range": [12, 80], "z2Range": [12, 120], "mRange": [1, 4] },
+          "params": {
+            "z1": 20,
+            "z2": 60,
+            "m": 2,
+            "z1Range": [
+              12,
+              80
+            ],
+            "z2Range": [
+              12,
+              120
+            ],
+            "mRange": [
+              1,
+              4
+            ],
+            "show": [
+              "z1",
+              "z2"
+            ],
+            "highlight": "i"
+          },
           "caption": "Schiebe die Zähnezahlen und sieh zu, wie sich i verändert."
         },
         {
           "type": "calc",
           "formulaId": "ratio",
-          "inputs": { "z2": 60, "z1": 20 },
-          "expected": { "value": 3, "unit": "-" },
+          "inputs": {
+            "z2": 60,
+            "z1": 20
+          },
+          "expected": {
+            "value": 3,
+            "unit": "-"
+          },
           "narrative": "Mit z₁ = 20 und z₂ = 60 ergibt sich i = 60/20 = 3. Das Abtriebsrad dreht also dreimal langsamer – genau das, was die Challenge verlangt."
         },
         {
           "type": "task",
           "kind": "numeric",
           "question": "Ein Getriebe hat z₁ = 15 und z₂ = 45. Wie groß ist die Übersetzung i?",
-          "concepts": ["uebersetzung", "zaehnezahl"],
+          "concepts": [
+            "uebersetzung",
+            "zaehnezahl"
+          ],
           "answer": 3,
           "tolerance": 0.01,
           "unit": "-",
-          "source": { "formulaId": "ratio", "inputs": { "z1": 15, "z2": 45 } },
+          "source": {
+            "formulaId": "ratio",
+            "inputs": {
+              "z1": 15,
+              "z2": 45
+            }
+          },
           "hint": "Abtrieb durch Antrieb: z₂ kommt in den Zähler.",
           "explanation": "i = z₂/z₁ = 45/15 = 3. Gleiches Spiel, andere Zahlen – die Übersetzung hängt nur vom Verhältnis ab, nicht von den absoluten Zähnezahlen."
         }
@@ -114,8 +201,13 @@
       "blocks": [
         {
           "type": "text",
-          "introduces": ["modul", "teilkreisdurchmesser"],
-          "uses": ["zaehnezahl"],
+          "introduces": [
+            "modul",
+            "teilkreisdurchmesser"
+          ],
+          "uses": [
+            "zaehnezahl"
+          ],
           "layers": {
             "intuitive": "Zähne gibt es in Größen wie Schuhe: Der Modul ist die Schuhgröße deines Zahnrads. Zwei Räder kämmen nur, wenn ihre Zähne gleich groß sind. Und wie groß das Rad selbst wird? Zahngröße mal Zahnzahl – fertig ist der Teilkreis.",
             "practical": "Der Modul m legt die Zahngröße fest – kämmen können nur Räder mit gleichem m. Der Teilkreisdurchmesser d = m·z ist das Auslegungsmaß: An ihm berühren sich die Räder rechnerisch. Übliche Module folgen einer Normreihe (1; 1,25; 1,5; 2; …).",
@@ -129,25 +221,78 @@
         {
           "type": "interactive",
           "componentId": "gear-pair",
-          "params": { "z1": 20, "z2": 60, "m": 2, "z1Range": [12, 80], "z2Range": [12, 120], "mRange": [1, 4] },
+          "params": {
+            "z1": 20,
+            "z2": 60,
+            "m": 2,
+            "z1Range": [
+              12,
+              80
+            ],
+            "z2Range": [
+              12,
+              120
+            ],
+            "mRange": [
+              1,
+              4
+            ],
+            "show": [
+              "m"
+            ],
+            "highlight": "d"
+          },
           "caption": "Ändere den Modul: Die Zähne wachsen – und mit ihnen das ganze Rad."
         },
         {
           "type": "calc",
           "formulaId": "pitch_d",
-          "inputs": { "m": 2, "z": 20 },
-          "expected": { "value": 40, "unit": "mm" },
+          "inputs": {
+            "m": 2,
+            "z": 20
+          },
+          "expected": {
+            "value": 40,
+            "unit": "mm"
+          },
           "narrative": "Ein Rad mit Modul 2 und 20 Zähnen hat einen Teilkreis von d = 2·20 = 40 mm."
         },
         {
           "type": "task",
           "kind": "error-find",
           "question": "Drei Räder, drei Rechnungen – aber eine Zeile lügt. Welche?",
-          "concepts": ["modul", "teilkreisdurchmesser"],
+          "concepts": [
+            "modul",
+            "teilkreisdurchmesser"
+          ],
           "rows": [
-            { "label": "Rad A: m = 2 mm, z = 20  →  d = 40 mm", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 20 }, "shown": 40 },
-            { "label": "Rad B: m = 2 mm, z = 30  →  d = 60 mm", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 30 }, "shown": 60 },
-            { "label": "Rad C: m = 2 mm, z = 60  →  d = 100 mm", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 60 }, "shown": 100 }
+            {
+              "label": "Rad A: m = 2 mm, z = 20  →  d = 40 mm",
+              "formulaId": "pitch_d",
+              "inputs": {
+                "m": 2,
+                "z": 20
+              },
+              "shown": 40
+            },
+            {
+              "label": "Rad B: m = 2 mm, z = 30  →  d = 60 mm",
+              "formulaId": "pitch_d",
+              "inputs": {
+                "m": 2,
+                "z": 30
+              },
+              "shown": 60
+            },
+            {
+              "label": "Rad C: m = 2 mm, z = 60  →  d = 100 mm",
+              "formulaId": "pitch_d",
+              "inputs": {
+                "m": 2,
+                "z": 60
+              },
+              "shown": 100
+            }
           ],
           "hint": "Rechne jede Zeile kurz nach: d = m·z. Eine passt nicht.",
           "explanation": "Rad C müsste d = 2·60 = 120 mm haben, nicht 100 mm. Die anderen beiden stimmen."
@@ -164,8 +309,12 @@
       "blocks": [
         {
           "type": "text",
-          "introduces": ["achsabstand"],
-          "uses": ["teilkreisdurchmesser"],
+          "introduces": [
+            "achsabstand"
+          ],
+          "uses": [
+            "teilkreisdurchmesser"
+          ],
           "layers": {
             "intuitive": "Jetzt prüfen wir, ob die beiden Räder überhaupt zusammenpassen. Ihre Achsen brauchen genau den richtigen Abstand: zu eng – es klemmt, zu weit – es klappert. Der richtige Abstand ist einfach die halbe Summe der beiden Teilkreise.",
             "practical": "Der Achsabstand a = m·(z₁+z₂)/2 ist das Einbaumaß deines Getriebes. Er entscheidet, ob die Konstruktion ins Gehäuse passt – und er muss zur Bohrungslage deiner Grundplatte passen.",
@@ -179,28 +328,70 @@
         {
           "type": "interactive",
           "componentId": "gear-pair",
-          "params": { "z1": 20, "z2": 60, "m": 2, "z1Range": [12, 80], "z2Range": [12, 120], "mRange": [1, 4] },
+          "params": {
+            "z1": 20,
+            "z2": 60,
+            "m": 2,
+            "z1Range": [
+              12,
+              80
+            ],
+            "z2Range": [
+              12,
+              120
+            ],
+            "mRange": [
+              1,
+              4
+            ],
+            "show": [
+              "m"
+            ],
+            "highlight": "a"
+          },
           "caption": "Der Achsabstand läuft live mit – beobachte ihn, während du m änderst."
         },
         {
           "type": "calc",
           "formulaId": "axis_dist",
-          "inputs": { "m": 2, "z1": 20, "z2": 60 },
-          "expected": { "value": 80, "unit": "mm" },
+          "inputs": {
+            "m": 2,
+            "z1": 20,
+            "z2": 60
+          },
+          "expected": {
+            "value": 80,
+            "unit": "mm"
+          },
           "narrative": "Mit m = 2, z₁ = 20 und z₂ = 60: a = 2·(20+60)/2 = 80 mm. Das passt auf die Grundplatte."
         },
         {
           "type": "task",
           "kind": "target",
           "question": "Deine Grundplatte hat Bohrungen im Abstand von genau 80 mm. Stell den Modul so ein, dass der Achsabstand passt.",
-          "concepts": ["achsabstand"],
+          "concepts": [
+            "achsabstand"
+          ],
           "target": {
             "formulaId": "axis_dist",
-            "vars": ["m"],
-            "goal": { "value": 80, "tolerance": 0.01 },
+            "vars": [
+              "m"
+            ],
+            "goal": {
+              "value": 80,
+              "tolerance": 0.01
+            },
             "proof": {
-              "pass": { "m": 2, "z1": 20, "z2": 60 },
-              "fail": { "m": 3, "z1": 20, "z2": 60 }
+              "pass": {
+                "m": 2,
+                "z1": 20,
+                "z2": 60
+              },
+              "fail": {
+                "m": 3,
+                "z1": 20,
+                "z2": 60
+              }
             }
           },
           "hint": "a = m·(z₁+z₂)/2 – bei z₁ = 20 und z₂ = 60 steckt der Hebel im Modul.",
@@ -217,7 +408,10 @@
       "blocks": [
         {
           "type": "text",
-          "uses": ["uebersetzung", "drehmoment"],
+          "uses": [
+            "uebersetzung",
+            "drehmoment"
+          ],
           "layers": {
             "intuitive": "Jetzt wird eingelöst, was die Übersetzung versprochen hat: Das Tempo sinkt auf ein Drittel, die Kraft wächst fast aufs Dreifache. „Fast“, weil die Reibung ihren kleinen Anteil kassiert.",
             "practical": "Zwei Umrechnungen, ein Faktor: n₂ = n₁/i und M₂ = M₁·i·η. Merk dir die Richtung – die Drehzahl wird durch i geteilt, das Drehmoment mit i multipliziert. η liegt bei guten Stirnradstufen um 0,97.",
@@ -235,19 +429,41 @@
         {
           "type": "calc",
           "formulaId": "speed_out",
-          "inputs": { "n1": 3000, "i": 3 },
-          "expected": { "value": 1000, "unit": "1/min" },
+          "inputs": {
+            "n1": 3000,
+            "i": 3
+          },
+          "expected": {
+            "value": 1000,
+            "unit": "1/min"
+          },
           "narrative": "Der Motor liefert 3000 1/min; mit i = 3 kommen hinten 1000 1/min an – das Challenge-Ziel."
         },
         {
           "type": "task",
           "kind": "steps",
           "question": "Rechne den Abtrieb in zwei Stufen aus – erst die Übersetzung, dann die Drehzahl.",
-          "concepts": ["uebersetzung"],
+          "concepts": [
+            "uebersetzung"
+          ],
           "tolerance": 0.01,
           "steps": [
-            { "prompt": "Stufe 1: Die Räder haben z₁ = 20 und z₂ = 60. Berechne i.", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 } },
-            { "prompt": "Stufe 2: Der Motor dreht mit n₁ = 3000 1/min. Berechne n₂ mit deinem i.", "formulaId": "speed_out", "inputs": { "n1": 3000, "i": "$prev" } }
+            {
+              "prompt": "Stufe 1: Die Räder haben z₁ = 20 und z₂ = 60. Berechne i.",
+              "formulaId": "ratio",
+              "inputs": {
+                "z1": 20,
+                "z2": 60
+              }
+            },
+            {
+              "prompt": "Stufe 2: Der Motor dreht mit n₁ = 3000 1/min. Berechne n₂ mit deinem i.",
+              "formulaId": "speed_out",
+              "inputs": {
+                "n1": 3000,
+                "i": "$prev"
+              }
+            }
           ],
           "hint": "Stufe 1: z₂/z₁. Stufe 2: n₁ durch dein Ergebnis teilen.",
           "explanation": "i = 60/20 = 3, dann n₂ = 3000/3 = 1000 1/min. Folgefehler zählen nicht doppelt – Stufe 2 rechnet mit deinem i weiter."
@@ -256,12 +472,26 @@
           "type": "task",
           "kind": "numeric",
           "question": "Der Motor liefert M₁ = 10 N·m, das Getriebe hat i = 3 und η = 0,97. Wie groß ist das Abtriebsdrehmoment – und in welcher Einheit?",
-          "concepts": ["drehmoment", "uebersetzung"],
+          "concepts": [
+            "drehmoment",
+            "uebersetzung"
+          ],
           "answer": 29.1,
           "tolerance": 0.01,
           "unit": "N*m",
-          "unitChoices": ["N*m", "N", "W"],
-          "source": { "formulaId": "torque_out", "inputs": { "M1": 10, "i": 3, "eta": 0.97 } },
+          "unitChoices": [
+            "N*m",
+            "N",
+            "W"
+          ],
+          "source": {
+            "formulaId": "torque_out",
+            "inputs": {
+              "M1": 10,
+              "i": 3,
+              "eta": 0.97
+            }
+          },
           "hint": "Drehmoment mal i mal η – und ein Drehmoment ist keine Kraft.",
           "explanation": "M₂ = 10·3·0,97 = 29,1 N·m. Newton allein wäre eine Kraft, Watt eine Leistung – das Drehmoment trägt N·m."
         }
@@ -277,7 +507,9 @@
       "blocks": [
         {
           "type": "text",
-          "introduces": ["wirkungsgrad"],
+          "introduces": [
+            "wirkungsgrad"
+          ],
           "layers": {
             "intuitive": "Kein Tauschgeschäft ohne Gebühr: Ein bisschen Leistung verheizt das Getriebe als Reibungswärme. Der Wirkungsgrad sagt dir, wie viel vom Einsatz wirklich hinten ankommt – bei guten Stirnrädern fast alles.",
             "practical": "Stirnradstufen erreichen η ≈ 0,96–0,98 pro Stufe. Faustregel: Pro Getriebestufe etwa 2–4 % Verlust einplanen. Mehrstufige Getriebe multiplizieren ihre Wirkungsgrade.",
@@ -294,18 +526,38 @@
         {
           "type": "interactive",
           "componentId": "value-slider",
-          "params": { "formulaId": "torque_out", "var": "eta", "min": 0.85, "max": 1, "step": 0.01, "fixed": { "M1": 10, "i": 3 } },
+          "params": {
+            "formulaId": "torque_out",
+            "var": "eta",
+            "min": 0.85,
+            "max": 1,
+            "step": 0.01,
+            "fixed": {
+              "M1": 10,
+              "i": 3
+            }
+          },
           "caption": "Schiebe η und beobachte, wie viel Drehmoment die Reibung kostet."
         },
         {
           "type": "task",
           "kind": "single",
           "question": "Ein Getriebe mit i = 3 und η = 0,97 – welche Aussage stimmt?",
-          "concepts": ["wirkungsgrad"],
+          "concepts": [
+            "wirkungsgrad"
+          ],
           "options": [
-            { "text": "Das Drehmoment verdreifacht sich fast; ein kleiner Rest geht als Reibungswärme verloren." },
-            { "text": "Die Drehzahl steigt auf das Dreifache.", "why": "Verlockend – aber i = 3 senkt die Drehzahl auf ein Drittel. Schneller wird es nur bei i < 1." },
-            { "text": "Der Wirkungsgrad erhöht das Drehmoment zusätzlich.", "why": "η ist immer ≤ 1 – er knabbert am Drehmoment, statt es zu vergrößern." }
+            {
+              "text": "Das Drehmoment verdreifacht sich fast; ein kleiner Rest geht als Reibungswärme verloren."
+            },
+            {
+              "text": "Die Drehzahl steigt auf das Dreifache.",
+              "why": "Verlockend – aber i = 3 senkt die Drehzahl auf ein Drittel. Schneller wird es nur bei i < 1."
+            },
+            {
+              "text": "Der Wirkungsgrad erhöht das Drehmoment zusätzlich.",
+              "why": "η ist immer ≤ 1 – er knabbert am Drehmoment, statt es zu vergrößern."
+            }
           ],
           "answer": 0,
           "hint": "Was macht i mit dem Drehmoment, was macht η damit?",
@@ -315,12 +567,28 @@
           "type": "task",
           "kind": "match",
           "question": "Ordne jeder Größe ihre Einheit zu.",
-          "concepts": ["wirkungsgrad", "modul", "drehmoment"],
+          "concepts": [
+            "wirkungsgrad",
+            "modul",
+            "drehmoment"
+          ],
           "pairs": [
-            { "left": "Drehmoment M", "right": "N·m" },
-            { "left": "Drehzahl n", "right": "1/min" },
-            { "left": "Modul m", "right": "mm" },
-            { "left": "Wirkungsgrad η", "right": "ohne Einheit" }
+            {
+              "left": "Drehmoment M",
+              "right": "N·m"
+            },
+            {
+              "left": "Drehzahl n",
+              "right": "1/min"
+            },
+            {
+              "left": "Modul m",
+              "right": "mm"
+            },
+            {
+              "left": "Wirkungsgrad η",
+              "right": "ohne Einheit"
+            }
           ],
           "explanation": "M trägt N·m, n zählt Umdrehungen pro Minute, der Modul ist ein Längenmaß in mm – und η ist ein reines Verhältnis."
         }
@@ -336,7 +604,12 @@
       "blocks": [
         {
           "type": "text",
-          "uses": ["modul", "zaehnezahl", "teilkreisdurchmesser", "achsabstand"],
+          "uses": [
+            "modul",
+            "zaehnezahl",
+            "teilkreisdurchmesser",
+            "achsabstand"
+          ],
           "layers": {
             "intuitive": "Genug gerechnet – jetzt baust du. Wähle Zähnezahlen und Modul, bis beide Anforderungen grün sind. Dann lädst du deine Räder als druckfertige Dateien herunter.",
             "practical": "Beide Räder brauchen denselben Modul, das Verhältnis z₂/z₁ muss die Ziel-Übersetzung treffen, und der Achsabstand muss aufs Gehäuse passen. Die Vorschau und die STL-Dateien stammen aus genau demselben parametrischen Modell.",
@@ -347,32 +620,92 @@
           "type": "build",
           "cadModel": "gear",
           "parameters": {
-            "m": { "min": 1, "max": 4, "default": 2, "unit": "mm", "label": "Modul" },
-            "z1": { "min": 12, "max": 40, "default": 20, "unit": "-", "label": "Zähnezahl Antrieb" },
-            "z2": { "min": 30, "max": 120, "default": 60, "unit": "-", "label": "Zähnezahl Abtrieb" },
-            "thickness": { "min": 3, "max": 16, "default": 8, "unit": "mm", "label": "Breite" },
-            "bore": { "min": 2, "max": 10, "default": 5, "unit": "mm", "label": "Bohrung" }
+            "m": {
+              "min": 1,
+              "max": 4,
+              "default": 2,
+              "unit": "mm",
+              "label": "Modul"
+            },
+            "z1": {
+              "min": 12,
+              "max": 40,
+              "default": 20,
+              "unit": "-",
+              "label": "Zähnezahl Antrieb"
+            },
+            "z2": {
+              "min": 30,
+              "max": 120,
+              "default": 60,
+              "unit": "-",
+              "label": "Zähnezahl Abtrieb"
+            },
+            "thickness": {
+              "min": 3,
+              "max": 16,
+              "default": 8,
+              "unit": "mm",
+              "label": "Breite"
+            },
+            "bore": {
+              "min": 2,
+              "max": 10,
+              "default": 5,
+              "unit": "mm",
+              "label": "Bohrung"
+            }
           },
           "constraints": [
             {
               "expr": "abs(z2 / z1 - 3) / 3 <= 0.05",
               "label": "Übersetzung trifft das Ziel i = 3 (±5 %)",
               "proof": {
-                "pass": { "m": 2, "z1": 20, "z2": 60, "thickness": 8, "bore": 5 },
-                "fail": { "m": 2, "z1": 20, "z2": 40, "thickness": 8, "bore": 5 }
+                "pass": {
+                  "m": 2,
+                  "z1": 20,
+                  "z2": 60,
+                  "thickness": 8,
+                  "bore": 5
+                },
+                "fail": {
+                  "m": 2,
+                  "z1": 20,
+                  "z2": 40,
+                  "thickness": 8,
+                  "bore": 5
+                }
               }
             },
             {
               "expr": "m * (z1 + z2) / 2 <= 90",
               "label": "Achsabstand passt ins Gehäuse (a ≤ 90 mm)",
               "proof": {
-                "pass": { "m": 2, "z1": 20, "z2": 60, "thickness": 8, "bore": 5 },
-                "fail": { "m": 3, "z1": 20, "z2": 60, "thickness": 8, "bore": 5 }
+                "pass": {
+                  "m": 2,
+                  "z1": 20,
+                  "z2": 60,
+                  "thickness": 8,
+                  "bore": 5
+                },
+                "fail": {
+                  "m": 3,
+                  "z1": 20,
+                  "z2": 60,
+                  "thickness": 8,
+                  "bore": 5
+                }
               }
             }
           ],
-          "exports": ["stl"],
-          "bom": ["2× Stirnrad (gedruckt)", "2× Achse Ø 5 mm", "1× Grundplatte mit 80-mm-Bohrungsabstand"]
+          "exports": [
+            "stl"
+          ],
+          "bom": [
+            "2× Stirnrad (gedruckt)",
+            "2× Achse Ø 5 mm",
+            "1× Grundplatte mit 80-mm-Bohrungsabstand"
+          ]
         }
       ]
     },
@@ -385,7 +718,11 @@
       "blocks": [
         {
           "type": "text",
-          "uses": ["uebersetzung", "achsabstand", "wirkungsgrad"],
+          "uses": [
+            "uebersetzung",
+            "achsabstand",
+            "wirkungsgrad"
+          ],
           "layers": {
             "intuitive": "Moment der Wahrheit: Drei Anforderungen hat die Challenge gestellt – Drehzahl runter auf ein Drittel, Drehmoment fast verdreifacht, und alles muss aufs Brett passen. Schauen wir, was deine Auslegung sagt.",
             "practical": "Der Challenge-Check rechnet deine gewählten Parameter durch dieselben Formeln, mit denen du ausgelegt hast – Übersetzung, Achsabstand, Abtriebsdrehmoment. Alles grün? Dann ist das Getriebe druckreif.",
@@ -395,22 +732,42 @@
         {
           "type": "calc",
           "formulaId": "ratio",
-          "inputs": { "z1": 20, "z2": 60 },
-          "expected": { "value": 3, "unit": "-" },
+          "inputs": {
+            "z1": 20,
+            "z2": 60
+          },
+          "expected": {
+            "value": 3,
+            "unit": "-"
+          },
           "narrative": "Check 1 – Übersetzung: i = 60/20 = 3. Ziel getroffen."
         },
         {
           "type": "calc",
           "formulaId": "axis_dist",
-          "inputs": { "m": 2, "z1": 20, "z2": 60 },
-          "expected": { "value": 80, "unit": "mm" },
+          "inputs": {
+            "m": 2,
+            "z1": 20,
+            "z2": 60
+          },
+          "expected": {
+            "value": 80,
+            "unit": "mm"
+          },
           "narrative": "Check 2 – Achsabstand: a = 80 mm. Passt auf die Grundplatte."
         },
         {
           "type": "calc",
           "formulaId": "torque_out",
-          "inputs": { "M1": 10, "i": 3, "eta": 0.97 },
-          "expected": { "value": 29.1, "unit": "N*m" },
+          "inputs": {
+            "M1": 10,
+            "i": 3,
+            "eta": 0.97
+          },
+          "expected": {
+            "value": 29.1,
+            "unit": "N*m"
+          },
           "narrative": "Check 3 – Drehmoment: M₂ = 29,1 N·m. Die Challenge wollte ≥ 29 – geschafft."
         },
         {
