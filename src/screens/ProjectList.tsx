@@ -2,6 +2,7 @@
 // vier Niveau-Sektionen, Statuskarten, Soft-Lock nur als Optik (immer antippbar).
 
 import { Link } from 'react-router-dom';
+import { ScreenSkeleton, StatusBadge } from '@buildlab/ui';
 import { projects, projectStatus, recommendNext, type ProjectMeta, type ProjectStatus } from '../content';
 import { useAllProgress, useConceptStates } from '../db/repo';
 import type { ProjectProgress } from '../db/types';
@@ -13,34 +14,56 @@ const LEVEL_LABELS: Record<number, string> = {
   4: 'Niveau 4 — Meisterstück',
 };
 
-// Mobil ausgeblendet (SCREENS.md §5.1): auf schmalen Karten zählt der Status.
+// Lineal-Ticks (DESIGN.md §3) — mobil kompakter, aber sichtbar (SCREENS.md §5.1).
 function Difficulty({ value }: { value?: number }) {
   if (!value) return null;
   return (
-    <span className="hidden font-mono text-xs text-ink-faint md:inline" aria-label={`Schwierigkeit ${value} von 5`}>
+    <span
+      className="font-mono text-[10px] text-ink-faint md:text-xs"
+      aria-label={`Schwierigkeit ${value} von 5`}
+    >
       {'●'.repeat(value)}
       {'○'.repeat(5 - value)}
     </span>
   );
 }
 
+// Schloss-Symbol (gezeichnet, kein Emoji — DESIGN.md §9) für den Soft-Lock.
+function LockGlyph() {
+  return (
+    <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
+      <rect x="2.5" y="5.5" width="7" height="5" rx="1" fill="none" stroke="currentColor" strokeWidth="1.1" />
+      <path d="M4 5.5 V4 a2 2 0 0 1 4 0 v1.5" fill="none" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
 function StatusLine({ status, progress, total }: { status: ProjectStatus; progress?: ProjectProgress; total: number }) {
   switch (status) {
     case 'fertig':
-      return <span className="font-mono text-xs text-[color:var(--viz-low)]">✓ fertig</span>;
+      return <span className="font-mono text-xs text-ok">✓ fertig</span>;
     case 'begonnen':
       return (
         <span className="flex items-center gap-2">
-          <span className="h-1 w-16 rounded bg-paper-sink">
+          <span className="h-1 w-16 rounded bg-paper-deep">
             <span className="block h-full rounded bg-accent" style={{ width: `${((progress?.stepsDone.length ?? 0) / total) * 100}%` }} />
           </span>
           <span className="font-mono text-xs text-ink-2">begonnen</span>
         </span>
       );
     case 'empfohlen':
-      return <span className="rounded border border-black/10 bg-paper px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-accent-ink">empfohlen</span>;
+      return (
+        <StatusBadge tone="accent" className="uppercase tracking-wider">
+          empfohlen
+        </StatusBadge>
+      );
     case 'voraussetzung':
-      return <span className="font-mono text-xs text-ink-faint">Voraussetzung offen</span>;
+      return (
+        <span className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-faint">
+          <LockGlyph />
+          Voraussetzung offen
+        </span>
+      );
     default:
       return <span className="font-mono text-xs text-ink-faint">offen</span>;
   }
@@ -50,7 +73,7 @@ export default function ProjectList() {
   const allProgress = useAllProgress();
   const conceptStates = useConceptStates();
   if (!allProgress || !conceptStates) {
-    return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+    return <ScreenSkeleton layout="list" />;
   }
 
   const mastered = new Set(
@@ -67,7 +90,7 @@ export default function ProjectList() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="mb-6 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Projekte</h1>
+      <h1 className="mb-6 font-display text-display-sm text-ink-strong md:text-display">Projekte</h1>
       {[...byLevel.entries()].map(([level, list], si) => (
         <section
           key={level}
@@ -86,7 +109,7 @@ export default function ProjectList() {
                 <Link
                   key={p.id}
                   to={`/projekt/${p.id}`}
-                  className={`rounded border border-black/10 bg-paper-2 p-4 shadow outline-none transition hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px active:shadow-none ${
+                  className={`rounded border border-black/10 bg-paper-2 p-4 shadow outline-none transition hover:-translate-y-px hover:border-rule-strong focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px active:shadow-none ${
                     soft ? 'opacity-60' : ''
                   }`}
                 >

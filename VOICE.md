@@ -45,7 +45,9 @@ prüfungsgenau); `merksatz` ist auf allen Ebenen gleich (ein Satz, merkfähig);
 | CAD-Fehler | „Das Modell mag diese Werte nicht — stell einen Parameter zurück." |
 | Soft-Lock-Hinweis | „Dir fehlen noch: … — 10 Minuten Auffrischen, oder du legst direkt los und holst es unterwegs nach." |
 | 404 | „Hier ist nichts gezeichnet." |
-| Speicher-Warnung | „Konnte nicht speichern — Speicher voll? Exportier zur Sicherheit ein Backup." |
+| Speicher-Warnung (Badge) | „Konnte nicht speichern" |
+| Speicher-Dialog | „Dein Browser-Speicher scheint voll zu sein. Dein bisheriger Stand bleibt erhalten — exportier zur Sicherheit ein Backup." + [Sicherung exportieren] [später] |
+| Fehler-Karte (Error-Boundary) | „Hier hat sich etwas verklemmt. Lad die Seite einmal neu — dein Stand ist gespeichert." + [Neu laden] |
 
 ## 5. Feedback-Bausteine (für die drei Stufen aus `LERNMODELL.md` §7)
 

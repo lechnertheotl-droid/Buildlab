@@ -144,7 +144,9 @@ function symbolKey(symbol: string): string {
 
 function FormulaTap({ latex, variables }: { latex: string; variables: FormulaVariable[] }) {
   const host = useRef<HTMLDivElement>(null);
-  const [openVar, setOpenVar] = useState<{ v: FormulaVariable; x: number } | null>(null);
+  const [openVar, setOpenVar] = useState<{ v: FormulaVariable; x: number; el: HTMLElement } | null>(
+    null,
+  );
   const [unmatched, setUnmatched] = useState<FormulaVariable[]>([]);
 
   useEffect(() => {
@@ -214,7 +216,7 @@ function FormulaTap({ latex, variables }: { latex: string; variables: FormulaVar
       setOpenVar((cur) =>
         cur?.v.var === v.var
           ? null
-          : { v, x: Math.max(0, Math.min(rect.left - rootRect.left, rootRect.width - 260)) },
+          : { v, x: Math.max(0, Math.min(rect.left - rootRect.left, rootRect.width - 260)), el },
       );
     }
   }, [latex, variables]);
@@ -224,7 +226,12 @@ function FormulaTap({ latex, variables }: { latex: string; variables: FormulaVar
     const onDoc = (e: MouseEvent) => {
       if (host.current && !host.current.contains(e.target as Node)) setOpenVar(null);
     };
-    const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && setOpenVar(null);
+    // Esc schließt und gibt den Fokus ans angetippte Symbol zurück (DESIGN.md §7).
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setOpenVar(null);
+      openVar.el.focus();
+    };
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onEsc);
     return () => {
@@ -240,7 +247,7 @@ function FormulaTap({ latex, variables }: { latex: string; variables: FormulaVar
         <span
           role="dialog"
           style={{ left: openVar.x }}
-          className="animate-fade absolute top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-2 p-3 text-left shadow"
+          className="animate-fade absolute top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-3 p-3 text-left shadow-2"
         >
           <VariablePopoverBody v={openVar.v} />
         </span>

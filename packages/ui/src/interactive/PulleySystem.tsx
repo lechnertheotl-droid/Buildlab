@@ -11,7 +11,8 @@
 import { useEffect, useState } from 'react';
 import { project, shade, type Vec3 } from '@buildlab/iso';
 import { Slider } from '../Slider';
-import { IsoStage, isoBox, useEngineValue } from '../iso-scene';
+import { AmpelArrow, IsoStage, isoBox, useEngineValue } from '../iso-scene';
+import { reducedMotionActive } from '../primitives/motion';
 
 export interface PulleySystemParams {
   /** Gewichtskraft der Last in N. */
@@ -27,15 +28,6 @@ const fmt = (n: number, digits = 3) =>
   new Intl.NumberFormat('de-DE', { maximumFractionDigits: digits }).format(n);
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
-
-function reducedMotionActive(): boolean {
-  return (
-    (typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) ||
-    (typeof document !== 'undefined' &&
-      document.documentElement.classList.contains('bl-reduced-motion'))
-  );
-}
 
 // ── Welt-Konstanten (x-z-Ebene, y = Tiefe) ───────────────────────────────────
 const FRAME_COLOR = '#a9a294';
@@ -148,27 +140,12 @@ export function PulleySystem({ params, caption }: { params: PulleySystemParams; 
   const loadFront = project({ x: loadCx, y: 0, z: loadTopZ - 11 });
   const loadShadow = project({ x: loadCx, y: 0, z: 0 });
 
-  // Zugkraft-Pfeil (Ampel nach Kraftanteil, DESIGN.md §6): zieht am Seilende nach unten.
+  // Zugkraft-Pfeil (Ampel nach Kraftanteil, DESIGN.md §6): zieht am Seilende
+  // nach unten — die AmpelArrow-Primitive zeigt nach unten, hier gespiegelt.
   const frac = Math.min(1, (f.value ?? G) / G);
-  const vecColor = frac <= 0.34 ? 'var(--viz-low)' : frac <= 0.67 ? 'var(--viz-mid)' : 'var(--viz-high)';
   const hand = project({ x: pullX, y: 0, z: HAND_Z });
   const aLen = 14 + 26 * frac;
-  const ah = 7; // halbe Pfeilkopf-Breite
-  const headLen = 11;
-  const sw = 2;
   const tipY = hand.y + aLen;
-  const yHead = tipY - headLen;
-  const arrowPts = [
-    [hand.x - sw, hand.y],
-    [hand.x - sw, yHead],
-    [hand.x - ah, yHead],
-    [hand.x, tipY],
-    [hand.x + ah, yHead],
-    [hand.x + sw, yHead],
-    [hand.x + sw, hand.y],
-  ]
-    .map(([x, y]) => `${r2(x)},${r2(y)}`)
-    .join(' ');
 
   // Achsaufhängungen der festen Rollen (Laschen am Balken).
   const brackets = tops.map((cx) => ({
@@ -181,7 +158,13 @@ export function PulleySystem({ params, caption }: { params: PulleySystemParams; 
 
   return (
     <div className="rounded border border-black/10 bg-paper-2 p-4 shadow">
-      <IsoStage label={label} height={320} origin={{ x: 230, y: 196 }} floor={110}>
+      <IsoStage
+        label={label}
+        desc="Ein Flaschenzug an einem Gestell: Seil über Rollen, Last am Haken; der Ampel-Pfeil am Seilende zeigt die nötige Zugkraft."
+        height={320}
+        origin={{ x: 230, y: 196 }}
+        floor={110}
+      >
         {/* weicher Schatten unter der Last */}
         <ellipse cx={r2(loadShadow.x)} cy={r2(loadShadow.y)} rx={34} ry={12} fill="var(--ink)" opacity={0.12} filter="url(#iso-soft)" />
 
@@ -218,8 +201,11 @@ export function PulleySystem({ params, caption }: { params: PulleySystemParams; 
           G = {fmt(G)} N
         </text>
 
-        {/* Zugkraft als Ampel-Pfeil am Seilende */}
-        <polygon points={arrowPts} fill={vecColor} stroke="var(--ink)" strokeWidth={1.3} strokeLinejoin="round" />
+        {/* Zugkraft als Ampel-Pfeil am Seilende (an der Hand-Höhe gespiegelt,
+            weil die Zugrichtung nach unten zeigt). */}
+        <g transform={`translate(0 ${r2(hand.y + tipY)}) scale(1 -1)`}>
+          <AmpelArrow tip={{ x: hand.x, y: tipY }} length={aLen} frac={frac} shaftHalf={2} headHalf={7} headLen={11} />
+        </g>
         <text x={r2(hand.x)} y={r2(hand.y) - 8} textAnchor="middle" fontSize="11" className="fill-[color:var(--accent-ink)] font-mono">
           F = {f.value === null ? '—' : fmt(f.value)} N
         </text>

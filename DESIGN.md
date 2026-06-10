@@ -13,13 +13,16 @@ generisches Dashboard. Beiges Papier, Tuschelinien, Monospace-Messwerte, viel Lu
 
 ```css
 :root {
-  /* Flächen — warmes Beige als dominante Fläche */
+  /* Flächen — warmes Beige als dominante Fläche, fünf Tiefenstufen */
   --paper:      #EDE6D6;  /* App-Hintergrund (warmes Sandbeige) */
   --paper-2:    #F4EEE0;  /* Karten/erhöhte Flächen, etwas heller */
-  --paper-sink: #E3DAC6;  /* vertiefte Bereiche, Eingabefelder, Skeletons */
+  --paper-3:    #FAF5E9;  /* höchste Erhebung: Popover, Dialog, schwebender Rechner */
+  --paper-sink: #E3DAC6;  /* vertiefte Bereiche, Eingabefelder */
+  --paper-deep: #DCD1B6;  /* tiefste Senke: Skeleton-Basis, Canvas-Boden, Wells */
 
   /* Tinte — Graphit statt reinem Schwarz */
   --ink:        #23211C;  /* Haupttext */
+  --ink-strong: #161410;  /* Display-Headlines ≥ 2 rem (mehr Schlag als --ink) */
   --ink-2:      #57534A;  /* Sekundärtext, Labels */
   --ink-faint:  #8B857A;  /* Hilfslinien, Platzhalter (nur dekorativ, §7) */
 
@@ -29,6 +32,7 @@ generisches Dashboard. Beiges Papier, Tuschelinien, Monospace-Messwerte, viel Lu
 
   /* Linien */
   --rule:       #00000014; /* Hairline-Rahmen (Tinte, transparent) */
+  --rule-strong:#00000029; /* Hover-/aktive Hairlines */
   --grid:       #00000008; /* Millimeterpapier-Raster, sehr dezent */
 
   /* Datenvisualisierung (NUR Sim-Overlays + Aufgaben-Feedback, nie Marke) */
@@ -45,9 +49,11 @@ generisches Dashboard. Beiges Papier, Tuschelinien, Monospace-Messwerte, viel Lu
   --focus:      var(--accent); /* 2px-Ring, 2px Offset, §7 */
 
   /* Radius & Schatten — minimal, präzise (3 Elevation-Stufen, §4) */
+  --radius-sm:  4px;   /* Chips, Badges */
   --radius:     6px;
-  --shadow-1:   0 1px 0 #00000010, 0 8px 24px -16px #00000033;  /* Karte */
-  --shadow-2:   0 12px 32px -16px #00000040;                     /* Popover/Drawer */
+  --radius-lg:  10px;  /* Hero-Karten, Dialoge, Drawer */
+  --shadow-1:   0 1px 0 #00000012, 0 2px 6px -3px #00000024, 0 14px 32px -18px #00000040; /* Karte */
+  --shadow-2:   0 1px 0 #0000000D, 0 10px 22px -10px #0000002E, 0 32px 64px -28px #00000055; /* Popover/Drawer */
   --shadow:     var(--shadow-1); /* Alias (Bestand) */
 }
 ```
@@ -72,9 +78,26 @@ Drei freie Schriften, bewusst nicht generisch:
 --font-mono:    'IBM Plex Mono', monospace;
 ```
 
-Größenskala (rem): 0.75 / 0.875 / 1 / 1.25 / 1.5 / 2 / 2.75.
-Body 1 rem, Zeilenhöhe 1.6. Headings eng (1.1), leicht negative Laufweite.
-Zahlen immer mit Einheit, Dezimal-**Komma** (deutsche Anzeige), Mono.
+**Type-Scale** (benannte Tailwind-`fontSize`-Tokens — keine ad-hoc `text-[…]`-Größen):
+
+| Token | Größe / Zeilenhöhe / Laufweite | Gewicht | Einsatz |
+|---|---|---|---|
+| `display-xl` | 3.25 rem / 1.04 / −0.025 em | 700 | Dashboard-Hero, Meilenstein |
+| `display` | 2.75 rem / 1.08 / −0.02 em | 600 | H1 Desktop |
+| `display-sm` | 2 rem / 1.12 / −0.015 em | 600 | H1 Mobil, Karten-Heroes |
+| `title` | 1.375 rem / 1.25 / −0.01 em | 600 | Schritt-Ziel, Sektionstitel |
+| `lead` | 1.125 rem / 1.5 | 400 | Hook-Karten, Empty-State-Titel |
+| `base` / `sm` / `xs` | 1 / 0.875 / 0.75 rem | 400 | Fließtext, Labels, Captions |
+
+- **H1-Regel:** `font-display text-display-sm md:text-display text-ink-strong`.
+- Display-Headlines (≥ 2 rem) nutzen `--ink-strong`. Hero-Headlines dürfen einen
+  **Tuschestrich** tragen: 3-px-Strich in `--accent`, 48 px breit, unterhalb der Zeile.
+- Body 1 rem, Zeilenhöhe 1.6.
+- Zahlen immer mit Einheit, Dezimal-**Komma** (deutsche Anzeige), Mono.
+
+**Spacing-Rhythmus** (4-px-Basis; erlaubte Stufen 4/8/12/16/24/32/48):
+Karte `p-4` · Hero-Karte `p-6` · Screen-Container `px-6 py-10` (mobil `px-4 py-6`) ·
+Sektionsabstand `gap-6` · Lektionsfluss `space-y-6` · Inline-Gruppen `gap-3`.
 
 ---
 
@@ -91,32 +114,60 @@ Zahlen immer mit Einheit, Dezimal-**Komma** (deutsche Anzeige), Mono.
 
 ## 4. Komponenten-Regeln & Zustände
 
+**Primitiven-Schicht (verbindlich):** Jede interaktive Fläche baut auf den
+Bausteinen in `packages/ui/src/primitives/` auf — ad-hoc nachgebaute Buttons,
+Karten oder Radiogroups sind nicht erlaubt.
+
+| Primitive | Zweck |
+|---|---|
+| `Button` / `buttonClass` | 4 Varianten (primary/secondary/ghost/danger), 2 Größen, alle 5 Zustände |
+| `Card` | Zeichenfeld, Elevation 1; `level="hero"` = großzügige Variante (`--radius-lg`, `p-6`) |
+| `EmptyState` | Leerzustand mit Titel, Hinweis, Aktion, optionalem Iso-Doodle |
+| `Skeleton` / `ScreenSkeleton` | Ladezustand (`schimmer` auf `--paper-deep`), 4 Layout-Gerüste |
+| `Dialog` | modales Muster: Fokus-Falle, Esc, Fokus-Rückgabe, Elevation 2, `gleiten` |
+| `SegmentedControl` | segmentierte Auswahl mit Roving-Tabindex + ←/→ |
+| `StatusBadge` | Status immer Symbol + Text (§5) |
+| `ProgressBar` | Fortschritt mit `fuellen`-Motion |
+| `Collapse` | Höhen-Expansion `aufklappen`, Inhalt bleibt im DOM |
+| `focusRing` / `hitArea` | der eine Fokus-Ring · die eine Treffflächen-Technik |
+
 Jede interaktive Komponente definiert **alle fünf** Zustände:
 
 | Zustand | Darstellung |
 |---|---|
 | Ruhe | Hairline-Rahmen (`--rule`), Fläche `--paper-2` |
-| Hover | Rahmen → `--ink-2`, Fläche 1 % dunkler; Cursor zeigt Interaktivität |
+| Hover | Rahmen → `--rule-strong`, Fläche 1 % heller (`--paper-3`); Karten dürfen 1 px liften |
 | Fokus | `:focus-visible`: 2-px-Ring in `--focus`, 2 px Offset — **immer**, auch auf SVG-Elementen |
 | Aktiv | `translateY(1px)`, Schatten entfällt (gedrückt = aufliegend) |
 | Deaktiviert | 40 % Opazität, `cursor: not-allowed`, Tooltip erklärt warum |
 
+**Zustands-Ebenen je Screen (Pflicht):** Jeder Screen mit asynchronen Daten
+definiert **Laden** (`ScreenSkeleton`, layout-nah — nie nackter Text),
+**Leer** (`EmptyState` mit nächstem Schritt) und **Fehler** (Fehler-Karte mit
+„Neu laden", siehe `src/shell/RouteError.tsx`).
+
 **Elevation (genau drei Stufen):**
 0 = Fläche (kein Schatten) · 1 = Karte (`--shadow-1`) · 2 = Popover/Drawer/
-schwebender Rechner (`--shadow-2`). Keine weiteren Stufen, kein Stapeln.
+schwebender Rechner (`--shadow-2`, Fläche `--paper-3`). Keine weiteren Stufen,
+kein Stapeln.
 
 - **Buttons:** flach, Hairline-Rahmen; primär = `--accent`-Fläche, Text `--paper`;
   sekundär = Outline. Höhe ≥ 44 px (Touch).
+- **Trefffläche-Technik:** Bedienelemente dürfen visuell kleiner als 44 px sein
+  (z. B. Slider-Stepper 28 px), wenn ein unsichtbares Pseudo-Element die
+  Trefffläche auf ≥ 44 px erweitert (`hitArea`: `after:absolute after:-inset-2`).
 - **Slider** (zentrales Interaktions-Element): Tick-Marks an der Schiene,
   aktueller Wert in Mono am Griff, **−/+-Stepper** an beiden Enden (Feinjustage,
   Touch, Tastatur). Live-Feedback ohne Verzögerung. Unter jedem SVG-Slider liegt
   ein nativer `<input type="range">` (§7).
 - **Formel-Variablen:** Mono, antippbar, beim Tippen unterstrichen in `--accent-ink`.
 - **Tiefen-Umschalter:** drei segmentierte Tabs (verspielt / praxis / genau);
-  globale Ebene = gefüllter Tab, lokale Abweichung = Outline-Tab.
+  globale Ebene = gefüllter Tab, lokale Abweichung = Outline-Tab
+  (`SegmentedControl outlineActive`).
 - **Aufgaben-Karten:** eingerückt, Statusecke oben rechts (offen = leer,
-  ✓ = `--ok`, „mit Hilfe ✓" = `--ok` mit Ring).
-- **Skeleton/Laden:** Flächen in `--paper-sink` mit langsamem Schimmer;
+  ✓ = `--ok`, „mit Hilfe ✓" = `--ok` mit Ring); Feedback-Zeile immer mit
+  Symbol-Präfix (✓ ⚠ ✗) und per `aria-describedby` mit dem Eingabefeld verknüpft.
+- **Skeleton/Laden:** Flächen in `--paper-deep` mit langsamem `schimmer`;
   WASM-Kompilieren zusätzlich Mono-Zeile „Fräse läuft …".
 
 ---
@@ -124,7 +175,9 @@ schwebender Rechner (`--shadow-2`). Keine weiteren Stufen, kein Stapeln.
 ## 5. Farbe semantisch
 
 - `--accent` heißt: *hier kannst du etwas tun* (aktive Navigation, primäre
-  Buttons, Messmarken, antippbare Begriffe). **Nie** für richtig/falsch.
+  Buttons, Messmarken, antippbare Begriffe). Zusätzlich erlaubt als
+  Marken-Moment: Wordmark-Punkt („Buildlab."), Hero-**Tuschestrich** (§2),
+  aktiver Schritt-Punkt, Meilenstein-Maßlinien. **Nie** für richtig/falsch.
 - Aufgaben-Feedback und Sim-Overlays nutzen **ausschließlich** `--ok` / `--warn`
   / `--fehl`. Richtig ist grün, kritisch ist rot — auch wenn Orange „schöner" wäre.
 - Status niemals nur über Farbe: immer Symbol (✓ ⚠ ✗) oder Text dazu (§7).
@@ -151,17 +204,25 @@ wiederverwendbaren Bühnen-Primitiven liegen in `packages/ui/src/iso-scene/`
 - **Plastische Körper:** jede sichtbare Fläche bekommt einen Verlauf (oben hell
   → unten dunkel) statt flacher Füllung, plus Glanzkante + Bevel.
 - **Weiche Tiefe:** dezenter Gauß-Blur-Schatten (`feGaussianBlur`, niedriges
-  Alpha) unter Körpern — **kein** harter Schlagschatten.
-- **Perspektivischer Boden:** isometrische Bühne mit projiziertem Welt-Gitter
-  (Millimeterpapier in 3D). Hairline-Rahmen der Karte bleibt erhalten.
+  Alpha) unter Körpern — **kein** harter Schlagschatten. Wiederverwendbar als
+  `isoContactShadow` (iso-scene).
+- **Perspektivischer Boden (Bühne):** isometrische Bühne mit projiziertem
+  Welt-Gitter (Millimeterpapier in 3D), das zum Rand hin **ausläuft**
+  (Opazität 0,22 → 0,08; Achsen 0,35), einem **Licht-Pool** unter dem Ursprung
+  (radialGradient, sehr dezent) und **Lineal-Ticks** auf der +x-Achse (§3-Motiv).
+  Opt-out für ruhige Szenen: `staging="plain"`. Hairline-Rahmen der Karte bleibt.
 - **Wirkung geometrisch zeigen, nicht nur einfärben:** der Hebel neigt sich
   unter Last (Drehwinkel ∝ Drehmoment), Zahnräder drehen im echten
   Drehzahlverhältnis, ein überlasteter Stab biegt sichtbar durch. Der
-  Kraftvektor ist ein **Ampel-Pfeil** (`--ok → --warn → --fehl`) mit
-  `--ink`-Kontur und kräftiger Spitze — Betrag bleibt auch im grünen Bereich
-  lesbar. Alle Zahlen aus der Engine (Eiserne Regel 1).
+  Kraftvektor ist ein **Ampel-Pfeil** (`AmpelArrow`: eine geschlossene
+  Silhouette mit `--ink`-Kontur und kräftiger Spitze — Betrag bleibt auch im
+  grünen Bereich lesbar). Farbe über `ampelColor` mit verbindlichen Schwellen:
+  < 0,5 → `--ok` · < 0,8 → `--warn` · sonst `--fehl`. Alle Zahlen aus der
+  Engine (Eiserne Regel 1).
 - **Explosionsansicht** (`packages/iso/explode`): Belohnungsmoment am
-  Meilenstein — Teile gleiten gestaffelt auseinander, Maßlinien beschriften sie.
+  Meilenstein — Teile gleiten per one-shot rAF (900 ms, Standard-Easing-Gefühl)
+  auseinander, Maßlinien (dünne Akzent-Leader, Mono-Labels) beschriften sie.
+  Reduzierte Bewegung → sofort explodierte Endlage.
 - **Ziel-Korridor** (bei `target`-Aufgaben): der zulässige Bereich wird als
   dezentes `--ok`-Band auf der Ergebnis-Skala der Canvas markiert.
 
@@ -176,13 +237,19 @@ wiederverwendbaren Bühnen-Primitiven liegen in `packages/ui/src/iso-scene/`
 - **Tap-Targets ≥ 44 px** (Buttons, Stepper, Chips, Navigationspunkte).
 - **Fokus sichtbar:** `:focus-visible`-Ring (§4) überall, auch auf SVG.
 - **Interaktive Canvases:** jede Sim hat `role="img"` + sprechendes
-  `aria-label` mit Live-Werten („Zahnradpaar, z1 20, z2 60, Übersetzung 3,0");
+  `aria-label` mit Live-Werten („Zahnradpaar, z1 20, z2 60, Übersetzung 3,0")
+  **und** ein statisches `<desc>`-Kind, das die Szenen-Konstruktion beschreibt;
   die Mono-Ergebniszeile trägt `aria-live="polite"`. **Pflicht:** zu jedem
-  SVG-Slider existiert ein paralleles natives `<input type="range">`
-  (Muster: `packages/ui/src/Slider.tsx`) — das gilt für alle Komponenten der
-  Registry, ohne Ausnahme.
-- **Popover/Panels:** `role="dialog"`, Fokus hinein und beim Schließen zurück,
-  `Esc` schließt. Keine Fokus-Falle bei leichten Popovers.
+  SVG-Slider existiert ein paralleles natives `<input type="range">` mit
+  `aria-valuetext` (Wert + Einheit; Muster: `packages/ui/src/Slider.tsx`) —
+  das gilt für alle Komponenten der Registry, ohne Ausnahme. Kontinuierliche
+  Wertansagen laufen debounced über die globale Live-Region (`useAnnounce`).
+- **Popover/Panels:** `role="dialog"`, Fokus hinein und beim Schließen zurück
+  (`useFocusReturn`), `Esc` schließt. Keine Fokus-Falle bei leichten Popovers;
+  modale Dialoge nutzen das `Dialog`-Primitiv (echte Falle, `useFocusTrap`).
+- **Fehlertexte an Eingaben:** immer per `aria-describedby` mit dem Feld
+  verknüpft, Feld bekommt `aria-invalid`; eigenständige Fehlermeldungen
+  tragen `role="alert"`.
 - **Reduzierte Bewegung:** `prefers-reduced-motion` **oder** die App-Einstellung
   (ODER-verknüpft) ersetzt jede Animation aus §8 durch den sofortigen Endzustand.
 - **Nie nur Farbe:** Status immer mit Symbol/Text (§5).
@@ -191,19 +258,26 @@ wiederverwendbaren Bühnen-Primitiven liegen in `packages/ui/src/iso-scene/`
 
 ## 8. Motion-Vokabular (benannt, zurückhaltend)
 
-Vier benannte Bewegungen — mehr gibt es nicht. Easing: `cubic-bezier(0.2, 0, 0, 1)`.
+Acht benannte Bewegungen — mehr gibt es nicht. Easing: `cubic-bezier(0.2, 0, 0, 1)`.
 
 | Name | Einsatz | Dauer | Verhalten |
 |---|---|---|---|
 | `einzeichnen` | Schritt-/Seiteneinstieg, neues Bauteil | 400 ms | gestaffeltes Erscheinen (`animation-delay`: Boden → Drehpunkt → Körper → Vordergrund), Teile „zeichnen" sich isometrisch ein |
-| `quittung` | Aufgabe gelöst, Constraint erfüllt | 180 ms | Fade-in + 2 px Rise der Bestätigungszeile |
+| `quittung` | Aufgabe gelöst, Constraint erfüllt | 180 ms | Fade-in + 2 px Rise der Bestätigungszeile; Statusecken-Variante: kleiner Pop (`scale 0.9 → 1`) |
 | `wechsel` | Tiefen-Umschalter, Tab-/Panelwechsel | 200 ms | Cross-Fade in place, Scroll-Position bleibt |
 | `zaehlen` | Ergebniszahl ändert sich | 300 ms | Zahl zählt per rAF zum neuen Wert (Mono, keine Layout-Verschiebung) |
+| `aufklappen` | jede Höhen-Expansion: Canvas-Collapse, Hinweis/Lösungsweg, Disclosures | 300 ms | `grid-template-rows 1fr ↔ 0fr`-Transition, Kind `min-height: 0` + `overflow: hidden` |
+| `gleiten` | Drawer, Bottom-Sheet, Dialog, Trainings-Kartenwechsel | 240 ms | 24 px Translate + Fade zum Zielort |
+| `fuellen` | Fortschrittsbalken/-ring beim ersten Rendern | 500 ms | füllt per `scaleX(0 → 1)` zur Ist-Position |
+| `schimmer` | Skeleton-Glanz | 1,8 s Loop | heller Sweep über `--paper-deep`-Fläche (`background-position`) |
 
+- **Mikrotransitionen:** Zustandswechsel (Farbe/Transform, ≤ 200 ms) sind ohne
+  eigenen Namen erlaubt — z. B. Hover-Lift einer Karte, Schritt-Punkt-Wechsel.
 - **Slider/Sim:** sofortige, flüssige Reaktion (60 fps), kein Bounce, keine
   CSS-Transition auf Geometrie — Live-Werte fließen direkt in Neigung, Pfeil,
   Farbe (rAF).
-- Alles respektiert reduzierte Bewegung (§7).
+- Alles respektiert reduzierte Bewegung (§7): `schimmer` wird statische Fläche,
+  `fuellen` sofort voll, `aufklappen`/`gleiten` ohne Übergang.
 
 ---
 

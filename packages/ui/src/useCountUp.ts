@@ -3,20 +3,13 @@
 // Bewegung (§7: System-Präferenz ODER App-Einstellung) → sofortiger Endwert.
 
 import { useEffect, useRef, useState } from 'react';
-
-function reducedMotion(): boolean {
-  if (document.documentElement.classList.contains('bl-reduced-motion')) return true;
-  return (
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-}
+import { reducedMotionActive } from './primitives/motion';
 
 export function useCountUp(target: number, duration = 300): number {
   const [value, setValue] = useState(target);
   const shown = useRef(target);
   useEffect(() => {
-    if (shown.current === target || !Number.isFinite(target) || reducedMotion()) {
+    if (shown.current === target || !Number.isFinite(target) || reducedMotionActive()) {
       shown.current = target;
       setValue(target);
       return;

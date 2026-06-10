@@ -2,6 +2,7 @@
 
 import { createHashRouter } from 'react-router-dom';
 import AppShell from './shell/AppShell';
+import { RouteError } from './shell/RouteError';
 import Onboarding from './screens/Onboarding';
 import Dashboard from './screens/Dashboard';
 import SkillMap from './screens/SkillMap';
@@ -20,6 +21,7 @@ export const router = createHashRouter([
   {
     path: '/',
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <Dashboard />, handle: { crumb: 'Start' } },
       { path: 'karte', element: <SkillMap />, handle: { crumb: 'Skill-Map' } },

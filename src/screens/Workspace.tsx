@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
-  ContentProvider, WorkspaceStep,
+  ContentProvider, ScreenSkeleton, WorkspaceStep,
   type Concept, type Formula, type Project, type TaskBlock, type TaskResult,
 } from '@buildlab/ui';
 import { componentIds, concepts, formulas, projectById } from '../content';
@@ -33,7 +33,7 @@ export default function Workspace() {
 
   if (!project) return <NotFound />;
   if (!taskStates || !conceptStates || !settings || progress === undefined) {
-    return <div className="p-8 font-mono text-sm text-ink-faint">lädt …</div>;
+    return <ScreenSkeleton layout="workspace" />;
   }
 
   // Kein Vorspulen per URL: höchstens bis zum höchsten erreichten Schritt + 1.

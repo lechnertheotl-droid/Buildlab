@@ -9,6 +9,7 @@ import { project, shade } from '@buildlab/iso';
 import { Slider } from '../Slider';
 import { useContent } from '../content-context';
 import { IsoStage, groundRotationMatrix, useEngineValue } from '../iso-scene';
+import { reducedMotionActive } from '../primitives/motion';
 
 export interface GearPairParams {
   z1?: number;
@@ -43,15 +44,6 @@ function gearOutline(z: number, rootR: number, tipR: number): string {
     push(rootR, a + 0.62 * pitch);
   }
   return points.join(' ');
-}
-
-function reducedMotionActive(): boolean {
-  return (
-    (typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) ||
-    (typeof document !== 'undefined' &&
-      document.documentElement.classList.contains('bl-reduced-motion'))
-  );
 }
 
 function Gear({
@@ -146,8 +138,20 @@ export function GearPair({ params, caption }: { params: GearPairParams; caption?
       }
       raf = requestAnimationFrame(tick);
     };
+    // rAF pausiert in verdeckten Tabs (kein Batterie-Verbrauch im Hintergrund).
+    const onVisibility = () => {
+      cancelAnimationFrame(raf);
+      if (!document.hidden) {
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   const height = 14;
@@ -155,7 +159,13 @@ export function GearPair({ params, caption }: { params: GearPairParams; caption?
 
   return (
     <div className="rounded border border-black/10 bg-paper-2 p-4 shadow">
-      <IsoStage label={label} height={250} origin={{ x: 230, y: 150 }} floor={120}>
+      <IsoStage
+        label={label}
+        desc="Zwei verzahnte Räder auf einer isometrischen Bühne drehen sich im echten Drehzahlverhältnis; die Regler ändern Zähnezahlen und Modul."
+        height={250}
+        origin={{ x: 230, y: 150 }}
+        floor={120}
+      >
         <Gear cx={c1.x} cy={c1.y} z={z1} rootR={(r1 - 1.25 * m) * k} tipR={(r1 + m) * k} height={height} color="#a9a294" bore={6} groupRef={collect(1)} />
         <Gear cx={c2.x} cy={c2.y} z={z2} rootR={(r2 - 1.25 * m) * k} tipR={(r2 + m) * k} height={height} color="#9a9489" bore={8} groupRef={collect(2)} />
         {/* Teilkreise als Maßhilfe, wenn der Schritt d behandelt */}

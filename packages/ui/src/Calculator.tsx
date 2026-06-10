@@ -4,10 +4,11 @@
 // formelbewusst (zieht die aktive Projektformel + aktuelle Slider-Werte herein)
 // und mit Verlauf. Bewusst auf den Ingenieur-Bedarf fokussiert, kein voller CAS.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { create, all } from 'mathjs';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
+import { Skeleton } from './primitives/Skeleton';
 import { useWorkspaceStore } from './store';
 import type { Formula } from './types';
 
@@ -27,8 +28,11 @@ interface HistoryItem extends CalcHistoryItem {
 }
 
 export interface CalculatorProps {
-  /** Persistierter Verlauf (DATENMODELL.md §2: calcHistory), neueste zuerst. */
+  /** Persistierter Verlauf (DATENMODELL.md §2: calcHistory), neueste zuerst.
+      Darf nachgeliefert werden — der Rechner sät ihn dann einmalig ein. */
   initialHistory?: CalcHistoryItem[];
+  /** Verlauf lädt noch → Skeleton-Zeilen statt leerem Hinweis. */
+  historyLoading?: boolean;
   /** Wird bei jedem „=" gerufen (Persistenz-Anbindung). */
   onEvaluate?: (entry: CalcHistoryItem) => void;
 }
@@ -79,7 +83,7 @@ const KEYS: { label: string; insert?: string; action?: 'eval' | 'clear' | 'back'
 
 const UNITS = ['N', 'mm', 'm', 'kg', 'MPa', 'N*m', 'deg', 'm/s^2'];
 
-export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {}) {
+export function Calculator({ initialHistory, historyLoading, onEvaluate }: CalculatorProps = {}) {
   const { formulas } = useContent();
   const active = useWorkspaceStore((s) => s.active);
   const answerSink = useWorkspaceStore((s) => s.answerSink);
@@ -89,6 +93,15 @@ export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {})
   const [ans, setAns] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>(() => initialHistory ?? []);
+
+  // Verlauf kann nach dem Mount eintreffen (Drawer ist sofort da, IndexedDB
+  // lädt noch) — einmalig einsäen, lokale Einträge bleiben vorn.
+  const seeded = useRef(initialHistory !== undefined);
+  useEffect(() => {
+    if (seeded.current || initialHistory === undefined) return;
+    seeded.current = true;
+    setHistory((h) => [...h, ...initialHistory].slice(0, 50));
+  }, [initialHistory]);
 
   const preview = useMemo(() => {
     if (!expr.trim()) return '';
@@ -140,7 +153,14 @@ export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {})
     <div className="flex h-full flex-col">
       {/* Verlauf */}
       <div className="min-h-[64px] flex-1 overflow-auto border-b border-black/10 bg-paper-sink/40 p-3">
-        {history.length === 0 ? (
+        {historyLoading && history.length === 0 ? (
+          <div className="flex flex-col gap-2" role="status" aria-label="Verlauf lädt">
+            <span className="sr-only">Verlauf lädt …</span>
+            <Skeleton className="h-3.5 w-4/5" />
+            <Skeleton className="h-3.5 w-3/5" />
+            <Skeleton className="h-3.5 w-2/3" />
+          </div>
+        ) : history.length === 0 ? (
           <p className="font-mono text-xs text-ink-faint">Verlauf — Ergebnisse sind anklickbar.</p>
         ) : (
           <ul className="flex flex-col gap-1">
@@ -150,7 +170,7 @@ export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {})
                   type="button"
                   onClick={() => append(h.display.replace(/\s/g, ' '))}
                   title="Ergebnis übernehmen"
-                  className="min-w-0 flex-1 truncate text-left font-mono text-xs text-ink-2 outline-none hover:text-accent-ink focus-visible:ring-2 focus-visible:ring-accent"
+                  className="min-h-9 min-w-0 flex-1 truncate text-left font-mono text-xs text-ink-2 outline-none hover:text-accent-ink focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {h.expr} = <span className="text-ink">{h.display}</span>
                 </button>
@@ -160,7 +180,7 @@ export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {})
                     onClick={() => answerSink(h.value!)}
                     title="In das aktive Antwortfeld einsetzen"
                     aria-label={`${h.display} in die Aufgabe einsetzen`}
-                    className="shrink-0 rounded border border-black/10 px-1.5 font-mono text-xs text-accent-ink outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
+                    className="min-h-9 shrink-0 rounded border border-black/10 px-2 font-mono text-xs text-accent-ink outline-none hover:border-rule-strong focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     ⇥
                   </button>
@@ -310,7 +330,7 @@ export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {})
                         setExpr(f.expr);
                         setTab('numbers');
                       }}
-                      className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-paper-sink/60"
+                      className="flex min-h-9 w-full items-center gap-2 rounded px-1 py-0.5 text-left outline-none transition-colors hover:bg-paper-sink/60 focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       <Latex className="text-sm text-ink" src={f.latex} />
                     </button>
