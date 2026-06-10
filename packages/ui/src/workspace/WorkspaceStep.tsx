@@ -415,13 +415,13 @@ export function WorkspaceStep({
               Desktop inline am Lektion-Ende. */}
           <nav
             aria-label="Schritte"
-            className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 flex items-center gap-3 border-t border-black/10 bg-paper-2 px-4 py-2 md:static md:mt-8 md:border-t md:bg-transparent md:px-0 md:pt-4"
+            className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 flex items-center gap-2 border-t border-black/10 bg-paper-2 px-3 py-2 md:static md:mt-8 md:gap-3 md:border-t md:bg-transparent md:px-0 md:pt-4"
           >
             <button
               type="button"
               onClick={() => onNavigate(stepIndex - 1)}
               disabled={stepIndex === 0}
-              className={`${buttonClass({ variant: 'secondary' })} whitespace-nowrap !px-3 md:!px-4`}
+              className={`${buttonClass({ variant: 'secondary' })} whitespace-nowrap !px-2.5 md:!px-4`}
             >
               ‹ Zurück
             </button>
@@ -439,7 +439,7 @@ export function WorkspaceStep({
                     aria-current={current ? 'step' : undefined}
                     disabled={!reachable}
                     onClick={() => onNavigate(i)}
-                    className={`group relative flex h-11 w-6 items-center justify-center rounded ${focusRing} disabled:cursor-not-allowed md:w-7`}
+                    className={`group relative flex h-11 w-5 items-center justify-center rounded ${focusRing} disabled:cursor-not-allowed md:w-7`}
                   >
                     <span
                       aria-hidden
@@ -464,7 +464,7 @@ export function WorkspaceStep({
               onClick={() => onNavigate(stepIndex + 1)}
               disabled={!stepDone || stepIndex >= project.steps.length - 1}
               title={stepDone ? undefined : 'Noch eine Aufgabe offen — sie ist direkt über mir.'}
-              className={`${buttonClass()} whitespace-nowrap !px-3 md:!px-4`}
+              className={`${buttonClass()} whitespace-nowrap !px-2.5 md:!px-4`}
             >
               Weiter ›
             </button>
