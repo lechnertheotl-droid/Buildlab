@@ -1,0 +1,68 @@
+{
+  "_doc": "Trainings-Pool der Skill-Map-Gruppe 'maschinenelemente'. Gleiche task-Schemata wie im Projekt-Content (schema/content.schema.json#taskBlock), ohne Projektkontext. Verwendet vom Training-Screen (LERNMODELL.md §6).",
+  "group": "maschinenelemente",
+  "tasks": [
+    {
+      "type": "task",
+      "kind": "numeric",
+      "question": "Ein Getriebe hat z₁ = 18 und z₂ = 54. Wie groß ist die Übersetzung i?",
+      "concepts": ["uebersetzung"],
+      "answer": 3,
+      "tolerance": 0.01,
+      "unit": "-",
+      "source": { "formulaId": "ratio", "inputs": { "z1": 18, "z2": 54 } },
+      "hint": "Abtrieb durch Antrieb: z₂/z₁.",
+      "explanation": "i = z₂/z₁ = 54/18 = 3."
+    },
+    {
+      "type": "task",
+      "kind": "numeric",
+      "question": "Ein Rad hat Modul m = 1,5 mm und z = 24 Zähne. Wie groß ist der Teilkreisdurchmesser?",
+      "concepts": ["teilkreisdurchmesser", "modul"],
+      "answer": 36,
+      "tolerance": 0.01,
+      "unit": "mm",
+      "source": { "formulaId": "pitch_d", "inputs": { "m": 1.5, "z": 24 } },
+      "hint": "d = m·z.",
+      "explanation": "d = 1,5·24 = 36 mm."
+    },
+    {
+      "type": "task",
+      "kind": "single",
+      "question": "Zwei Zahnräder sollen miteinander kämmen. Was muss übereinstimmen?",
+      "concepts": ["modul"],
+      "options": [
+        { "text": "Der Modul beider Räder." },
+        { "text": "Die Zähnezahl beider Räder.", "why": "Dann wäre i immer 1 – unterschiedliche Zähnezahlen sind ja gerade der Sinn eines Getriebes." },
+        { "text": "Der Teilkreisdurchmesser beider Räder.", "why": "Die Teilkreise berühren sich nur – gleich groß müssen sie nicht sein." }
+      ],
+      "answer": 0,
+      "hint": "Welche Größe beschreibt die Zahngröße?",
+      "explanation": "Nur Räder mit gleichem Modul haben gleich große Zähne und können sauber ineinandergreifen."
+    },
+    {
+      "type": "task",
+      "kind": "numeric",
+      "question": "Zwei Räder mit m = 2 mm, z₁ = 25 und z₂ = 55: Wie groß ist der Achsabstand a?",
+      "concepts": ["achsabstand"],
+      "answer": 80,
+      "tolerance": 0.01,
+      "unit": "mm",
+      "source": { "formulaId": "axis_dist", "inputs": { "m": 2, "z1": 25, "z2": 55 } },
+      "hint": "a = m·(z₁+z₂)/2.",
+      "explanation": "a = 2·(25+55)/2 = 80 mm."
+    },
+    {
+      "type": "task",
+      "kind": "match",
+      "question": "Ordne jeder Getriebegröße ihre Einheit zu.",
+      "concepts": ["uebersetzung", "modul", "drehmoment"],
+      "pairs": [
+        { "left": "Übersetzung i", "right": "ohne Einheit" },
+        { "left": "Modul m", "right": "mm" },
+        { "left": "Drehmoment M", "right": "N·m" }
+      ],
+      "explanation": "i ist ein reines Verhältnis, der Modul ein Längenmaß, das Drehmoment Kraft mal Hebelarm."
+    }
+  ]
+}

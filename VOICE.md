@@ -3,7 +3,7 @@
 Ziel: **spielerisch und freundlich, aber nie auf Kosten der Korrektheit.** Wie ein
 kluger Werkstatt-Kumpel, der dich ernst nimmt, dir aber die Angst vor der Formel nimmt.
 
-## Grundhaltung
+## 1. Grundhaltung
 
 - Du sprichst den Lernenden direkt mit „du" an.
 - Kurze Sätze. Ein Gedanke pro Satz. Lieber ein gutes Bild als drei Fachwörter.
@@ -11,14 +11,18 @@ kluger Werkstatt-Kumpel, der dich ernst nimmt, dir aber die Angst vor der Formel
 - Scheitern wird gefeiert: „Welle gebrochen? Super – jetzt weißt du, wo die Grenze liegt."
 - Humor ja, aber dezent und nie auf Kosten der Klarheit. Kein Albern-Sein.
 
-## Tiefen-Ebenen haben verschiedene Stimmen
+## 2. Tiefen-Ebenen haben verschiedene Stimmen
 
 - **verspielt** — Bilder, Alltagsvergleiche, ein Augenzwinkern. Keine Formel nötig.
 - **praxis** — ruhig, anwendungsorientiert, Faustregeln. „So machst du's."
-- **genau** — präzise, vollständig, prüfungstauglich. Hier sind Strenge und
-  Vollständigkeit wichtiger als Lockerheit (aber immer noch verständlich).
+- **genau** — präzise, vollständig, prüfungstauglich. Strenge und Vollständigkeit
+  vor Lockerheit (aber immer noch verständlich).
 
-## Beispiele (vorher → nachher)
+Sonderfälle: `text.variant: hook` ist **immer** verspielt (ein Aufhänger ist nie
+prüfungsgenau); `merksatz` ist auf allen Ebenen gleich (ein Satz, merkfähig);
+`hinweis` spricht in der Praxis-Stimme.
+
+## 3. Beispiele (vorher → nachher)
 
 - Trocken: „Das Übersetzungsverhältnis ist als Quotient der Zähnezahlen definiert."
   Besser (verspielt): „Zwei Zahnräder, ein Tauschgeschäft: Tempo gegen Kraft. Wie viel
@@ -29,9 +33,52 @@ kluger Werkstatt-Kumpel, der dich ernst nimmt, dir aber die Angst vor der Formel
 - Bevormundend: „Sie müssen nun den Achsabstand berechnen."
   Besser: „Jetzt prüfen wir, ob die beiden Räder überhaupt zusammenpassen."
 
-## Tabu
+## 4. Microcopy-Inventar (UI-Texte)
+
+| Ort | Ton-Beispiel |
+|---|---|
+| Deaktivierter Weiter-Button | „Noch eine Aufgabe offen — sie ist direkt über mir." |
+| Leere Werkstatt | „Noch nichts gebaut — das erste Zahnrad wartet." |
+| Leeres Training | „Nichts fällig. Dein Kopf ist auf Stand — bau lieber was." |
+| Leere Skill-Map | „Deine Karte ist noch unbeschriftet — das erste Projekt zeichnet die ersten Knoten ein." |
+| WASM lädt | „Fräse läuft …" |
+| CAD-Fehler | „Das Modell mag diese Werte nicht — stell einen Parameter zurück." |
+| Soft-Lock-Hinweis | „Dir fehlen noch: … — 10 Minuten Auffrischen, oder du legst direkt los und holst es unterwegs nach." |
+| 404 | „Hier ist nichts gezeichnet." |
+| Speicher-Warnung | „Konnte nicht speichern — Speicher voll? Exportier zur Sicherheit ein Backup." |
+
+## 5. Feedback-Bausteine (für die drei Stufen aus `LERNMODELL.md` §7)
+
+**Richtig (variieren, nie zwei gleiche hintereinander):**
+„Sitzt." · „Genau so." · „Passt — weiter im Takt." · „Sauber gerechnet."
+
+**Stufe 1 — Heuristiken (numerisch):**
+- Zehnerpotenz: „Die Ziffern stimmen — prüf die Einheiten, da ist eine
+  Zehnerpotenz verrutscht."
+- Vorzeichen: „Betrag richtig, Richtung falsch. Was zieht, was drückt?"
+- Kehrwert: „Du hast den Kehrwert erwischt — welcher Wert gehört in den Zähler?"
+- Knapp daneben: „Fast! Prüf deine Rundung — rechne mit mehr Nachkommastellen weiter."
+- Sonst: „Noch nicht ganz. Welche Formel passt zu dieser Größe?"
+
+**Stufe 1 — Wahl-Aufgaben:** das `why` der gewählten Option zeigen — jedes `why`
+erklärt freundlich, *warum* die Option verführerisch, aber falsch ist
+(„Verlockend — das wäre die Drehzahl, nicht das Drehmoment.").
+
+**Stufe 2:** „Schau dir <Formel> nochmal an — ich hab sie dir markiert." + `hint`.
+
+**Stufe 3 (Lösungsweg):** „Gut gescheitert — jetzt weißt du, woran's lag.
+Hier ist der Weg:" + engine-gerechnete Rechnung.
+
+**Schritt fertig:** „Schritt 4 ✓ · Achsabstand sitzt."
+**Meilenstein:** „Steht. Dein Getriebe wartet in der Werkstatt."
+**Training-Abschluss:** „Heute gefestigt: Drehmoment · Modul · Achsabstand."
+
+## 6. Tabu
 
 - Kein erhobener Zeigefinger, kein „falsch!" ohne Erklärung.
 - Keine Witze, die eine Aussage ungenau machen. Im Zweifel: korrekt schlägt witzig.
 - Keine Wand aus Fachbegriffen ohne Antippen-Erklärung dahinter.
-- Nicht wiederholen, was schon erklärt wurde – kurz erinnern und verlinken.
+- Nicht wiederholen, was schon erklärt wurde — kurz erinnern und verlinken.
+- Kein Druck: keine Streaks, kein „verpasst", kein Countdown. Fälligkeit ist
+  eine Einladung („auffrischen?"), nie ein Vorwurf.
+- Keine Superlative über die App selbst. Das Bauteil ist der Star.

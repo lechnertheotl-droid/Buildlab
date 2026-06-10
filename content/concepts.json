@@ -1,61 +1,61 @@
 [
-  { "id": "kraft", "name": "Kraft", "symbol": "F", "unit": "N",
+  { "id": "kraft", "name": "Kraft", "symbol": "F", "unit": "N", "group": "statik",
     "short": "Eine gerichtete Einwirkung, die etwas verformt oder beschleunigt. Hat Betrag und Richtung.",
     "prerequisites": [] },
 
-  { "id": "hebelarm", "name": "Hebelarm", "symbol": "r", "unit": "m",
+  { "id": "hebelarm", "name": "Hebelarm", "symbol": "r", "unit": "m", "group": "statik",
     "short": "Der senkrechte Abstand einer Kraft von der Drehachse. Er entscheidet, wie viel Drehwirkung die Kraft entfaltet.",
     "prerequisites": ["kraft"] },
 
-  { "id": "drehmoment", "name": "Drehmoment", "symbol": "M", "unit": "N*m",
+  { "id": "drehmoment", "name": "Drehmoment", "symbol": "M", "unit": "N*m", "group": "statik",
     "short": "Die Drehwirkung einer Kraft: Kraft mal Hebelarm. Sorgt fürs Verdrehen statt Verschieben.",
     "prerequisites": ["kraft", "hebelarm"], "relatedFormulas": ["torque_lever"] },
 
-  { "id": "gleichgewicht", "name": "Gleichgewicht", "unit": "-",
+  { "id": "gleichgewicht", "name": "Gleichgewicht", "unit": "-", "group": "statik",
     "short": "Wenn alle Kräfte und Momente sich aufheben (ΣF = 0, ΣM = 0), bewegt sich nichts.",
     "prerequisites": ["kraft", "drehmoment"] },
 
-  { "id": "auflagerreaktion", "name": "Auflagerreaktion", "symbol": "F_A", "unit": "N",
+  { "id": "auflagerreaktion", "name": "Auflagerreaktion", "symbol": "F_A", "unit": "N", "group": "statik",
     "short": "Die Kraft, mit der ein Auflager zurückdrückt, damit alles im Gleichgewicht bleibt.",
     "prerequisites": ["gleichgewicht"], "relatedFormulas": ["beam_reaction"] },
 
-  { "id": "zugdruckstab", "name": "Zug- und Druckstab", "unit": "-",
+  { "id": "zugdruckstab", "name": "Zug- und Druckstab", "unit": "-", "group": "statik",
     "short": "Ein Stab im Fachwerk wird entweder gezogen (Zug) oder gestaucht (Druck) – nie gebogen.",
     "prerequisites": ["kraft"] },
 
-  { "id": "zahnrad", "name": "Zahnrad", "unit": "-",
+  { "id": "zahnrad", "name": "Zahnrad", "unit": "-", "group": "maschinenelemente",
     "short": "Ein Rad mit Zähnen, das formschlüssig in ein anderes greift und so Drehung überträgt.",
     "prerequisites": [] },
 
-  { "id": "zaehnezahl", "name": "Zähnezahl", "symbol": "z", "unit": "-",
+  { "id": "zaehnezahl", "name": "Zähnezahl", "symbol": "z", "unit": "-", "group": "maschinenelemente",
     "short": "Die Anzahl der Zähne eines Rads – bestimmt zusammen mit dem Partnerrad die Übersetzung.",
     "prerequisites": ["zahnrad"] },
 
-  { "id": "modul", "name": "Modul", "symbol": "m", "unit": "mm",
+  { "id": "modul", "name": "Modul", "symbol": "m", "unit": "mm", "group": "maschinenelemente",
     "short": "Das Maß für die Zahngröße. Zwei Räder kämmen nur, wenn ihr Modul gleich ist.",
     "prerequisites": ["zahnrad"], "relatedFormulas": ["pitch_d"] },
 
-  { "id": "teilkreisdurchmesser", "name": "Teilkreisdurchmesser", "symbol": "d", "unit": "mm",
+  { "id": "teilkreisdurchmesser", "name": "Teilkreisdurchmesser", "symbol": "d", "unit": "mm", "group": "maschinenelemente",
     "short": "Der gedachte Durchmesser, an dem zwei Zahnräder sich gerade berühren: d = m·z.",
     "prerequisites": ["modul", "zaehnezahl"], "relatedFormulas": ["pitch_d"] },
 
-  { "id": "uebersetzung", "name": "Übersetzungsverhältnis", "symbol": "i", "unit": "-",
+  { "id": "uebersetzung", "name": "Übersetzungsverhältnis", "symbol": "i", "unit": "-", "group": "maschinenelemente",
     "short": "Der Faktor, um den ein Getriebe Drehzahl verringert und Drehmoment erhöht: i = z₂/z₁.",
     "prerequisites": ["zaehnezahl", "drehmoment"], "relatedFormulas": ["ratio", "speed_out", "torque_out"] },
 
-  { "id": "achsabstand", "name": "Achsabstand", "symbol": "a", "unit": "mm",
+  { "id": "achsabstand", "name": "Achsabstand", "symbol": "a", "unit": "mm", "group": "maschinenelemente",
     "short": "Der Abstand der beiden Radachsen, damit die Zähne sauber ineinandergreifen.",
     "prerequisites": ["teilkreisdurchmesser"], "relatedFormulas": ["axis_dist"] },
 
-  { "id": "wirkungsgrad", "name": "Wirkungsgrad", "symbol": "\\eta", "unit": "-",
+  { "id": "wirkungsgrad", "name": "Wirkungsgrad", "symbol": "\\eta", "unit": "-", "group": "maschinenelemente",
     "short": "Der Anteil der Eingangsleistung, der hinten ankommt – der Rest geht als Reibung verloren.",
     "prerequisites": [] },
 
-  { "id": "luftwiderstand", "name": "Luftwiderstand", "symbol": "F_w", "unit": "N",
+  { "id": "luftwiderstand", "name": "Luftwiderstand", "symbol": "F_w", "unit": "N", "group": "stroemung",
     "short": "Die bremsende Kraft der Luft; wächst mit dem Quadrat der Geschwindigkeit.",
     "prerequisites": ["kraft"], "relatedFormulas": ["drag"] },
 
-  { "id": "stabilitaetsmass", "name": "Stabilitätsmaß", "symbol": "S", "unit": "Kaliber",
+  { "id": "stabilitaetsmass", "name": "Stabilitätsmaß", "symbol": "S", "unit": "Kaliber", "group": "stroemung",
     "short": "Wie stabil eine Rakete fliegt: Abstand Druckpunkt–Schwerpunkt, gemessen in Rohrdurchmessern. Gut sind 1–2.",
     "prerequisites": ["luftwiderstand"], "relatedFormulas": ["stability"] }
 ]

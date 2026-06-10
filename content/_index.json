@@ -1,0 +1,117 @@
+{
+  "_doc": "GENERIERT von tools/verify — nicht von Hand pflegen. Konzept → Einführung/Verwendungen (SCREENS.md §7 „kommt vor in\").",
+  "concepts": {
+    "achsabstand": {
+      "introducedIn": {
+        "project": "stirnradgetriebe",
+        "step": "achsabstand"
+      },
+      "usedIn": [
+        {
+          "project": "stirnradgetriebe",
+          "step": "getriebe-bauen"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "meilenstein"
+        }
+      ]
+    },
+    "drehmoment": {
+      "introducedIn": null,
+      "usedIn": [
+        {
+          "project": "stirnradgetriebe",
+          "step": "warum-zahnraeder"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "uebersetzung"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "drehzahl-drehmoment"
+        }
+      ]
+    },
+    "modul": {
+      "introducedIn": {
+        "project": "stirnradgetriebe",
+        "step": "modul-teilkreis"
+      },
+      "usedIn": [
+        {
+          "project": "stirnradgetriebe",
+          "step": "getriebe-bauen"
+        }
+      ]
+    },
+    "teilkreisdurchmesser": {
+      "introducedIn": {
+        "project": "stirnradgetriebe",
+        "step": "modul-teilkreis"
+      },
+      "usedIn": [
+        {
+          "project": "stirnradgetriebe",
+          "step": "achsabstand"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "getriebe-bauen"
+        }
+      ]
+    },
+    "uebersetzung": {
+      "introducedIn": {
+        "project": "stirnradgetriebe",
+        "step": "uebersetzung"
+      },
+      "usedIn": [
+        {
+          "project": "stirnradgetriebe",
+          "step": "drehzahl-drehmoment"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "meilenstein"
+        }
+      ]
+    },
+    "wirkungsgrad": {
+      "introducedIn": {
+        "project": "stirnradgetriebe",
+        "step": "wirkungsgrad"
+      },
+      "usedIn": [
+        {
+          "project": "stirnradgetriebe",
+          "step": "meilenstein"
+        }
+      ]
+    },
+    "zaehnezahl": {
+      "introducedIn": {
+        "project": "stirnradgetriebe",
+        "step": "uebersetzung"
+      },
+      "usedIn": [
+        {
+          "project": "stirnradgetriebe",
+          "step": "modul-teilkreis"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "getriebe-bauen"
+        }
+      ]
+    },
+    "zahnrad": {
+      "introducedIn": {
+        "project": "stirnradgetriebe",
+        "step": "warum-zahnraeder"
+      },
+      "usedIn": []
+    }
+  }
+}

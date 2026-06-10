@@ -1,0 +1,25 @@
+{
+  "_doc": "Statisches Skill-Map-Layout (V1). Koordinaten sind handgepflegt (kein Force-Layout): x/y in einem 1000x600-Raster, Gruppen als Sektionen. Knoten ohne Eintrag hier erscheinen am Ende ihrer Gruppe.",
+  "groups": [
+    { "id": "statik", "label": "Statik", "x": 60, "y": 60 },
+    { "id": "maschinenelemente", "label": "Maschinenelemente", "x": 520, "y": 60 },
+    { "id": "stroemung", "label": "Strömung", "x": 520, "y": 420 }
+  ],
+  "nodes": [
+    { "conceptId": "kraft", "x": 100, "y": 140 },
+    { "conceptId": "hebelarm", "x": 240, "y": 140 },
+    { "conceptId": "drehmoment", "x": 170, "y": 230 },
+    { "conceptId": "gleichgewicht", "x": 100, "y": 320 },
+    { "conceptId": "auflagerreaktion", "x": 100, "y": 410 },
+    { "conceptId": "zugdruckstab", "x": 280, "y": 320 },
+    { "conceptId": "zahnrad", "x": 560, "y": 140 },
+    { "conceptId": "zaehnezahl", "x": 700, "y": 140 },
+    { "conceptId": "modul", "x": 860, "y": 140 },
+    { "conceptId": "teilkreisdurchmesser", "x": 790, "y": 230 },
+    { "conceptId": "uebersetzung", "x": 630, "y": 230 },
+    { "conceptId": "achsabstand", "x": 790, "y": 320 },
+    { "conceptId": "wirkungsgrad", "x": 630, "y": 320 },
+    { "conceptId": "luftwiderstand", "x": 560, "y": 500 },
+    { "conceptId": "stabilitaetsmass", "x": 720, "y": 500 }
+  ]
+}

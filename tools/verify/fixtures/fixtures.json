@@ -1,0 +1,213 @@
+{
+  "_doc": "Absichtlich kaputte Mini-Projekte — je eines pro Prüfregel aus VERIFICATION.md §2. verify.test.mjs erwartet, dass checkProject den jeweiligen Fehler (oder die Warnung) findet. Neue Prüfregel ohne Fixture = die Regel gilt als nicht existent.",
+  "fixtures": [
+    {
+      "name": "numeric-answer-falsch",
+      "expectError": "weicht von der Engine ab",
+      "project": {
+        "id": "fx-numeric", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 }, "expected": { "value": 3, "unit": "-" } },
+            { "type": "task", "kind": "numeric", "question": "?", "concepts": ["uebersetzung"],
+              "answer": 4, "tolerance": 0.01, "unit": "-",
+              "source": { "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 } }, "explanation": "-" }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "target-proof-fail-erfuellt",
+      "expectError": "proof.fail erfüllt das Ziel",
+      "project": {
+        "id": "fx-target", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "axis_dist", "inputs": { "m": 2, "z1": 20, "z2": 60 }, "expected": { "value": 80, "unit": "mm" } },
+            { "type": "task", "kind": "target", "question": "?", "concepts": ["achsabstand"],
+              "target": { "formulaId": "axis_dist", "vars": ["m"],
+                "goal": { "value": 80, "tolerance": 0.01 },
+                "proof": { "pass": { "m": 2, "z1": 20, "z2": 60 }, "fail": { "m": 2, "z1": 20, "z2": 60 } } } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "error-find-zwei-fehler",
+      "expectError": "genau eine falsche Zeile",
+      "project": {
+        "id": "fx-errorfind", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 20 }, "expected": { "value": 40, "unit": "mm" } },
+            { "type": "task", "kind": "error-find", "question": "?", "concepts": ["modul"],
+              "rows": [
+                { "label": "A", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 20 }, "shown": 41 },
+                { "label": "B", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 30 }, "shown": 61 }
+              ], "explanation": "-" }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "steps-prev-ohne-vorstufe",
+      "expectError": "'$prev' ohne Vorstufe",
+      "project": {
+        "id": "fx-steps", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 }, "expected": { "value": 3, "unit": "-" } },
+            { "type": "task", "kind": "steps", "question": "?", "concepts": ["uebersetzung"],
+              "steps": [
+                { "prompt": "1", "formulaId": "speed_out", "inputs": { "n1": 3000, "i": "$prev" } },
+                { "prompt": "2", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 } }
+              ] }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "wahl-ohne-why",
+      "expectError": "ohne 'why'",
+      "project": {
+        "id": "fx-why", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 }, "expected": { "value": 3, "unit": "-" } },
+            { "type": "task", "kind": "single", "question": "?", "concepts": ["uebersetzung"],
+              "options": [ { "text": "richtig" }, { "text": "falsch ohne why" } ],
+              "answer": 0, "explanation": "-" }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "constraint-fail-erfuellt",
+      "expectError": "proof.fail erfüllt",
+      "project": {
+        "id": "fx-constraint", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "bauen", "blocks": [
+            { "type": "build", "cadModel": "gear",
+              "parameters": { "z1": { "min": 12, "max": 40, "default": 20, "unit": "-" } },
+              "constraints": [
+                { "expr": "z1 >= 12", "label": "L",
+                  "proof": { "pass": { "z1": 20 }, "fail": { "z1": 14 } } }
+              ] }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "geplant-in-live-projekt",
+      "expectError": "nur in draft-Projekten erlaubt",
+      "project": {
+        "id": "fx-geplant", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "interactive", "componentId": "flight-sim" },
+            { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
+              "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "ohne-meilenstein",
+      "expectError": "genau einen meilenstein-Schritt",
+      "project": {
+        "id": "fx-meilenstein", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 }, "expected": { "value": 3, "unit": "-" } },
+            { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
+              "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "konzept-ohne-pruefung",
+      "expectWarning": "Konzept ohne Prüfung",
+      "project": {
+        "id": "fx-coverage", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "conceptsIntroduced": ["wirkungsgrad"],
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "text", "introduces": ["wirkungsgrad"], "layers": { "intuitive": "-" } },
+            { "type": "calc", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 }, "expected": { "value": 3, "unit": "-" } },
+            { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
+              "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "lernen-ohne-task",
+      "expectWarning": "ohne task-Block",
+      "project": {
+        "id": "fx-loop", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 }, "expected": { "value": 3, "unit": "-" } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "beispiel-falsch-gerechnet",
+      "expectError": "Beispiel weicht ab",
+      "project": {
+        "id": "fx-calc", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "calc", "formulaId": "ratio", "inputs": { "z1": 20, "z2": 60 }, "expected": { "value": 4, "unit": "-" } },
+            { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
+              "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    }
+  ]
+}

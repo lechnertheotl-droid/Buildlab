@@ -15,11 +15,14 @@
     "verify": "pnpm lint && pnpm typecheck && pnpm verify:content && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@buildlab/cad": "workspace:*",
     "@buildlab/engine": "workspace:*",
     "@buildlab/ui": "workspace:*",
+    "idb": "^8.0.3",
     "mathjs": "^13.2.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.17.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

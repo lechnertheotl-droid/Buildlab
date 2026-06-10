@@ -1,77 +1,83 @@
-# PROJECTS.md — Projekt-Curriculum (grober Plan)
+# PROJECTS.md — Projekt-Curriculum
 
-Jedes Projekt ist ein **baubares Ergebnis**, das echte Maschinenbau-Themen abdeckt.
-Aufbau über vier Niveaus; spätere Projekte setzen frühere Skill-Map-Knoten voraus.
-Format je Projekt: **Name** → *Bau-Ergebnis* · Skill-Map-Knoten · Kerninhalte.
+> Jedes Projekt ist ein **baubares Ergebnis**, das echte Maschinenbau-Themen
+> abdeckt. Zwölf Projekte über vier Niveaus — bewusst kuratiert statt Katalog.
+> Detail-Spezifikationen je Projekt: `PROJECT_SPECS.md`. Didaktik: `LERNMODELL.md`.
 
-Skill-Map-Knoten: Zeichnen&Toleranzen · Statik · Festigkeit · Kinematik/Dynamik ·
-Werkstoffe · Maschinenelemente · Fertigung · Thermo/Strömung · Konstruktionsmethodik.
+**Redesign-Entscheidung:** Das Curriculum wurde von 17 auf **12 Projekte**
+gekürzt. Gestrichen: *Passungs-Trainer* (schwache Interaktivität als Einstieg),
+*Stirling-Motor* (eigener Thermo-Engine-Ast für ein einziges Projekt),
+*Robotergreifer* und *Tischkran* (redundant zu Antriebsstrang/Kragträger),
+*Sandbox* (erst sinnvoll, wenn ≥ 8 Projekte live sind — dann als eigene Phase).
+Der Skill-Map-Knoten „Thermo/Strömung" reduziert sich auf die Strömungs-Konzepte
+der Rakete; „Zeichnen & Toleranzen" fließt in die Bau-Schritte aller Projekte ein.
+
+**Skill-Map-Gruppen** (`concept.group`, Layout in `content/skillmap.layout.json`):
+`statik` · `festigkeit` · `kinematik` · `werkstoffe` · `maschinenelemente` ·
+`fertigung` · `stroemung` · `methodik`.
 
 ---
 
-## Niveau 1 — Grundlagen (verspielt, schnelle Erfolge)
+## Das Curriculum
 
-1. **Passungs-Trainer** → *3D-gedrucktes Steck-Set (Spiel-/Übergangs-/Presspassung)*
-   · Zeichnen&Toleranzen · ISO-Passungen, Maße, Toleranzfelder, Oberflächen.
-2. **Fachwerkbrücke** → *Strebenmodell (Karton/Holz/Druck)*
-   · Statik · Kräftegleichgewicht, Stabkräfte, Knotenpunktverfahren.
-3. **Flaschenzug & Hebel** → *funktionierender Flaschenzug*
-   · Statik · Hebelgesetz, Drehmoment, mechanische Übersetzung, Wirkungsgrad.
-4. **Material-Biegeprobe** → *Halter für eigene Biegeversuche*
-   · Werkstoffe · Steifigkeit, E-Modul, elastisch/plastisch (intuitiv).
+### Niveau 1 — Grundlagen (verspielt, schnelle Erfolge)
 
-## Niveau 2 — Aufbau (echte Auslegung, Maschinenelemente)
+| # | Projekt | Bau-Ergebnis | Gruppen | Kern-Interactives |
+|---|---|---|---|---|
+| 1 | **Hebel & Flaschenzug** | funktionierender Flaschenzug (Druck) | statik | `lever-slider`, `value-slider` |
+| 2 | **Fachwerkbrücke** | Strebenmodell, trägt 5 kg über 30 cm | statik | `vector-drag`, `force-balance`, `truss-load` |
+| 3 | **Material-Biegeprobe** | Halter für eigene Biegeversuche | werkstoffe, festigkeit | `stress-bar`, `value-slider` |
 
-5. **Stirnradgetriebe** → *3D-gedrucktes Getriebe*
-   · Maschinenelemente · Kinematik · Übersetzung, Modul, Zähnezahl, Achsabstand,
-   Drehmomentwandlung (DIN 3990 vereinfacht).
-6. **Welle auslegen** → *Welle mit Lagerung*
-   · Festigkeit · Biegung, Torsion, Vergleichsspannung, Welle nach DIN 743.
-7. **Schraubverbindung** → *verschraubte Baugruppe*
-   · Maschinenelemente · Vorspannkraft, Schraubengröße, Reibung, Anziehmoment.
-8. **Wälzlagerung** → *gelagerte Welle*
-   · Maschinenelemente · Lagertypen, Belastung, L10-Lebensdauer.
-9. **Kurbelschwinge (Viergelenk)** → *bewegliches Gestängemodell*
-   · Kinematik · ebene Mechanismen, Geschwindigkeit/Beschleunigung, Totlagen.
+### Niveau 2 — Aufbau (echte Auslegung, Maschinenelemente)
 
-## Niveau 3 — Vertiefung (Dynamik, Wärme, Strömung)
+| # | Projekt | Bau-Ergebnis | Gruppen | Kern-Interactives |
+|---|---|---|---|---|
+| 4 | **★ Stirnradgetriebe** | 3D-gedrucktes Getriebe mit i = 3 | maschinenelemente, kinematik | `gear-pair`, `build` (gear) |
+| 5 | **Welle auslegen** | Welle mit Lagerung | festigkeit | `value-slider`, `stress-bar`, `build` |
+| 6 | **Schraubverbindung** | verschraubte Baugruppe | maschinenelemente | `value-slider` |
+| 7 | **Wälzlagerung** | gelagerte Welle (Lagersitz) | maschinenelemente | `value-slider` |
+| 8 | **Kurbelschwinge** | bewegliches Viergelenk | kinematik | `linkage-anim`, `build` |
 
-10. **Schwungrad-Energiespeicher** → *Schwungrad auf Lager*
-    · Dynamik · Massenträgheitsmoment, Rotationsenergie, Drehimpuls.
-11. **Kragträger optimieren** → *Lasthalter (Leichtbau)*
-    · Festigkeit · Biegelinie, Durchbiegung, Materialeinsatz, Spannungs-Overlay.
-12. **Stirling-Motor** → *3D-druckbarer Stirling-Motor*
-    · Thermo/Strömung · Kreisprozess, Wärme→Arbeit, Wirkungsgrad.
-13. **★ Modellrakete (Flaggschiff)** → *druckbare Rakete (STL), real flugfähig*
-    · Thermo/Strömung · Festigkeit · Stabilität (Barrowman, CP vs. CG), Schubkurve,
-    Luftwiderstand, Flugbahn-Simulation (Apogäum, Maximalgeschwindigkeit).
+### Niveau 3 — Vertiefung (Dynamik, Strömung, Optimierung)
 
-## Niveau 4 — Meisterstücke (Integration ganzer Maschinen)
+| # | Projekt | Bau-Ergebnis | Gruppen | Kern-Interactives |
+|---|---|---|---|---|
+| 9 | **Kragträger-Leichtbau** | optimierter Lasthalter | festigkeit | `stress-bar`, `build` |
+| 10 | **Schwungrad** | Schwungrad auf Lager | kinematik | `value-slider`, `build` |
+| 11 | **★ Modellrakete** | druckbare, real flugfähige Rakete (STL) | stroemung, festigkeit | `rocket-stability`, `flight-sim`, `build` |
 
-14. **Antriebsstrang komplett** → *Motor → Getriebe → Welle → Last*
-    · Maschinenelemente · Dynamik · Integration der Knoten aus Niveau 2/3.
-15. **Robotergreifer** → *3D-gedruckter Greifmechanismus (optional Servo)*
-    · Kinematik · Fertigung · Konstruktion · Mechatronik-Basis.
-16. **Tischkran / Hebezeug** → *funktionierender kleiner Kran*
-    · Statik · Festigkeit · Maschinenelemente · end-to-end-Auslegung.
-17. **Eigenes Projekt (Sandbox)** → *freie Konstruktion nach Anforderung*
-    · Konstruktionsmethodik · Anforderung → Konzept → Auslegung → Bau → Test.
+### Niveau 4 — Meisterstück (Integration)
+
+| # | Projekt | Bau-Ergebnis | Gruppen | Kern-Interactives |
+|---|---|---|---|---|
+| 12 | **Antriebsstrang** | Motor → Getriebe → Welle → Last | maschinenelemente, methodik | Kombination aus 4/5/7 |
 
 ---
 
 ## Reihenfolge & Abhängigkeiten
 
-- **Empfohlener Pfad:** 1→4 in beliebiger Reihenfolge, dann 5 als erstes „echtes"
-  Auslegungsprojekt. 6–9 bauen darauf auf. Niveau 4 setzt Niveau 2 weitgehend voraus.
-- **Drei Einstiegstüren** (für die drei Personas): Studium startet bei 2 (Statik),
-  Azubi/Technik bei 1 (Toleranzen), Maker bei 5 (Getriebe, sofort druckbar).
-- **Erste benutzbare Version: Projekt 5 (Stirnradgetriebe)** — schneller Erfolg, nutzt
-  alle 6 Blocktypen, Pseudo-3D, CAD/STL-Export und prüfungsgenaue Auslegung. Wird in
-  `BUILD_PLAN.md` Phase 5 komplett gebaut. Die **Rakete (13)** folgt danach als
-  Schaustück mit voller Flug-Simulation.
+```
+1 Hebel ──┬─▶ 4 Getriebe ──┬─▶ 5 Welle ──▶ 7 Lager ──┐
+2 Brücke ─┤                └─▶ 8 Kurbelschwinge      ├─▶ 12 Antriebsstrang
+3 Probe ──┴─▶ 5 Welle      9 Kragträger ◀── 3,5      │
+              10 Schwungrad ◀── 5,8      11 Rakete ◀─ 2 (+3 empfohlen)
+```
+
+- `recommendedAfter` (Projekt-Metadatum) bildet diese Kanten ab. Es ist eine
+  **Empfehlung (Soft-Lock)**, kein Zwang — siehe `SCREENS.md` §5.2.
+- **Drei Einstiegstüren** (Personas, `LERNMODELL.md` §9): Studium → 2 (Brücke),
+  Azubi/Technik → 1 (Hebel), Maker → 4 (Getriebe, sofort druckbar).
+- **Erste komplette Version: Projekt 4 (Stirnradgetriebe)** — nutzt alle
+  Blockfamilien, Pseudo-3D, CAD/STL und prüfungsgenaue Auslegung; liegt fertig
+  in `content/stirnradgetriebe.json`. Die **Rakete (11)** folgt als Schaustück
+  mit voller Flug-Simulation.
+- Empfehlung „Als Nächstes": nächstes Projekt mit erfüllten `recommendedAfter`;
+  bei mehreren Kandidaten das mit den meisten bereits gemeisterten Konzepten.
 
 ## Generierungs-Hinweis
 
-Alle Projekte werden über `/generate-project "<name>"` in Claude Code (Abo) erzeugt,
-ein Projekt nach dem anderen, jeweils erst nach grünem `pnpm verify`. Pro Projekt in
-kleine Schritte (5–15 Min.) zerlegen — siehe Schema in `CLAUDE.md`.
+Alle Projekte entstehen über `/generate-project <projekt-id>` in Claude Code
+(Abo), ein Projekt nach dem anderen, jeweils erst nach grünem `pnpm verify`.
+Vorlage und verbindliche Detailtiefe: `PROJECT_SPECS.md`. Pro Projekt 5–9
+Mikro-Schritte (5–15 Min.), mindestens 4 verschiedene Aufgabenarten, genau ein
+`meilenstein`-Schritt.

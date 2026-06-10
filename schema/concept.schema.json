@@ -3,7 +3,7 @@
   "$id": "concept.schema.json",
   "title": "Konzept",
   "type": "object",
-  "required": ["id", "name", "short", "prerequisites"],
+  "required": ["id", "name", "short", "prerequisites", "group"],
   "additionalProperties": false,
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
@@ -11,6 +11,10 @@
     "symbol": { "type": "string", "description": "Formelzeichen (optional)" },
     "unit": { "type": "string" },
     "short": { "type": "string", "description": "1-2 Saetze fuers Antippen-Popover" },
+    "group": {
+      "enum": ["statik", "festigkeit", "kinematik", "werkstoffe", "maschinenelemente", "fertigung", "stroemung", "methodik"],
+      "description": "Skill-Map-Gruppe (PROJECTS.md)"
+    },
     "prerequisites": {
       "type": "array",
       "items": { "type": "string" },
