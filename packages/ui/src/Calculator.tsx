@@ -72,7 +72,7 @@ const KEYS: { label: string; insert?: string; action?: 'eval' | 'clear' | 'back'
   { label: 'π', insert: 'pi' }, { label: 'e', insert: 'e' }, { label: 'x²', insert: '^2' }, { label: 'xⁿ', insert: '^' },
   { label: '1', insert: '1' }, { label: '2', insert: '2' }, { label: '3', insert: '3' }, { label: '−', insert: '-' },
   { label: '(', insert: '(' }, { label: ')', insert: ')' }, { label: 'ans', insert: 'ans' }, { label: 'C', action: 'clear' },
-  { label: '0', insert: '0' }, { label: ',', insert: '.' }, { label: '+', insert: '+' }, { label: '⌫', action: 'back' },
+  { label: '0', insert: '0' }, { label: ',', insert: '.' }, { label: '+', insert: '+' }, { label: 'DEL', action: 'back' },
 ];
 
 const UNITS = ['N', 'mm', 'm', 'kg', 'MPa', 'N*m', 'deg', 'm/s^2'];
@@ -218,7 +218,7 @@ export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {})
                 key={k.label}
                 type="button"
                 onClick={() => onKey(k)}
-                className="rounded border border-black/10 bg-paper-sink/60 py-2 font-mono text-sm text-ink transition-colors hover:border-accent hover:text-accent-ink"
+                className="min-h-11 rounded border border-black/10 bg-paper-sink/60 py-2 font-mono text-sm text-ink transition-colors hover:border-accent hover:text-accent-ink"
               >
                 {k.label}
               </button>
@@ -226,7 +226,8 @@ export function Calculator({ initialHistory, onEvaluate }: CalculatorProps = {})
             <button
               type="button"
               onClick={evaluate}
-              className="col-span-4 rounded border border-black/10 bg-accent py-2 font-mono text-sm text-paper transition-opacity hover:opacity-90"
+              aria-label="ist gleich — ausrechnen"
+              className="col-span-4 min-h-11 rounded border border-black/10 bg-accent py-2 font-mono text-xl leading-none text-paper transition-opacity hover:opacity-90"
             >
               =
             </button>
