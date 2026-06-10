@@ -62,7 +62,11 @@ Host, auch GitHub Pages, ohne Server-Rewrites).
 
 **Mobile (< 768 px):**
 - Rail → **Bottom-Bar** mit denselben 5 Icons (Tap-Targets ≥ 48 px), Einstellungen
-  wandern in die Topbar (Zahnrad rechts).
+  wandern in die Topbar (Zahnrad rechts). Aktives Icon: Akzent-Tick an der
+  Oberkante.
+- **Topbar mobil = Breadcrumb + Zahnrad.** Der Fortschrittsring erscheint nur
+  ≥ 768 px — globaler Fortschritt ist mobil nicht aufgaben-relevant, die
+  Skill-Map zeigt ihn vollständig.
 - Rechner-Lasche → schwebende Lasche unten rechts, **über** der Bottom-Bar
   (12 px Abstand), damit beide bedienbar bleiben.
 
@@ -150,6 +154,9 @@ Status (genau einer): `empfohlen` (Akzent-Badge) · `offen` · `begonnen`
 (Mini-Fortschrittsbalken) · `fertig` (✓) · `Voraussetzung offen` (blass +
 Schloss-Symbol, **trotzdem antippbar** — Soft-Lock).
 
+**Mobil (< 768 px):** Schwierigkeits-Ticks (●●○○○) ausgeblendet — die Karte
+zeigt Icon · Titel · Dauer · Status. Schwierigkeit bleibt ein Desktop-Detail.
+
 ### 5.2 Detail (Briefing vor dem Start)
 
 ```
@@ -173,6 +180,10 @@ Schloss-Symbol, **trotzdem antippbar** — Soft-Lock).
 │              [ Fortsetzen → ]                │
 └──────────────────────────────────────────────┘
 ```
+
+**Schrittliste = Disclosure:** sichtbar sind erledigte + aktueller + nächster
+Schritt (bei nicht begonnenem Projekt: die ersten drei); der Rest liegt hinter
+„alle n Schritte anzeigen". Nur zeigen, was gerade wichtig ist.
 
 **Soft-Lock-Verhalten** (Voraussetzungen aus `recommendedAfter` unerfüllt):
 Oberhalb des CTA erscheint ein Hinweiskasten:
@@ -294,6 +305,8 @@ Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
 
 - Canvas maximal 45 vh hoch, kollabierbar per Griff-Leiste (Doppel-Strich) auf
   eine 64-px-Ergebniszeile — Lektion bekommt dann den Platz.
+- Subheader zeigt mobil nur „Schritt X/Y ‚Titel'" — Projekt-Icon und -Name
+  sind dort redundant (man kommt aus dem Projekt-Detail).
 - Schritt-Navigation ist eine **fixe Leiste** unten (nie von der Canvas
   verdeckt); Swipe-Gesten sind Zusatz, nie einzige Bedienung.
 
@@ -352,9 +365,10 @@ keine Physik; Determinismus schlägt Effekt).
 - **Knoten-Zustände** (aus `conceptState`, Legende in einer zuklappbaren Ecke):
   blass-gestrichelt (`neu`) · Ring (`gesehen`) · halbgefüllt (`angewendet`) ·
   gefüllt in Akzent (`sicher`) · kleines „⟳"-Badge (fällig).
-- **Tap auf Knoten** → kleine Karte: Kurztext (`short`), Mastery-Status,
-  „braucht: …" (Voraussetzungs-Chips), „kommt vor in: [Projekte]",
-  Button „Konzept öffnen →".
+- **Tap auf Knoten** → **Vorschau-Karte**: Name · Symbol · Mastery-Status ·
+  Kurztext (`short`) · Button „Konzept öffnen →". Voraussetzungen und
+  „kommt vor in" stehen vollständig auf der Konzept-Seite (§7) — die Karte
+  bleibt eine Vorschau, keine zweite Konzept-Seite.
 - Nur Knoten + Kanten, keine Texttapete; Beschriftung in Mono, 0.75 rem.
 - **Mobile:** keine 2D-Pan-Zoom-Fläche, sondern vertikal scrollende
   Gruppen-Ebenen (eine Gruppe = eine Sektion, Kanten innerhalb der Sektion).
@@ -394,9 +408,8 @@ ABSCHLÜSSE
 Karten-Stapel für fällige Konzepte (`LERNMODELL.md` §6).
 
 ```
-Auffrischen · 3 von heute 7
+Auffrischen · 3 von heute 7 · ·Drehmoment·
 ┌──────────────────────────────────────┐
-│ ·Drehmoment·                    ⟳ Box 2│
 │ <task inline — gleiche Renderer wie   │
 │  im Workspace, gleiche Feedback-Stufen>│
 └──────────────────────────────────────┘
@@ -404,6 +417,8 @@ Auffrischen · 3 von heute 7
 ```
 
 - Eine Aufgabe pro Karte; „überspringen" ohne Strafe (Konzept bleibt fällig).
+- Die Leitner-Box-Nummer ist interner Scheduler-Zustand und erscheint **nicht**
+  im UI.
 - Ende der Session: Abschluss-Karte „Heute gefestigt: …" mit Box-Tick-Leisten.
 - **Leerzustand:** „Nichts fällig. Dein Kopf ist auf Stand — bau lieber was."
   + Link zum aktuellen Projekt.

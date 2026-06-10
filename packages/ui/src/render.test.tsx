@@ -224,6 +224,13 @@ describe('WorkspaceStep (SCREENS.md §6)', () => {
     expect(html).toContain('Schritt 2 ✓');
   });
 
+  it('mobile Griff-Leiste vorhanden, Canvas standardmäßig ausgeklappt (§6.4)', () => {
+    const html = wrap(<WorkspaceStep {...baseProps} stepIndex={1} taskStates={{}} />);
+    expect(html).toContain('aria-label="Ansicht einklappen"');
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('id="canvas-inhalt"');
+  });
+
   it('zeigt Auffrisch-Karten für ungesehene uses-Konzepte (Quereinstieg)', () => {
     // Schritt 1 nutzt „drehmoment“ — nicht in seenConcepts → Karte erscheint.
     const html = wrap(<WorkspaceStep {...baseProps} stepIndex={0} taskStates={{}} />);

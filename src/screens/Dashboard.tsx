@@ -46,7 +46,7 @@ export default function Dashboard() {
       ) : current ? (
         <section
           aria-label="Weitermachen"
-          className="rounded border border-black/10 bg-paper-2 p-6 shadow"
+          className="bl-einzeichnen rounded border border-black/10 bg-paper-2 p-6 shadow"
         >
           <p className="font-display text-xl">
             Weiter bei: {current.title} ·{' '}
@@ -76,7 +76,7 @@ export default function Dashboard() {
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         {due.length >= 3 && (
-          <section aria-label="Auffrischen" className="rounded border border-black/10 bg-paper-2 p-4 shadow">
+          <section aria-label="Auffrischen" className="bl-einzeichnen bl-einzeichnen-d1 rounded border border-black/10 bg-paper-2 p-4 shadow">
             <h2 className="font-display">Auffrischen <span className="font-mono text-xs text-ink-2">({due.length} fällig)</span></h2>
             <p className="mt-1 text-sm text-ink-2">
               {due.slice(0, 3).map((id) => conceptById.get(id)?.name ?? id).join(' · ')}
@@ -90,7 +90,7 @@ export default function Dashboard() {
           </section>
         )}
 
-        <section aria-label="Als Nächstes" className="rounded border border-black/10 bg-paper-2 p-4 shadow">
+        <section aria-label="Als Nächstes" className="bl-einzeichnen bl-einzeichnen-d2 rounded border border-black/10 bg-paper-2 p-4 shadow">
           <h2 className="font-display">Als Nächstes</h2>
           <ul className="mt-2 space-y-2">
             {next && (
@@ -124,9 +124,12 @@ export default function Dashboard() {
     const start = personaStartProject(settings?.persona);
     const p = projectById.get(start.id)!;
     return (
-      <section aria-label="Dein erstes Projekt" className="rounded border border-black/10 bg-paper-2 p-6 shadow">
-        <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">Dein erstes Projekt</p>
-        <p className="mt-2 font-display text-2xl">
+      <section aria-label="Dein erstes Projekt" className="bl-einzeichnen rounded border border-black/10 bg-paper-2 p-6 shadow">
+        <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
+          <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
+          Dein erstes Projekt
+        </p>
+        <p className="mt-2 font-display text-[2rem] leading-[1.1] tracking-tight">
           <span aria-hidden className="mr-2">{p.icon}</span>{p.title}
         </p>
         <p className="mt-2 text-sm text-ink-2">{p.challenge}</p>

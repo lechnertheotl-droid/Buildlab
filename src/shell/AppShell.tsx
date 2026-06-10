@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useMatches } from 'react-router-dom';
-import { CalculatorDrawer, ContentProvider, type Concept, type Formula } from '@buildlab/ui';
+import { CalculatorDrawer, ContentProvider, useCountUp, type Concept, type Formula } from '@buildlab/ui';
 import { componentIds, concepts, formulas } from '../content';
 import { addCalcEntry, useCalcHistory, useConceptStates, useSettings, isDbHealthy } from '../db/repo';
 import {
@@ -26,11 +26,15 @@ function MasteryRing() {
     ? Object.values(states).filter((s) => s.status === 'angewendet' || s.status === 'sicher').length
     : 0;
   const pct = total ? Math.round((mastered / total) * 100) : 0;
+  // Motion „zaehlen" (DESIGN.md §8): Ring + Prozentzahl zählen zum neuen Stand.
+  const shownPct = Math.round(useCountUp(pct));
   const r = 9;
   const c = 2 * Math.PI * r;
   return (
+    // Mobil ausgeblendet (SCREENS.md §2): globaler Fortschritt ist dort nicht
+    // aufgaben-relevant — die Skill-Map zeigt ihn vollständig.
     <div
-      className="flex items-center gap-2"
+      className="hidden items-center gap-2 md:flex"
       role="img"
       aria-label={`Gesamtfortschritt ${pct} Prozent der Konzepte angewendet`}
       title="Anteil der Konzepte, die du schon angewendet hast"
@@ -39,10 +43,10 @@ function MasteryRing() {
         <circle cx="12" cy="12" r={r} fill="none" stroke="var(--rule)" strokeWidth="3" />
         <circle
           cx="12" cy="12" r={r} fill="none" stroke="var(--accent)" strokeWidth="3"
-          strokeDasharray={`${(pct / 100) * c} ${c}`} strokeLinecap="round"
+          strokeDasharray={`${(shownPct / 100) * c} ${c}`} strokeLinecap="round"
         />
       </svg>
-      <span className="font-mono text-xs text-ink-2">{pct} %</span>
+      <span className="font-mono text-xs text-ink-2">{shownPct} %</span>
     </div>
   );
 }
@@ -74,7 +78,7 @@ export default function AppShell() {
     `group relative flex h-12 w-12 items-center justify-center rounded text-ink-2 outline-none transition-colors
      hover:text-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper
      md:h-11 md:w-full md:justify-start md:gap-3 md:px-3
-     ${isActive ? 'text-ink before:absolute before:left-0 before:top-2 before:hidden before:h-7 before:w-0.5 before:bg-accent md:before:block' : ''}`;
+     ${isActive ? 'text-ink before:absolute before:left-0 before:top-2 before:hidden before:h-7 before:w-0.5 before:bg-accent md:before:block after:absolute after:left-1/2 after:top-0 after:h-0.5 after:w-7 after:-translate-x-1/2 after:bg-accent md:after:hidden' : ''}`;
 
   return (
     // ContentProvider umschließt die GANZE Shell: der Rechner (useContent)

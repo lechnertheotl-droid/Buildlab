@@ -85,7 +85,7 @@ export default function Werkstatt() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="mb-6 font-display text-2xl">Werkstatt</h1>
+      <h1 className="mb-6 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Werkstatt</h1>
 
       {empty ? (
         <div className="rounded border border-black/10 bg-paper-2 p-6 text-center shadow">

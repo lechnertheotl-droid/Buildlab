@@ -76,7 +76,7 @@ export default function Training() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="mb-2 font-display text-2xl">Training</h1>
+      <h1 className="mb-2 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Training</h1>
 
       {session.length === 0 ? (
         <div className="mt-4 rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
@@ -124,8 +124,7 @@ export default function Training() {
               className="text-accent-ink underline decoration-black/20 underline-offset-2 outline-none hover:decoration-current focus-visible:ring-2 focus-visible:ring-accent"
             >
               {conceptById.get(current.conceptId)?.name}
-            </Link>{' '}
-            <span aria-hidden>⟳</span> Box {states[current.conceptId]?.box ?? 1}
+            </Link>
           </p>
           <div key={`${current.conceptId}-${sessionIndex}`} className="bl-wechsel">
             <TaskView

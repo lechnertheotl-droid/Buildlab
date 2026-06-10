@@ -63,7 +63,7 @@ export default function Settings() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="mb-8 font-display text-2xl">Einstellungen</h1>
+      <h1 className="mb-8 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Einstellungen</h1>
 
       <Section title="Erklärtiefe">
         <div className="inline-flex rounded border border-black/10" role="radiogroup" aria-label="Erklärtiefe">

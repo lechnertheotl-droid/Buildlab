@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { conceptById, conceptIndex, concepts, projectById, skillmapLayout } from '../content';
+import { conceptById, concepts, skillmapLayout } from '../content';
 import { useConceptStates } from '../db/repo';
 import type { ConceptStateEntry } from '../db/types';
 
@@ -50,7 +50,6 @@ export default function SkillMap() {
   const nodePos = new Map(skillmapLayout.nodes.map((n) => [n.conceptId, n]));
   const sel = selected ? conceptById.get(selected) : undefined;
   const selState = selected ? nodeState(states[selected]) : null;
-  const selIndex = selected ? conceptIndex[selected] : undefined;
 
   const edges = concepts.flatMap((c) =>
     c.prerequisites
@@ -60,7 +59,7 @@ export default function SkillMap() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
-      <h1 className="mb-2 font-display text-2xl">Skill-Map</h1>
+      <h1 className="mb-2 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Skill-Map</h1>
       {!anySeen && (
         <p className="mb-4 rounded border border-black/10 bg-paper-2 p-3 text-sm text-ink-2 shadow">
           Deine Karte ist noch unbeschriftet — das erste Projekt zeichnet die ersten Knoten ein.
@@ -148,35 +147,8 @@ export default function SkillMap() {
             <span className="ml-auto font-mono text-xs text-ink-2">{STATUS_LABEL[selState!.status]}{selState!.due ? ' · auffrischen' : ''}</span>
           </div>
           <p className="mt-2 text-sm text-ink-2">{sel.short}</p>
-          {sel.prerequisites.length > 0 && (
-            <p className="mt-2 text-sm">
-              <span className="font-mono text-xs uppercase tracking-wider text-ink-faint">braucht: </span>
-              {sel.prerequisites.map((p, i) => (
-                <span key={p}>
-                  {i > 0 && ' · '}
-                  <button onClick={() => setSelected(p)} className="text-accent-ink underline decoration-black/20 underline-offset-2 outline-none hover:decoration-current focus-visible:ring-2 focus-visible:ring-accent">
-                    {conceptById.get(p)?.name ?? p}
-                  </button>
-                </span>
-              ))}
-            </p>
-          )}
-          {selIndex && (selIndex.introducedIn || selIndex.usedIn.length > 0) && (
-            <p className="mt-1 text-sm">
-              <span className="font-mono text-xs uppercase tracking-wider text-ink-faint">kommt vor in: </span>
-              {[selIndex.introducedIn, ...selIndex.usedIn]
-                .filter((r): r is { project: string; step: string } => r !== null)
-                .filter((r, i, arr) => arr.findIndex((x) => x.project === r.project) === i)
-                .map((r, i) => (
-                  <span key={r.project}>
-                    {i > 0 && ' · '}
-                    <Link to={`/projekt/${r.project}`} className="text-accent-ink underline decoration-black/20 underline-offset-2 outline-none hover:decoration-current focus-visible:ring-2 focus-visible:ring-accent">
-                      {projectById.get(r.project)?.title ?? r.project}
-                    </Link>
-                  </span>
-                ))}
-            </p>
-          )}
+          {/* Vorschau-Karte (SCREENS.md §8): Voraussetzungen & Vorkommen stehen
+              vollständig auf der Konzept-Seite — ein Tap über den CTA. */}
           <div className="mt-3 flex gap-3">
             <Link
               to={`/konzept/${sel.id}`}

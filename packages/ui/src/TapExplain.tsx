@@ -43,7 +43,7 @@ function TapExplain({ label, children }: { label: ReactNode; children: ReactNode
       {open && (
         <span
           role="dialog"
-          className="animate-fade absolute left-0 top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-2 p-3 text-left shadow"
+          className="animate-fade absolute left-0 top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-2 p-3 text-left shadow-2"
         >
           {children}
         </span>

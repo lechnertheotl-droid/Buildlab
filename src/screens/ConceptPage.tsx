@@ -62,7 +62,7 @@ export default function ConceptPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
       <div className="flex flex-wrap items-baseline gap-3">
-        <h1 className="font-display text-3xl">{concept.name}</h1>
+        <h1 className="font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">{concept.name}</h1>
         {concept.symbol && <span className="font-mono text-xl text-ink-2">{concept.symbol}</span>}
         {concept.unit && concept.unit !== '-' && (
           <span className="font-mono text-sm text-ink-faint">[{concept.unit}]</span>
@@ -119,8 +119,10 @@ export default function ConceptPage() {
       )}
 
       {occurrences.length > 0 && (
-        <section aria-label="Kommt vor in" className="mt-8">
-          <h2 className="mb-2 font-mono text-xs uppercase tracking-widest text-ink-2">Kommt vor in</h2>
+        <details className="mt-8">
+          <summary className="mb-2 cursor-pointer font-mono text-xs uppercase tracking-widest text-ink-2 outline-none focus-visible:ring-2 focus-visible:ring-accent">
+            Kommt vor in ({occurrences.length})
+          </summary>
           <ul className="space-y-1">
             {occurrences.map((r) => {
               const project = projectById.get(r.project);
@@ -140,7 +142,7 @@ export default function ConceptPage() {
               );
             })}
           </ul>
-        </section>
+        </details>
       )}
 
       <section aria-label="Jetzt üben" className="mt-8 rounded border border-black/10 bg-paper-2 p-4 shadow">

@@ -1,6 +1,7 @@
 // src/screens/ProjectDetail.tsx — Briefing vor dem Start (SCREENS.md §5.2):
 // Challenge, Konzept-Chips, Schrittliste, Soft-Lock-Hinweiskasten, CTA.
 
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { conceptById, missingPrerequisites, projectById } from '../content';
 import { useAllProgress } from '../db/repo';
@@ -10,6 +11,9 @@ export default function ProjectDetail() {
   const navigate = useNavigate();
   const allProgress = useAllProgress();
   const project = id ? projectById.get(id) : undefined;
+  // Schrittliste: erledigt + aktuell + nächster sichtbar, Rest auf Wunsch
+  // (SCREENS.md §5.2 — nur zeigen, was gerade wichtig ist).
+  const [showAllSteps, setShowAllSteps] = useState(false);
 
   if (!project) {
     return (
@@ -34,17 +38,19 @@ export default function ProjectDetail() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">Niveau {project.level}</p>
-      <h1 className="mt-1 font-display text-3xl">
+      <h1 className="font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">
         <span aria-hidden className="mr-3 font-mono">{project.icon}</span>
         {project.title}
       </h1>
       <p className="mt-2 font-mono text-xs text-ink-2">
-        ~{project.durationMin ?? '?'} min · {project.steps.length} Schritte
+        Niveau {project.level} · ~{project.durationMin ?? '?'} min · {project.steps.length} Schritte
       </p>
 
-      <section aria-label="Deine Challenge" className="mt-6 rounded border border-black/10 bg-paper-2 p-5 shadow">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-ink-2">Deine Challenge</h2>
+      <section aria-label="Deine Challenge" className="bl-einzeichnen mt-6 rounded border border-black/10 bg-paper-2 p-5 shadow">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-ink-2">
+          <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
+          Deine Challenge
+        </h2>
         <p className="mt-2 font-display text-lg leading-snug">„{project.challenge}“</p>
         <p className="mt-3 text-sm text-ink-2">
           <span className="font-mono text-xs uppercase tracking-wider text-ink-faint">Du baust: </span>
@@ -93,10 +99,15 @@ export default function ProjectDetail() {
         </section>
       )}
 
-      <section aria-label="Schritte" className="mt-6">
-        <h2 className="mb-2 font-mono text-xs uppercase tracking-widest text-ink-2">Schritte</h2>
+      <section aria-label="Schritte" className="bl-einzeichnen bl-einzeichnen-d1 mt-6">
+        <h2 className="mb-2 font-mono text-xs uppercase tracking-widest text-ink-2">
+          <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
+          Schritte
+        </h2>
         <ol className="space-y-1">
           {project.steps.map((s, i) => {
+            const lastVisible = progress ? progress.maxStepReached + 1 : 2;
+            if (!showAllSteps && i > lastVisible) return null;
             const reachable = progress && i <= progress.maxStepReached;
             const row = (
               <>
@@ -124,6 +135,16 @@ export default function ProjectDetail() {
             );
           })}
         </ol>
+        {project.steps.length > (progress ? progress.maxStepReached + 2 : 3) && (
+          <button
+            type="button"
+            onClick={() => setShowAllSteps((v) => !v)}
+            aria-expanded={showAllSteps}
+            className="mt-1 inline-flex min-h-11 items-center px-2 font-mono text-xs text-accent-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {showAllSteps ? 'weniger anzeigen' : `alle ${project.steps.length} Schritte anzeigen ›`}
+          </button>
+        )}
       </section>
 
       {(missing.length === 0 || progress) && (
