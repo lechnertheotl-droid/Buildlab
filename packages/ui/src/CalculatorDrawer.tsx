@@ -5,9 +5,9 @@
 // Fenster herausziehen. Schiebt sich über die Canvas, nie über die Lektion.
 
 import { useRef, useState } from 'react';
-import { Calculator } from './Calculator';
+import { Calculator, type CalculatorProps } from './Calculator';
 
-export function CalculatorDrawer() {
+export function CalculatorDrawer(calcProps: CalculatorProps = {}) {
   const [open, setOpen] = useState(false);
   const [floating, setFloating] = useState(false);
   const [pos, setPos] = useState({ x: 80, y: 80 });
@@ -20,7 +20,7 @@ export function CalculatorDrawer() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Rechner öffnen"
-        className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 flex-col items-center gap-2 rounded-l border border-r-0 border-black/10 bg-paper-2 px-2 py-4 shadow transition-colors hover:bg-paper-sink"
+        className="fixed bottom-20 right-0 z-40 flex flex-col items-center gap-2 rounded-l border border-r-0 border-black/10 bg-paper-2 px-2 py-4 shadow transition-colors hover:bg-paper-sink md:bottom-auto md:top-1/2 md:-translate-y-1/2"
       >
         <span className="text-lg" aria-hidden>🧮</span>
         <span className="font-mono text-[10px] uppercase tracking-widest text-ink-2 [writing-mode:vertical-rl]">
@@ -43,9 +43,10 @@ export function CalculatorDrawer() {
     drag.current = null;
   };
 
+  // Angedockt: Desktop = Seiten-Drawer; mobil = Bottom-Sheet (SCREENS.md §12).
   const shellClass = floating
     ? 'fixed z-40 w-[320px] rounded border border-black/10 shadow'
-    : 'fixed right-0 top-0 z-40 flex h-screen w-[340px] flex-col border-l border-black/10 shadow';
+    : 'fixed inset-x-0 bottom-0 z-40 flex max-h-[70vh] w-full flex-col border-t border-black/10 shadow md:inset-x-auto md:right-0 md:top-0 md:h-screen md:max-h-none md:w-[340px] md:border-l md:border-t-0';
   const shellStyle = floating
     ? { left: pos.x, top: pos.y, maxHeight: '80vh' }
     : undefined;
@@ -84,7 +85,7 @@ export function CalculatorDrawer() {
         </span>
       </header>
       <div className={floating ? 'max-h-[70vh] overflow-auto' : 'flex-1 overflow-auto'}>
-        <Calculator />
+        <Calculator {...calcProps} />
       </div>
     </aside>
   );

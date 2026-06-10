@@ -10,12 +10,21 @@ import type { ReactNode } from 'react';
 import { useContent } from '../content-context';
 import type { InteractiveBlock } from '../types';
 import { LeverSlider, type LeverSliderParams } from './LeverSlider';
+import { ValueSlider, type ValueSliderParams } from './ValueSlider';
+import { GearPair, type GearPairParams } from './GearPair';
 
-// In Phase 2 implementierte Komponenten. Weitere Registry-Einträge folgen in
-// späteren Phasen und erscheinen bis dahin als Platzhalter.
+// Implementierte Komponenten (Registry: status "implementiert"). Einträge mit
+// status "geplant" erscheinen als ruhiger Platzhalter — und sind per Verifier
+// nur in draft-Projekten erlaubt.
 const IMPLEMENTED: Record<string, (block: InteractiveBlock) => ReactNode> = {
   'lever-slider': (block) => (
     <LeverSlider params={(block.params ?? {}) as LeverSliderParams} caption={block.caption} />
+  ),
+  'value-slider': (block) => (
+    <ValueSlider params={(block.params ?? {}) as unknown as ValueSliderParams} caption={block.caption} />
+  ),
+  'gear-pair': (block) => (
+    <GearPair params={(block.params ?? {}) as GearPairParams} caption={block.caption} />
   ),
 };
 

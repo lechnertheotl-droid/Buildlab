@@ -2,10 +2,11 @@
 // (mobile: Bottom-Bar), Topbar mit Breadcrumb + Mastery-Ring, Rechner-Lasche
 // rechts (CalculatorDrawer), Inhalt als <Outlet/>.
 
+import { useEffect } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useMatches } from 'react-router-dom';
 import { CalculatorDrawer } from '@buildlab/ui';
 import { concepts } from '../content';
-import { useConceptStates, useSettings, isDbHealthy } from '../db/repo';
+import { addCalcEntry, useCalcHistory, useConceptStates, useSettings, isDbHealthy } from '../db/repo';
 import {
   IconEinstellungen, IconKarte, IconProjekte, IconStart, IconTraining, IconWerkstatt,
 } from './icons';
@@ -54,6 +55,12 @@ export default function AppShell() {
   const settings = useSettings();
   const location = useLocation();
   const matches = useMatches();
+
+  // App-Einstellung „Animationen reduzieren" ODER-verknüpft mit der
+  // System-Präferenz (DESIGN.md §7): CSS-Hebel ist html.bl-reduced-motion.
+  useEffect(() => {
+    document.documentElement.classList.toggle('bl-reduced-motion', !!settings?.reducedMotion);
+  }, [settings?.reducedMotion]);
   const crumb = matches
     .map((m) => (m.handle as Crumb | undefined)?.crumb)
     .filter(Boolean)
@@ -130,7 +137,19 @@ export default function AppShell() {
         ))}
       </nav>
 
-      <CalculatorDrawer />
+      <PersistentCalculator />
     </div>
+  );
+}
+
+/** Rechner mit persistentem Verlauf (DATENMODELL.md §2: calcHistory, Ring 50). */
+function PersistentCalculator() {
+  const history = useCalcHistory();
+  if (history === undefined) return null; // erst mounten, wenn der Verlauf da ist
+  return (
+    <CalculatorDrawer
+      initialHistory={[...history].reverse().map(({ expr, display }) => ({ expr, display }))}
+      onEvaluate={(entry) => void addCalcEntry(entry)}
+    />
   );
 }

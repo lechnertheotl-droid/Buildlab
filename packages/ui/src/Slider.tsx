@@ -46,25 +46,44 @@ export function Slider({
         </span>
       </div>
 
-      <div className="relative mt-2">
-        {/* Tick-Marks an der Schiene — wie an einem Lineal (DESIGN.md). */}
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-[2px]">
-          {tickValues.map((_, i) => (
-            <span key={i} className="h-2 w-px bg-ink-faint/40" />
-          ))}
+      <div className="mt-2 flex items-center gap-1.5">
+        {/* −/+-Stepper: Feinjustage für Touch & Tastatur (DESIGN.md §4). */}
+        <button
+          type="button"
+          aria-label={`${label} verringern`}
+          onClick={() => onChange(Math.max(min, Math.round((value - step) / step) * step))}
+          className="h-7 w-7 shrink-0 rounded border border-black/10 font-mono text-xs leading-none text-ink-2 outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
+        >
+          −
+        </button>
+        <div className="relative min-w-0 flex-1">
+          {/* Tick-Marks an der Schiene — wie an einem Lineal (DESIGN.md). */}
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-[2px]">
+            {tickValues.map((_, i) => (
+              <span key={i} className="h-2 w-px bg-ink-faint/40" />
+            ))}
+          </div>
+          {/* Aktive Spur bis zum Griff. */}
+          <div className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-accent/70" style={{ width: `${pct}%` }} />
+          <input
+            id={id}
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="bl-range relative z-10 w-full cursor-pointer appearance-none bg-transparent"
+          />
         </div>
-        {/* Aktive Spur bis zum Griff. */}
-        <div className="pointer-events-none absolute left-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-accent/70" style={{ width: `${pct}%` }} />
-        <input
-          id={id}
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="bl-range relative z-10 w-full cursor-pointer appearance-none bg-transparent"
-        />
+        <button
+          type="button"
+          aria-label={`${label} erhöhen`}
+          onClick={() => onChange(Math.min(max, Math.round((value + step) / step) * step))}
+          className="h-7 w-7 shrink-0 rounded border border-black/10 font-mono text-xs leading-none text-ink-2 outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
+        >
+          +
+        </button>
       </div>
     </div>
   );

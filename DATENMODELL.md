@@ -30,7 +30,7 @@
 | `projectProgress` | `projectId` | `{ currentStep, maxStepReached, stepsDone: string[], startedAt, completedAt? }` |
 | `taskState` | `"<projectId>/<stepId>/<blockIndex>"` | `{ solved: boolean, attempts: number, usedHelp: boolean, solvedAt? }` |
 | `conceptState` | `conceptId` | `{ status: "neu"\|"gesehen"\|"angewendet"\|"sicher", box: 1–5, due: ISO-Datum \| null, lastSeenIn?: projectId, refreshShown: projectId[] }` |
-| `calcHistory` | auto-increment | `{ expr: string, result: number, unit: string, at: ISO }` — Ring, max. 50 (ältester fliegt) |
+| `calcHistory` | auto-increment | `{ expr: string, display: string, at: ISO }` — formatiertes Ergebnis inkl. Einheit; Ring, max. 50 (ältester fliegt) |
 | `builds` | auto-increment | `{ projectId, cadModel: string, params: Record<string, number>, label: string, at: ISO }` |
 
 ### 2.1 `settings`-Einträge
