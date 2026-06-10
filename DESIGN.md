@@ -13,13 +13,16 @@ generisches Dashboard. Beiges Papier, Tuschelinien, Monospace-Messwerte, viel Lu
 
 ```css
 :root {
-  /* Flächen — warmes Beige als dominante Fläche */
+  /* Flächen — warmes Beige als dominante Fläche, fünf Tiefenstufen */
   --paper:      #EDE6D6;  /* App-Hintergrund (warmes Sandbeige) */
   --paper-2:    #F4EEE0;  /* Karten/erhöhte Flächen, etwas heller */
-  --paper-sink: #E3DAC6;  /* vertiefte Bereiche, Eingabefelder, Skeletons */
+  --paper-3:    #FAF5E9;  /* höchste Erhebung: Popover, Dialog, schwebender Rechner */
+  --paper-sink: #E3DAC6;  /* vertiefte Bereiche, Eingabefelder */
+  --paper-deep: #DCD1B6;  /* tiefste Senke: Skeleton-Basis, Canvas-Boden, Wells */
 
   /* Tinte — Graphit statt reinem Schwarz */
   --ink:        #23211C;  /* Haupttext */
+  --ink-strong: #161410;  /* Display-Headlines ≥ 2 rem (mehr Schlag als --ink) */
   --ink-2:      #57534A;  /* Sekundärtext, Labels */
   --ink-faint:  #8B857A;  /* Hilfslinien, Platzhalter (nur dekorativ, §7) */
 
@@ -29,6 +32,7 @@ generisches Dashboard. Beiges Papier, Tuschelinien, Monospace-Messwerte, viel Lu
 
   /* Linien */
   --rule:       #00000014; /* Hairline-Rahmen (Tinte, transparent) */
+  --rule-strong:#00000029; /* Hover-/aktive Hairlines */
   --grid:       #00000008; /* Millimeterpapier-Raster, sehr dezent */
 
   /* Datenvisualisierung (NUR Sim-Overlays + Aufgaben-Feedback, nie Marke) */
@@ -45,9 +49,11 @@ generisches Dashboard. Beiges Papier, Tuschelinien, Monospace-Messwerte, viel Lu
   --focus:      var(--accent); /* 2px-Ring, 2px Offset, §7 */
 
   /* Radius & Schatten — minimal, präzise (3 Elevation-Stufen, §4) */
+  --radius-sm:  4px;   /* Chips, Badges */
   --radius:     6px;
-  --shadow-1:   0 1px 0 #00000010, 0 8px 24px -16px #00000033;  /* Karte */
-  --shadow-2:   0 12px 32px -16px #00000040;                     /* Popover/Drawer */
+  --radius-lg:  10px;  /* Hero-Karten, Dialoge, Drawer */
+  --shadow-1:   0 1px 0 #00000012, 0 2px 6px -3px #00000024, 0 14px 32px -18px #00000040; /* Karte */
+  --shadow-2:   0 1px 0 #0000000D, 0 10px 22px -10px #0000002E, 0 32px 64px -28px #00000055; /* Popover/Drawer */
   --shadow:     var(--shadow-1); /* Alias (Bestand) */
 }
 ```
@@ -72,9 +78,26 @@ Drei freie Schriften, bewusst nicht generisch:
 --font-mono:    'IBM Plex Mono', monospace;
 ```
 
-Größenskala (rem): 0.75 / 0.875 / 1 / 1.25 / 1.5 / 2 / 2.75.
-Body 1 rem, Zeilenhöhe 1.6. Headings eng (1.1), leicht negative Laufweite.
-Zahlen immer mit Einheit, Dezimal-**Komma** (deutsche Anzeige), Mono.
+**Type-Scale** (benannte Tailwind-`fontSize`-Tokens — keine ad-hoc `text-[…]`-Größen):
+
+| Token | Größe / Zeilenhöhe / Laufweite | Gewicht | Einsatz |
+|---|---|---|---|
+| `display-xl` | 3.25 rem / 1.04 / −0.025 em | 700 | Dashboard-Hero, Meilenstein |
+| `display` | 2.75 rem / 1.08 / −0.02 em | 600 | H1 Desktop |
+| `display-sm` | 2 rem / 1.12 / −0.015 em | 600 | H1 Mobil, Karten-Heroes |
+| `title` | 1.375 rem / 1.25 / −0.01 em | 600 | Schritt-Ziel, Sektionstitel |
+| `lead` | 1.125 rem / 1.5 | 400 | Hook-Karten, Empty-State-Titel |
+| `base` / `sm` / `xs` | 1 / 0.875 / 0.75 rem | 400 | Fließtext, Labels, Captions |
+
+- **H1-Regel:** `font-display text-display-sm md:text-display text-ink-strong`.
+- Display-Headlines (≥ 2 rem) nutzen `--ink-strong`. Hero-Headlines dürfen einen
+  **Tuschestrich** tragen: 3-px-Strich in `--accent`, 48 px breit, unterhalb der Zeile.
+- Body 1 rem, Zeilenhöhe 1.6.
+- Zahlen immer mit Einheit, Dezimal-**Komma** (deutsche Anzeige), Mono.
+
+**Spacing-Rhythmus** (4-px-Basis; erlaubte Stufen 4/8/12/16/24/32/48):
+Karte `p-4` · Hero-Karte `p-6` · Screen-Container `px-6 py-10` (mobil `px-4 py-6`) ·
+Sektionsabstand `gap-6` · Lektionsfluss `space-y-6` · Inline-Gruppen `gap-3`.
 
 ---
 
@@ -191,19 +214,26 @@ wiederverwendbaren Bühnen-Primitiven liegen in `packages/ui/src/iso-scene/`
 
 ## 8. Motion-Vokabular (benannt, zurückhaltend)
 
-Vier benannte Bewegungen — mehr gibt es nicht. Easing: `cubic-bezier(0.2, 0, 0, 1)`.
+Acht benannte Bewegungen — mehr gibt es nicht. Easing: `cubic-bezier(0.2, 0, 0, 1)`.
 
 | Name | Einsatz | Dauer | Verhalten |
 |---|---|---|---|
 | `einzeichnen` | Schritt-/Seiteneinstieg, neues Bauteil | 400 ms | gestaffeltes Erscheinen (`animation-delay`: Boden → Drehpunkt → Körper → Vordergrund), Teile „zeichnen" sich isometrisch ein |
-| `quittung` | Aufgabe gelöst, Constraint erfüllt | 180 ms | Fade-in + 2 px Rise der Bestätigungszeile |
+| `quittung` | Aufgabe gelöst, Constraint erfüllt | 180 ms | Fade-in + 2 px Rise der Bestätigungszeile; Statusecken-Variante: kleiner Pop (`scale 0.9 → 1`) |
 | `wechsel` | Tiefen-Umschalter, Tab-/Panelwechsel | 200 ms | Cross-Fade in place, Scroll-Position bleibt |
 | `zaehlen` | Ergebniszahl ändert sich | 300 ms | Zahl zählt per rAF zum neuen Wert (Mono, keine Layout-Verschiebung) |
+| `aufklappen` | jede Höhen-Expansion: Canvas-Collapse, Hinweis/Lösungsweg, Disclosures | 300 ms | `grid-template-rows 1fr ↔ 0fr`-Transition, Kind `min-height: 0` + `overflow: hidden` |
+| `gleiten` | Drawer, Bottom-Sheet, Dialog, Trainings-Kartenwechsel | 240 ms | 24 px Translate + Fade zum Zielort |
+| `fuellen` | Fortschrittsbalken/-ring beim ersten Rendern | 500 ms | füllt per `scaleX(0 → 1)` zur Ist-Position |
+| `schimmer` | Skeleton-Glanz | 1,8 s Loop | heller Sweep über `--paper-deep`-Fläche (`background-position`) |
 
+- **Mikrotransitionen:** Zustandswechsel (Farbe/Transform, ≤ 200 ms) sind ohne
+  eigenen Namen erlaubt — z. B. Hover-Lift einer Karte, Schritt-Punkt-Wechsel.
 - **Slider/Sim:** sofortige, flüssige Reaktion (60 fps), kein Bounce, keine
   CSS-Transition auf Geometrie — Live-Werte fließen direkt in Neigung, Pfeil,
   Farbe (rAF).
-- Alles respektiert reduzierte Bewegung (§7).
+- Alles respektiert reduzierte Bewegung (§7): `schimmer` wird statische Fläche,
+  `fuellen` sofort voll, `aufklappen`/`gleiten` ohne Übergang.
 
 ---
 
