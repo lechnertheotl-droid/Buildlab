@@ -1,15 +1,16 @@
 // blocks.tsx — die Block-Renderer: text · formula · calc · task · interactive · build.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
 import { CadBuild } from './build/CadBuild';
-import { ConceptChip, VariableChip } from './TapExplain';
+import { ConceptChip, VariableChip, VariablePopoverBody } from './TapExplain';
 import { TaskView } from './task/TaskView';
 import type {
   Block,
+  FormulaVariable,
   CalcBlock,
   FormulaBlock,
   Layer,
@@ -125,28 +126,145 @@ function TextBlockView({ block, depth }: { block: TextBlock; depth?: Layer }) {
   );
 }
 
-// ── formula ────────────────────────────────────────────────────────────────--
+// ── formula: Variablen sind DIREKT in der Formel antippbar ──────────────────
+//
+// KaTeX rendert statisches HTML; nach dem Mount suchen wir die DOM-Knoten der
+// Variablensymbole (Buchstabe + optionaler Subskript, griechisch inklusive),
+// machen sie antippbar und öffnen das bekannte Popover. Kompakt: keine
+// Extra-Chip-Zeile mehr — nur Symbole ohne DOM-Treffer fallen dorthin zurück.
+
+const GREEK: Record<string, string> = { '\\eta': 'η', '\\rho': 'ρ', '\\omega': 'ω', '\\sigma': 'σ', '\\tau': 'τ', '\\varepsilon': 'ε' };
+
+/** „z_1" → „z1", „x_{CP}" → „xCP", „\eta" → „η" — Vergleichsschlüssel fürs KaTeX-DOM. */
+function symbolKey(symbol: string): string {
+  let k = symbol;
+  for (const [tex, ch] of Object.entries(GREEK)) k = k.replace(new RegExp(tex, 'g'), ch);
+  return k.replace(/[_{}\s]/g, '');
+}
+
+function FormulaTap({ latex, variables }: { latex: string; variables: FormulaVariable[] }) {
+  const host = useRef<HTMLDivElement>(null);
+  const [openVar, setOpenVar] = useState<{ v: FormulaVariable; x: number } | null>(null);
+  const [unmatched, setUnmatched] = useState<FormulaVariable[]>([]);
+
+  useEffect(() => {
+    const root = host.current;
+    if (!root) return;
+    const byKey = new Map(variables.map((v) => [symbolKey(v.symbol), v]));
+    const found = new Set<string>();
+    const cleanups: (() => void)[] = [];
+    const matches: { el: HTMLElement; v: FormulaVariable }[] = [];
+
+    // KaTeX hängt Zero-Width-Spaces an Subskripte — fürs Matching entfernen.
+    const norm = (el: Element) => (el.textContent ?? '').replace(/[\u200B\s]/g, '');
+
+    // Kleinste .mord-Gruppe je Vorkommen: Wrapper, deren Kind denselben
+    // Schlüssel trägt, überspringen (sonst doppelt verdrahtet).
+    const candidates = [...root.querySelectorAll<HTMLElement>('.katex-html .mord')];
+    for (const el of candidates) {
+      const key = norm(el);
+      const v = byKey.get(key);
+      if (!v) continue;
+      const inner = [...el.querySelectorAll('.mord')].some((c) => norm(c) === key);
+      if (inner) continue;
+      found.add(key);
+      el.style.cursor = 'pointer';
+      el.style.borderBottom = '1px dotted var(--accent-ink)';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', `${v.name} — antippen für Erklärung`);
+      matches.push({ el, v });
+      const open = () => openFor(el, v);
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      };
+      el.addEventListener('keydown', onKey);
+      cleanups.push(() => el.removeEventListener('keydown', onKey));
+    }
+
+    // KaTeX' Bruch-Layout (vlist) liegt ÜBER den Symbolen und schluckt Klicks —
+    // daher Delegation am Container mit Koordinaten-Hit-Test (4 px Toleranz).
+    const onRootClick = (e: MouseEvent) => {
+      const pad = 4;
+      let best: { el: HTMLElement; v: FormulaVariable; area: number } | null = null;
+      for (const m of matches) {
+        const r = m.el.getBoundingClientRect();
+        if (
+          e.clientX >= r.left - pad && e.clientX <= r.right + pad &&
+          e.clientY >= r.top - pad && e.clientY <= r.bottom + pad
+        ) {
+          const area = r.width * r.height;
+          if (!best || area < best.area) best = { ...m, area };
+        }
+      }
+      if (best) openFor(best.el, best.v);
+    };
+    root.addEventListener('click', onRootClick);
+    cleanups.push(() => root.removeEventListener('click', onRootClick));
+
+    setUnmatched(variables.filter((v) => !found.has(symbolKey(v.symbol))));
+    return () => cleanups.forEach((fn) => fn());
+
+    function openFor(el: HTMLElement, v: FormulaVariable) {
+      const rect = el.getBoundingClientRect();
+      const rootRect = root!.getBoundingClientRect();
+      setOpenVar((cur) =>
+        cur?.v.var === v.var
+          ? null
+          : { v, x: Math.max(0, Math.min(rect.left - rootRect.left, rootRect.width - 260)) },
+      );
+    }
+  }, [latex, variables]);
+
+  useEffect(() => {
+    if (!openVar) return;
+    const onDoc = (e: MouseEvent) => {
+      if (host.current && !host.current.contains(e.target as Node)) setOpenVar(null);
+    };
+    const onEsc = (e: KeyboardEvent) => e.key === 'Escape' && setOpenVar(null);
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [openVar]);
+
+  return (
+    <div ref={host} className="relative">
+      <Latex className="text-xl text-ink md:text-2xl" src={latex} />
+      {openVar && (
+        <span
+          role="dialog"
+          style={{ left: openVar.x }}
+          className="animate-fade absolute top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-2 p-3 text-left shadow"
+        >
+          <VariablePopoverBody v={openVar.v} />
+        </span>
+      )}
+      {unmatched.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          {unmatched.map((v) => (
+            <VariableChip key={v.var} v={v} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function FormulaBlockView({ block }: { block: FormulaBlock }) {
   const { formulas } = useContent();
   const formula = formulas.get(block.formulaId);
   if (!formula) return <Missing what={`Formel „${block.formulaId}"`} />;
 
-  // Kompakt (Nutzer-Feedback): nur die antippbaren Symbole — Name, Einheit
-  // und Erklärung liefert das Popover beim Tippen/Hovern (TapExplain).
   return (
     <div className="rounded border border-black/10 bg-paper-2 p-4 shadow">
-      <Latex className="text-xl text-ink md:text-2xl" src={formula.latex} />
+      <FormulaTap latex={formula.latex} variables={formula.variables} />
       {block.note && <p className="mt-2 text-sm text-ink-2">{block.note}</p>}
-
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-black/10 pt-2 text-sm">
-        <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
-          antippen erklärt
-        </span>
-        {formula.variables.map((v) => (
-          <VariableChip key={v.var} v={v} />
-        ))}
-      </div>
     </div>
   );
 }

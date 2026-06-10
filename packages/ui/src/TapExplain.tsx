@@ -81,20 +81,27 @@ export function ConceptChip({ id }: { id: string }) {
   );
 }
 
+/** Popover-Inhalt einer Variable (auch vom In-Formel-Antippen genutzt). */
+export function VariablePopoverBody({ v }: { v: FormulaVariable }) {
+  return (
+    <span className="block">
+      <PopoverHead title={v.name} symbol={v.symbol} unit={v.unit} />
+      <span className="block text-sm leading-snug text-ink-2">{v.explanation}</span>
+      {v.typicalRange && (
+        <span className="mt-2 block font-mono text-xs text-ink-faint">
+          typisch {fmt(v.typicalRange[0])}–{fmt(v.typicalRange[1])}
+          {v.unit && v.unit !== '-' ? ` ${v.unit}` : ''}
+        </span>
+      )}
+    </span>
+  );
+}
+
 /** Antippbares Variablensymbol → Erklärung aus dem Formel-Objekt. */
 export function VariableChip({ v }: { v: FormulaVariable }) {
   return (
     <TapExplain label={<Latex src={v.symbol} />}>
-      <span className="block">
-        <PopoverHead title={v.name} symbol={v.symbol} unit={v.unit} />
-        <span className="block text-sm leading-snug text-ink-2">{v.explanation}</span>
-        {v.typicalRange && (
-          <span className="mt-2 block font-mono text-xs text-ink-faint">
-            typisch {fmt(v.typicalRange[0])}–{fmt(v.typicalRange[1])}
-            {v.unit && v.unit !== '-' ? ` ${v.unit}` : ''}
-          </span>
-        )}
-      </span>
+      <VariablePopoverBody v={v} />
     </TapExplain>
   );
 }
