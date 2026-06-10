@@ -14,6 +14,10 @@ export interface GearPairParams {
   z1?: number;
   z2?: number;
   m?: number;
+  /** Nur diese Regler zeigen — der Schritt stellt SEINE Stellgrößen frei (LERNMODELL: ein Lernziel). */
+  show?: ('z1' | 'z2' | 'm')[];
+  /** Dieses Ergebnis betonen (Akzent + passende Geometrie-Hervorhebung). */
+  highlight?: 'i' | 'd' | 'a';
   z1Range?: [number, number];
   z2Range?: [number, number];
   mRange?: [number, number];
@@ -90,6 +94,8 @@ export function GearPair({ params, caption }: { params: GearPairParams; caption?
   const [z1Min, z1Max] = params.z1Range ?? [12, 80];
   const [z2Min, z2Max] = params.z2Range ?? [12, 120];
   const [mMin, mMax] = params.mRange ?? [1, 4];
+  const show = params.show ?? ['z1', 'z2', 'm'];
+  const hl = params.highlight;
 
   // Engine-Werte (Eiserne Regel 1) + Publikation für Rechner/target-Aufgaben.
   const a = useEngineValue('axis_dist', { m, z1, z2 }, 'Zahnradpaar');
@@ -152,26 +158,45 @@ export function GearPair({ params, caption }: { params: GearPairParams; caption?
       <IsoStage label={label} height={250} origin={{ x: 230, y: 150 }} floor={120}>
         <Gear cx={c1.x} cy={c1.y} z={z1} rootR={(r1 - 1.25 * m) * k} tipR={(r1 + m) * k} height={height} color="#a9a294" bore={6} groupRef={collect(1)} />
         <Gear cx={c2.x} cy={c2.y} z={z2} rootR={(r2 - 1.25 * m) * k} tipR={(r2 + m) * k} height={height} color="#9a9489" bore={8} groupRef={collect(2)} />
+        {/* Teilkreise als Maßhilfe, wenn der Schritt d behandelt */}
+        {hl === 'd' && (
+          <>
+            <ellipse cx={c1.x} cy={c1.y - 14} rx={r1 * k} ry={r1 * k * 0.58} fill="none" stroke="var(--accent)" strokeDasharray="4 3" />
+            <ellipse cx={c2.x} cy={c2.y - 14} rx={r2 * k} ry={r2 * k * 0.58} fill="none" stroke="var(--accent)" strokeDasharray="4 3" />
+          </>
+        )}
         {/* Achsabstand als Maßlinie (Maßlinien-Stil: dünn, Mono-Beschriftung) */}
+        {(hl === 'a' || hl === undefined) && (<>
         <line x1={c1.x} y1={c1.y + 36} x2={c2.x} y2={c2.y + 36} stroke="var(--accent)" strokeWidth={1} />
         <line x1={c1.x} y1={c1.y + 31} x2={c1.x} y2={c1.y + 41} stroke="var(--accent)" strokeWidth={1} />
         <line x1={c2.x} y1={c2.y + 31} x2={c2.x} y2={c2.y + 41} stroke="var(--accent)" strokeWidth={1} />
         <text x={(c1.x + c2.x) / 2} y={c1.y + 50} textAnchor="middle" fontSize="11" className="fill-[color:var(--accent-ink)] font-mono">
           a = {a.value === null ? '—' : fmt(a.value)} mm
         </text>
+        </>)}
       </IsoStage>
 
-      <div className="mt-3 grid gap-3 md:grid-cols-3">
-        <Slider label="Zähne Antrieb" symbol="z₁" value={z1} min={z1Min} max={z1Max} step={1} onChange={setZ1} />
-        <Slider label="Zähne Abtrieb" symbol="z₂" value={z2} min={z2Min} max={z2Max} step={1} onChange={setZ2} />
-        <Slider label="Modul" symbol="m" value={m} min={mMin} max={mMax} step={0.5} unit="mm" onChange={setM} />
+      <div className={`mt-3 grid gap-3 ${show.length >= 3 ? 'md:grid-cols-3' : show.length === 2 ? 'md:grid-cols-2' : ''}`}>
+        {show.includes('z1') && (
+          <Slider label="Zähne Antrieb" symbol="z₁" value={z1} min={z1Min} max={z1Max} step={1} onChange={setZ1} />
+        )}
+        {show.includes('z2') && (
+          <Slider label="Zähne Abtrieb" symbol="z₂" value={z2} min={z2Min} max={z2Max} step={1} onChange={setZ2} />
+        )}
+        {show.includes('m') && (
+          <Slider label="Modul" symbol="m" value={m} min={mMin} max={mMax} step={0.5} unit="mm" onChange={setM} />
+        )}
       </div>
 
       <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-t border-black/10 pt-3 font-mono text-sm" aria-live="polite">
-        <span>i = <span className="text-accent-ink">{i === null ? '—' : fmt(i, 2)}</span></span>
-        <span>d₁ = <span className="text-accent-ink">{d1 === null ? '—' : fmt(d1)} mm</span></span>
-        <span>d₂ = <span className="text-accent-ink">{d2 === null ? '—' : fmt(d2)} mm</span></span>
-        <span>a = <span className="text-accent-ink">{a.value === null ? '—' : fmt(a.value)} mm</span></span>
+        {([['i', i === null ? '—' : fmt(i, 2)], ['d₁', d1 === null ? '—' : `${fmt(d1)} mm`], ['d₂', d2 === null ? '—' : `${fmt(d2)} mm`], ['a', a.value === null ? '—' : `${fmt(a.value)} mm`]] as const).map(([k, v]) => {
+          const on = (hl === 'i' && k === 'i') || (hl === 'd' && (k === 'd₁' || k === 'd₂')) || (hl === 'a' && k === 'a');
+          return (
+            <span key={k} className={on ? 'rounded border border-accent/60 bg-paper px-1.5 py-0.5' : hl ? 'opacity-60' : ''}>
+              {k} = <span className="text-accent-ink">{v}</span>
+            </span>
+          );
+        })}
       </p>
       {caption && <p className="mt-2 text-sm text-ink-2">{caption}</p>}
     </div>

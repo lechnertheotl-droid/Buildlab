@@ -23,6 +23,14 @@
     "short": "Ein Stab im Fachwerk wird entweder gezogen (Zug) oder gestaucht (Druck) – nie gebogen.",
     "prerequisites": ["kraft"] },
 
+  { "id": "rolle_fest_lose", "name": "Feste & lose Rolle", "unit": "-", "group": "maschinenelemente",
+    "short": "Eine feste Rolle lenkt die Kraft nur um; eine lose Rolle hängt in der Last und verteilt sie auf zwei Stränge.",
+    "prerequisites": ["kraft"], "relatedFormulas": ["pulley_force"] },
+
+  { "id": "kraftuebersetzung", "name": "Kraftübersetzung", "unit": "-", "group": "maschinenelemente",
+    "short": "Weniger Kraft, dafür mehr Weg: Hebel und Flaschenzug tauschen Kraft gegen Strecke — das Produkt bleibt gleich.",
+    "prerequisites": ["kraft", "rolle_fest_lose"], "relatedFormulas": ["pulley_force", "torque_balance"] },
+
   { "id": "zahnrad", "name": "Zahnrad", "unit": "-", "group": "maschinenelemente",
     "short": "Ein Rad mit Zähnen, das formschlüssig in ein anderes greift und so Drehung überträgt.",
     "prerequisites": [] },

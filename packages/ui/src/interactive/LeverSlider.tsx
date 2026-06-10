@@ -5,13 +5,13 @@
 // die 2.5D-Szene (packages/iso) zeigt Kraftvektor und Drehwirkung live — der
 // Balken neigt sich sichtbar unter Last, der Ampel-Pfeil zeigt den Kraftbetrag.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { project, rotateY, toPolygonPoints, shade, type Vec2, type Vec3 } from '@buildlab/iso';
 import { Latex } from '../Latex';
 import { useContent } from '../content-context';
-import { useWorkspaceStore } from '../store';
 import { Slider } from '../Slider';
+import { useEngineValue } from '../iso-scene';
 
 export interface LeverSliderParams {
   formulaId?: string;
@@ -200,8 +200,6 @@ export function LeverSlider({
   caption?: string;
 }) {
   const { formulas } = useContent();
-  const setActive = useWorkspaceStore((s) => s.setActive);
-  const clearActive = useWorkspaceStore((s) => s.clearActive);
 
   const formulaId = params.formulaId ?? 'torque_lever';
   const forceVar = params.forceVar ?? 'F';
@@ -224,15 +222,9 @@ export function LeverSlider({
     }
   }, [formula, forceVar, armVar, force, arm]);
 
-  // Aktuellen Kontext für den Universal-Rechner bereitstellen (SCREENS.md §7).
-  useEffect(() => {
-    setActive({
-      formulaId,
-      label: caption ?? formula?.result.name ?? formulaId,
-      values: { [forceVar]: force, [armVar]: arm },
-    });
-    return () => clearActive(formulaId);
-  }, [setActive, clearActive, formulaId, caption, formula, forceVar, armVar, force, arm]);
+  // Aktuellen Kontext für Universal-Rechner UND target-Aufgaben publizieren
+  // (canvasInputs-Kopplung, ENGINE_SPEC.md §3 target).
+  useEngineValue(formulaId, { [forceVar]: force, [armVar]: arm }, caption ?? formula?.result.name ?? formulaId);
 
   if (!formula) {
     return (

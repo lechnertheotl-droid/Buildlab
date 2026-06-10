@@ -12,6 +12,8 @@
     { "conceptId": "gleichgewicht", "x": 100, "y": 320 },
     { "conceptId": "auflagerreaktion", "x": 100, "y": 410 },
     { "conceptId": "zugdruckstab", "x": 280, "y": 320 },
+    { "conceptId": "rolle_fest_lose", "x": 930, "y": 230 },
+    { "conceptId": "kraftuebersetzung", "x": 930, "y": 320 },
     { "conceptId": "zahnrad", "x": 560, "y": 140 },
     { "conceptId": "zaehnezahl", "x": 700, "y": 140 },
     { "conceptId": "modul", "x": 860, "y": 140 },
