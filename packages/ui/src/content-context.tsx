@@ -10,6 +10,9 @@ interface ContentData {
   concepts: Map<string, Concept>;
   /** Erlaubte componentIds aus components.registry.json (Phase 2). */
   componentIds: Set<string>;
+  /** Navigiert zur Konzept-Seite („tiefer eintauchen", SCREENS.md §8/§11).
+      Ohne Callback verbergen die Popovers den Link — keine tote Affordance. */
+  onOpenConcept?: (id: string) => void;
 }
 
 const ContentContext = createContext<ContentData | null>(null);
@@ -18,11 +21,13 @@ export function ContentProvider({
   formulas,
   concepts,
   componentIds,
+  onOpenConcept,
   children,
 }: {
   formulas: Formula[];
   concepts: Concept[];
   componentIds?: string[];
+  onOpenConcept?: (id: string) => void;
   children: ReactNode;
 }) {
   const value = useMemo<ContentData>(
@@ -30,8 +35,9 @@ export function ContentProvider({
       formulas: new Map(formulas.map((f) => [f.id, f])),
       concepts: new Map(concepts.map((c) => [c.id, c])),
       componentIds: new Set(componentIds ?? []),
+      onOpenConcept,
     }),
-    [formulas, concepts, componentIds],
+    [formulas, concepts, componentIds, onOpenConcept],
   );
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
 }

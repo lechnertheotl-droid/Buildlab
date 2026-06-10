@@ -2,7 +2,7 @@
 // Jede interaktive Fläche der App baut auf diesen Bausteinen auf;
 // ad-hoc nachgebaute Buttons/Karten/Radiogroups sind nicht erlaubt.
 
-export { focusRing, useFocusReturn, useFocusTrap } from './focus';
+export { focusRing, hitArea, useFocusReturn, useFocusTrap } from './focus';
 export { Button, buttonClass, type ButtonProps, type ButtonVariant, type ButtonSize } from './Button';
 export { Card, cardClass, type CardProps, type CardLevel } from './Card';
 export { EmptyState, type EmptyStateProps } from './EmptyState';

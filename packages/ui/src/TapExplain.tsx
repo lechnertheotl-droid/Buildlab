@@ -1,15 +1,25 @@
 // TapExplain.tsx — die „Antippen erklärt"-Mechanik (SCREENS.md §8).
 // Ein antippbarer Begriff/Variablensymbol öffnet ein kleines Popover:
 // Symbol + Einheit, 1–2 Sätze, Voraussetzung, Link „tiefer eintauchen".
+// Leichtes Popover ohne Fokus-Falle (DESIGN.md §7) — aber Esc gibt den
+// Fokus an den Auslöser zurück.
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
+import { focusRing } from './primitives/focus';
 import type { Concept, FormulaVariable } from './types';
 
-function TapExplain({ label, children }: { label: ReactNode; children: ReactNode }) {
+function TapExplain({
+  label,
+  children,
+}: {
+  label: ReactNode;
+  children: ReactNode | ((close: () => void) => ReactNode);
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -17,7 +27,10 @@ function TapExplain({ label, children }: { label: ReactNode; children: ReactNode
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        trigger.current?.focus();
+      }
     };
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onKey);
@@ -30,11 +43,13 @@ function TapExplain({ label, children }: { label: ReactNode; children: ReactNode
   return (
     <span ref={ref} className="relative inline-block">
       <button
+        ref={trigger}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         className={[
           'cursor-pointer rounded-[3px] px-[1px] underline decoration-dotted decoration-ink-faint underline-offset-2 transition-colors',
+          focusRing,
           open ? 'text-accent-ink decoration-accent' : 'hover:text-accent-ink',
         ].join(' ')}
       >
@@ -43,9 +58,9 @@ function TapExplain({ label, children }: { label: ReactNode; children: ReactNode
       {open && (
         <span
           role="dialog"
-          className="animate-fade absolute left-0 top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-2 p-3 text-left shadow-2"
+          className="animate-fade absolute left-0 top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-3 p-3 text-left shadow-2"
         >
-          {children}
+          {typeof children === 'function' ? children(() => setOpen(false)) : children}
         </span>
       )}
     </span>
@@ -55,7 +70,7 @@ function TapExplain({ label, children }: { label: ReactNode; children: ReactNode
 function PopoverHead({ title, symbol, unit }: { title: string; symbol?: string; unit?: string }) {
   return (
     <span className="mb-1 flex items-baseline gap-2">
-      <span className="font-display text-sm font-medium text-ink">{title}</span>
+      <span className="font-display text-base font-semibold text-ink">{title}</span>
       {symbol && <Latex className="text-sm text-accent-ink" src={symbol} />}
       {unit && unit !== '-' && (
         <span className="font-mono text-xs text-ink-faint">[{unit}]</span>
@@ -71,12 +86,14 @@ export function ConceptChip({ id }: { id: string }) {
   if (!c) return <span className="font-mono text-xs text-ink-faint">{id}</span>;
   return (
     <TapExplain label={c.name}>
-      <span className="block">
-        <PopoverHead title={c.name} symbol={c.symbol} unit={c.unit} />
-        <span className="block text-sm leading-snug text-ink-2">{c.short}</span>
-        <Prerequisites concept={c} />
-        <DeepDive />
-      </span>
+      {(close) => (
+        <span className="block">
+          <PopoverHead title={c.name} symbol={c.symbol} unit={c.unit} />
+          <span className="block text-sm leading-snug text-ink-2">{c.short}</span>
+          <Prerequisites concept={c} onNavigate={close} />
+          <DeepDive conceptId={id} onNavigate={close} />
+        </span>
+      )}
     </TapExplain>
   );
 }
@@ -106,18 +123,32 @@ export function VariableChip({ v }: { v: FormulaVariable }) {
   );
 }
 
-function Prerequisites({ concept }: { concept: Concept }) {
-  const { concepts } = useContent();
+function Prerequisites({ concept, onNavigate }: { concept: Concept; onNavigate: () => void }) {
+  const { concepts, onOpenConcept } = useContent();
   if (!concept.prerequisites.length) return null;
   return (
     <span className="mt-2 block text-xs text-ink-faint">
       ↳ baut auf:{' '}
       {concept.prerequisites.map((pid, idx) => {
         const p = concepts.get(pid);
+        const name = p ? p.name : pid;
         return (
           <span key={pid}>
             {idx > 0 && ', '}
-            <span className="text-ink-2">{p ? p.name : pid}</span>
+            {onOpenConcept ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigate();
+                  onOpenConcept(pid);
+                }}
+                className={`text-ink-2 underline decoration-dotted decoration-ink-faint underline-offset-2 hover:text-accent-ink ${focusRing}`}
+              >
+                {name}
+              </button>
+            ) : (
+              <span className="text-ink-2">{name}</span>
+            )}
           </span>
         );
       })}
@@ -125,15 +156,21 @@ function Prerequisites({ concept }: { concept: Concept }) {
   );
 }
 
-function DeepDive() {
-  // Konzept-Seite folgt in Phase 6; der Link ist hier bereits als Affordance da.
+/** „tiefer eintauchen" → Konzept-Seite. Ohne Navigation-Callback unsichtbar. */
+function DeepDive({ conceptId, onNavigate }: { conceptId: string; onNavigate: () => void }) {
+  const { onOpenConcept } = useContent();
+  if (!onOpenConcept) return null;
   return (
-    <span
-      className="mt-2 block cursor-default font-mono text-xs text-accent-ink/70"
-      title="Konzept-Seite folgt in einer späteren Phase"
+    <button
+      type="button"
+      onClick={() => {
+        onNavigate();
+        onOpenConcept(conceptId);
+      }}
+      className={`mt-2 block font-mono text-xs text-accent-ink underline decoration-black/20 underline-offset-4 transition-colors hover:text-ink ${focusRing}`}
     >
       tiefer eintauchen →
-    </span>
+    </button>
   );
 }
 

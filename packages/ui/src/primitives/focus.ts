@@ -8,6 +8,12 @@ export const focusRing =
   'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper';
 
 /**
+ * Trefffläche-Technik (DESIGN.md §4): Element bleibt visuell klein, die
+ * unsichtbare Trefffläche wächst auf ≥ 44 px (Pseudo-Element, kein Layout-Shift).
+ */
+export const hitArea = "relative after:absolute after:-inset-2 after:content-['']";
+
+/**
  * Merkt sich beim Öffnen das fokussierte Element und gibt den Fokus beim
  * Schließen dorthin zurück (Popover, Dialog, Drawer — DESIGN.md §7).
  */
