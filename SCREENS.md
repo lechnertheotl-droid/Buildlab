@@ -47,18 +47,31 @@ Host, auch GitHub Pages, ohne Server-Rewrites).
 └────┴──────────────────────────────────────────────────┴──┘
 ```
 
-- **Rail (links, schmal):** 5 Icons — Start · Karte · Projekte · Werkstatt ·
-  Training. Eingeklappt nur Icons (Breite 56 px); Hover/Fokus klappt Labels aus.
-  Aktiver Eintrag: Akzent-Strich links + gefülltes Icon. Ganz unten: Zahnrad-Icon
-  → Einstellungen.
+- **Rail (links, schmal):** oben die Wordmark „Buildlab." (Display-Font,
+  Akzent-Punkt — der einzige Marken-Moment der Shell), darunter 5 Icons —
+  Start · Karte · Projekte · Werkstatt · Training. Aktiver Eintrag:
+  Akzent-Strich links + Akzent-Icon + Label in `--ink`. Ganz unten:
+  Zahnrad-Icon → Einstellungen.
 - **Topbar:** links Breadcrumb (max. 2 Ebenen: Bereich · Unterpunkt), rechts ein
   Fortschrittsring (im Workspace: Projekt-Fortschritt; sonst: Gesamt-Mastery in %
-  aller Konzepte ≥ `angewendet`). Keine weiteren Knöpfe.
-- **Rechner-Lasche:** vertikale Lasche am rechten Rand, auf jedem Screen.
+  aller Konzepte ≥ `angewendet`). Keine weiteren Knöpfe — Ausnahme: die
+  **Speicher-Warnung** (StatusBadge `warn`) erscheint nur bei Quota-Problemen
+  und öffnet einen Dialog mit „Sicherung exportieren"-CTA.
+- **Rechner-Lasche:** vertikale Lasche am rechten Rand, auf jedem Screen —
+  **sofort**, auch während der Verlauf noch lädt (der zeigt dann Skeleton-Zeilen).
   Antippen/Ziehen = Rechner fährt als Drawer heraus (§12).
+- **Zustands-Ebenen:** Jeder Screen hat Laden (`ScreenSkeleton`, layout-nah),
+  Leer (`EmptyState`) und Fehler (Fehler-Karte „Hier hat sich etwas verklemmt"
+  mit Neu-laden-Knopf; ErrorBoundary um den Outlet + Router-`errorElement`).
+  Die Shell rendert erst, wenn die Einstellungen geladen sind (kein
+  Dashboard-Blitzen vor der Onboarding-Weiche).
 - **Tastatur global:** `Tab`-Reihenfolge Rail → Topbar → Inhalt → Lasche.
   Fokus-Ring nach `DESIGN.md`. `Esc` schließt das oberste Overlay
-  (Popover → Konzept-Panel → Rechner, in dieser Reihenfolge).
+  (Popover → Konzept-Panel → Rechner, in dieser Reihenfolge) und gibt den
+  Fokus an den Auslöser zurück.
+- **z-Leiter (mobil):** Bottom-Bar 40 · Rechner-Drawer/-Lasche 40 ·
+  Workspace-Schritt-Leiste 30 · Dialog-Overlay 50. Feste Leisten respektieren
+  `env(safe-area-inset-bottom)`.
 
 **Mobile (< 768 px):**
 - Rail → **Bottom-Bar** mit denselben 5 Icons (Tap-Targets ≥ 48 px), Einstellungen
@@ -155,8 +168,9 @@ Status (genau einer): `empfohlen` (Akzent-Badge) · `offen` · `begonnen`
 (Mini-Fortschrittsbalken) · `fertig` (✓) · `Voraussetzung offen` (blass +
 Schloss-Symbol, **trotzdem antippbar** — Soft-Lock).
 
-**Mobil (< 768 px):** Schwierigkeits-Ticks (●●○○○) ausgeblendet — die Karte
-zeigt Icon · Titel · Dauer · Status. Schwierigkeit bleibt ein Desktop-Detail.
+**Mobil (< 768 px):** Schwierigkeits-Ticks (●●○○○) bleiben sichtbar, aber
+kompakt (10 px statt 12 px) — gleiche Informationsdichte wie Desktop, plus
+`aria-label` („Schwierigkeit 2 von 5").
 
 ### 5.2 Detail (Briefing vor dem Start)
 
@@ -197,9 +211,12 @@ Oberhalb des CTA erscheint ein Hinweiskasten:
 └───────────────────────────────────────────────────────┘
 ```
 
-„Erst auffrischen" öffnet die Konzept-Seite(n) bzw. das Training; „Trotzdem
-starten" startet normal — die Auffrisch-Karten (`LERNMODELL.md` §5) fangen
-Quereinsteiger im Workspace auf. **Es gibt keinen Hard-Lock.**
+Der Hinweiskasten ist **semantisch warn** (linker `--warn`-Strich +
+StatusBadge „⚠ Voraussetzung offen" auf normaler Karte) — keine eigene
+Sonderfläche. „Erst auffrischen" öffnet die Konzept-Seite(n) bzw. das Training;
+„Trotzdem starten" startet normal — die Auffrisch-Karten (`LERNMODELL.md` §5)
+fangen Quereinsteiger im Workspace auf. **Es gibt keinen Hard-Lock.**
+Der Rest der Schrittliste klappt per `aufklappen` auf (Collapse, kein Sprung).
 
 ---
 
@@ -235,7 +252,9 @@ Es ist immer nur **der aktuelle Schritt** sichtbar, nie die ganze Lektion.
 
 Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
 
-- **ZIEL-Zeile:** der `goal`-Text des Schritts, immer oben, ein Satz.
+- **ZIEL-Zeile:** Caption in Mono („Ziel · Schritt 3/8 · lernen" — Akzent-Tick
+  davor), darunter der `goal`-Text als `title`-Headline (`--ink-strong`),
+  immer oben, ein Satz.
 - **Aufhänger** (`text.variant: hook`): Frage-Karte mit Akzent-Fragezeichen.
 - **Text:** Tiefen-Tabs (global vorbelegt, lokal überschreibbar,
   `LERNMODELL.md` §4); Konzept-Chips antippbar (§11); volle Theorie zugeklappt
@@ -305,11 +324,16 @@ Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
 ```
 
 - Canvas maximal 45 vh hoch, kollabierbar per Griff-Leiste (Doppel-Strich) auf
-  eine 64-px-Ergebniszeile — Lektion bekommt dann den Platz.
+  eine 64-px-Ergebniszeile — Lektion bekommt dann den Platz. Der Übergang ist
+  Motion `aufklappen` (grid-rows 1fr↔0fr, 300 ms); die Ergebniszeile blendet
+  per `wechsel` ein. Ab 768 px ist die Canvas immer offen (der Griff existiert
+  nur mobil).
 - Subheader zeigt mobil nur „Schritt X/Y ‚Titel'" — Projekt-Icon und -Name
   sind dort redundant (man kommt aus dem Projekt-Detail).
 - Schritt-Navigation ist eine **fixe Leiste** unten (nie von der Canvas
-  verdeckt); Swipe-Gesten sind Zusatz, nie einzige Bedienung.
+  verdeckt, safe-area-bewusst); Swipe-Gesten sind Zusatz, nie einzige Bedienung.
+  Schritt-Punkte: sichtbar 14 px in 44-px-Knöpfen, aktueller Punkt skaliert
+  (1,25×) mit Akzent-Ring, erledigte Schritte tragen einen Lineal-Tick darunter.
 
 ### 6.5 Tastatur im Workspace
 
@@ -369,7 +393,10 @@ keine Physik; Determinismus schlägt Effekt).
 - **Tap auf Knoten** → **Vorschau-Karte**: Name · Symbol · Mastery-Status ·
   Kurztext (`short`) · Button „Konzept öffnen →". Voraussetzungen und
   „kommt vor in" stehen vollständig auf der Konzept-Seite (§7) — die Karte
-  bleibt eine Vorschau, keine zweite Konzept-Seite.
+  bleibt eine Vorschau, keine zweite Konzept-Seite. **Fokus:** beim Öffnen
+  springt der Fokus auf die Karten-Überschrift, `Esc`/„schließen" gibt ihn an
+  den Knoten zurück. Jeder Knoten hat einen expliziten Fokus-Kreis
+  (`:focus-visible`); das SVG trägt ein `<desc>` mit Gruppen + Zustandsbilanz.
 - Nur Knoten + Kanten, keine Texttapete; Beschriftung in Mono, 0.75 rem.
 - **Mobile:** keine 2D-Pan-Zoom-Fläche, sondern vertikal scrollende
   Gruppen-Ebenen (eine Gruppe = eine Sektion, Kanten innerhalb der Sektion).
@@ -444,8 +471,12 @@ Jeder ·unterstrichene· Begriff und jede Formel-Variable:
 
 Regeln: erstes Auftreten = volle Erklärung im Fließtext, danach nur Chip +
 Popover (`LERNMODELL.md` §5). Unerfüllte Voraussetzung wird im Popover zuerst
-genannt. Wegtippen/`Esc` schließt; nichts blockiert den Lesefluss.
-`role="dialog"`, Fokus springt hinein und beim Schließen zurück.
+genannt — die Voraussetzungs-Namen sind selbst antippbar (→ Konzept-Seite).
+„tiefer eintauchen →" ist ein echter Link zur Konzept-Seite (schließt das
+Popover und navigiert); ohne Navigationskontext (z. B. in Tests) verschwindet
+er — nie eine tote Affordance. Wegtippen/`Esc` schließt; nichts blockiert den
+Lesefluss. `role="dialog"` auf `--paper-3` (Elevation 2), `Esc` gibt den
+Fokus an den Auslöser zurück (auch beim In-Formel-Antippen).
 
 ---
 
@@ -480,7 +511,12 @@ Von jedem Screen über die Lasche rechts. Fährt als Drawer herein, **andockbar*
   zuletzt fokussierte numerische Antwortfeld einer Aufgabe (Button nur aktiv,
   wenn ein solches Feld existiert).
 - Rechner schiebt sich über die **Canvas**, nie über die Lektion — Lesen bleibt
-  frei. Mobile: volle Breite als Bottom-Sheet (max. 70 vh).
+  frei. Mobile: volle Breite als Bottom-Sheet (max. 70 vh). Eintritt per
+  `gleiten`; schwebend = `--paper-3` (höchste Erhebung).
+- **Bedienung:** `Esc` schließt den Drawer und gibt den Fokus an die Lasche
+  zurück. Kopfknöpfe (⤢/×) sind visuell kompakt, tragen aber 44-px-Treffflächen
+  (`hitArea`). Solange der Verlauf aus IndexedDB lädt, zeigt er Skeleton-Zeilen;
+  lokale Einträge bleiben beim Nachladen vorn.
 
 > Scope-Ehrlichkeit: tief, wo es zählt (Einheiten, Projektformeln), simpel
 > sonst. Kein Computeralgebra-System.
@@ -505,6 +541,11 @@ DATEN              [ Alles löschen ] → zweistufige Bestätigung mit Tipp-Wort
 Import validiert Format + Version (`DATENMODELL.md` §4), zeigt den Diff als
 Zusammenfassung und ersetzt transaktional — nie ein halber Import.
 
+Import-Bestätigung und Lösch-Fluss laufen über das **Dialog-Primitiv**
+(DESIGN.md §4/§7): Fokus-Falle, `Esc` bricht ab, Fokus kehrt zum Auslöser
+zurück; der destruktive Knopf ist `danger` und bleibt deaktiviert, bis das
+Tipp-Wort stimmt.
+
 ---
 
 ## 14. Übergänge & Disclosure-Regeln (Zusammenfassung)
@@ -514,6 +555,10 @@ Zusammenfassung und ersetzt transaktional — nie ein halber Import.
 - „tiefer eintauchen" gleitet als Panel über die Lektion — kein harter Seitenwechsel.
 - Schritt-Wechsel: Bauteil „zeichnet sich ein" (`einzeichnen`) — ein Moment,
   kein Effekt-Feuerwerk.
+- Höhen-Expansionen (Canvas-Griff, Hinweis/Lösungsweg, Schrittlisten-Rest)
+  laufen über `aufklappen`; Drawer/Dialoge/Trainings-Karten über `gleiten`;
+  Fortschrittsbalken füllen beim ersten Rendern per `fuellen`; Skeletons
+  tragen `schimmer`. Alles degradiert bei reduzierter Bewegung (DESIGN.md §8).
 - Disclosure: 1. Ein Screen, eine Aufgabe. 2. Nur der aktuelle Schritt.
   3. Theorie zugeklappt. 4. Eine Interaktion pro Canvas. 5. Tiefe hinter
   Antippen. 6. Werkzeuge auf Abruf. 7. Erklärtes wird verlinkt, nie wiederholt.

@@ -114,32 +114,60 @@ Sektionsabstand `gap-6` · Lektionsfluss `space-y-6` · Inline-Gruppen `gap-3`.
 
 ## 4. Komponenten-Regeln & Zustände
 
+**Primitiven-Schicht (verbindlich):** Jede interaktive Fläche baut auf den
+Bausteinen in `packages/ui/src/primitives/` auf — ad-hoc nachgebaute Buttons,
+Karten oder Radiogroups sind nicht erlaubt.
+
+| Primitive | Zweck |
+|---|---|
+| `Button` / `buttonClass` | 4 Varianten (primary/secondary/ghost/danger), 2 Größen, alle 5 Zustände |
+| `Card` | Zeichenfeld, Elevation 1; `level="hero"` = großzügige Variante (`--radius-lg`, `p-6`) |
+| `EmptyState` | Leerzustand mit Titel, Hinweis, Aktion, optionalem Iso-Doodle |
+| `Skeleton` / `ScreenSkeleton` | Ladezustand (`schimmer` auf `--paper-deep`), 4 Layout-Gerüste |
+| `Dialog` | modales Muster: Fokus-Falle, Esc, Fokus-Rückgabe, Elevation 2, `gleiten` |
+| `SegmentedControl` | segmentierte Auswahl mit Roving-Tabindex + ←/→ |
+| `StatusBadge` | Status immer Symbol + Text (§5) |
+| `ProgressBar` | Fortschritt mit `fuellen`-Motion |
+| `Collapse` | Höhen-Expansion `aufklappen`, Inhalt bleibt im DOM |
+| `focusRing` / `hitArea` | der eine Fokus-Ring · die eine Treffflächen-Technik |
+
 Jede interaktive Komponente definiert **alle fünf** Zustände:
 
 | Zustand | Darstellung |
 |---|---|
 | Ruhe | Hairline-Rahmen (`--rule`), Fläche `--paper-2` |
-| Hover | Rahmen → `--ink-2`, Fläche 1 % dunkler; Cursor zeigt Interaktivität |
+| Hover | Rahmen → `--rule-strong`, Fläche 1 % heller (`--paper-3`); Karten dürfen 1 px liften |
 | Fokus | `:focus-visible`: 2-px-Ring in `--focus`, 2 px Offset — **immer**, auch auf SVG-Elementen |
 | Aktiv | `translateY(1px)`, Schatten entfällt (gedrückt = aufliegend) |
 | Deaktiviert | 40 % Opazität, `cursor: not-allowed`, Tooltip erklärt warum |
 
+**Zustands-Ebenen je Screen (Pflicht):** Jeder Screen mit asynchronen Daten
+definiert **Laden** (`ScreenSkeleton`, layout-nah — nie nackter Text),
+**Leer** (`EmptyState` mit nächstem Schritt) und **Fehler** (Fehler-Karte mit
+„Neu laden", siehe `src/shell/RouteError.tsx`).
+
 **Elevation (genau drei Stufen):**
 0 = Fläche (kein Schatten) · 1 = Karte (`--shadow-1`) · 2 = Popover/Drawer/
-schwebender Rechner (`--shadow-2`). Keine weiteren Stufen, kein Stapeln.
+schwebender Rechner (`--shadow-2`, Fläche `--paper-3`). Keine weiteren Stufen,
+kein Stapeln.
 
 - **Buttons:** flach, Hairline-Rahmen; primär = `--accent`-Fläche, Text `--paper`;
   sekundär = Outline. Höhe ≥ 44 px (Touch).
+- **Trefffläche-Technik:** Bedienelemente dürfen visuell kleiner als 44 px sein
+  (z. B. Slider-Stepper 28 px), wenn ein unsichtbares Pseudo-Element die
+  Trefffläche auf ≥ 44 px erweitert (`hitArea`: `after:absolute after:-inset-2`).
 - **Slider** (zentrales Interaktions-Element): Tick-Marks an der Schiene,
   aktueller Wert in Mono am Griff, **−/+-Stepper** an beiden Enden (Feinjustage,
   Touch, Tastatur). Live-Feedback ohne Verzögerung. Unter jedem SVG-Slider liegt
   ein nativer `<input type="range">` (§7).
 - **Formel-Variablen:** Mono, antippbar, beim Tippen unterstrichen in `--accent-ink`.
 - **Tiefen-Umschalter:** drei segmentierte Tabs (verspielt / praxis / genau);
-  globale Ebene = gefüllter Tab, lokale Abweichung = Outline-Tab.
+  globale Ebene = gefüllter Tab, lokale Abweichung = Outline-Tab
+  (`SegmentedControl outlineActive`).
 - **Aufgaben-Karten:** eingerückt, Statusecke oben rechts (offen = leer,
-  ✓ = `--ok`, „mit Hilfe ✓" = `--ok` mit Ring).
-- **Skeleton/Laden:** Flächen in `--paper-sink` mit langsamem Schimmer;
+  ✓ = `--ok`, „mit Hilfe ✓" = `--ok` mit Ring); Feedback-Zeile immer mit
+  Symbol-Präfix (✓ ⚠ ✗) und per `aria-describedby` mit dem Eingabefeld verknüpft.
+- **Skeleton/Laden:** Flächen in `--paper-deep` mit langsamem `schimmer`;
   WASM-Kompilieren zusätzlich Mono-Zeile „Fräse läuft …".
 
 ---
@@ -147,7 +175,9 @@ schwebender Rechner (`--shadow-2`). Keine weiteren Stufen, kein Stapeln.
 ## 5. Farbe semantisch
 
 - `--accent` heißt: *hier kannst du etwas tun* (aktive Navigation, primäre
-  Buttons, Messmarken, antippbare Begriffe). **Nie** für richtig/falsch.
+  Buttons, Messmarken, antippbare Begriffe). Zusätzlich erlaubt als
+  Marken-Moment: Wordmark-Punkt („Buildlab."), Hero-**Tuschestrich** (§2),
+  aktiver Schritt-Punkt, Meilenstein-Maßlinien. **Nie** für richtig/falsch.
 - Aufgaben-Feedback und Sim-Overlays nutzen **ausschließlich** `--ok` / `--warn`
   / `--fehl`. Richtig ist grün, kritisch ist rot — auch wenn Orange „schöner" wäre.
 - Status niemals nur über Farbe: immer Symbol (✓ ⚠ ✗) oder Text dazu (§7).
@@ -174,17 +204,25 @@ wiederverwendbaren Bühnen-Primitiven liegen in `packages/ui/src/iso-scene/`
 - **Plastische Körper:** jede sichtbare Fläche bekommt einen Verlauf (oben hell
   → unten dunkel) statt flacher Füllung, plus Glanzkante + Bevel.
 - **Weiche Tiefe:** dezenter Gauß-Blur-Schatten (`feGaussianBlur`, niedriges
-  Alpha) unter Körpern — **kein** harter Schlagschatten.
-- **Perspektivischer Boden:** isometrische Bühne mit projiziertem Welt-Gitter
-  (Millimeterpapier in 3D). Hairline-Rahmen der Karte bleibt erhalten.
+  Alpha) unter Körpern — **kein** harter Schlagschatten. Wiederverwendbar als
+  `isoContactShadow` (iso-scene).
+- **Perspektivischer Boden (Bühne):** isometrische Bühne mit projiziertem
+  Welt-Gitter (Millimeterpapier in 3D), das zum Rand hin **ausläuft**
+  (Opazität 0,22 → 0,08; Achsen 0,35), einem **Licht-Pool** unter dem Ursprung
+  (radialGradient, sehr dezent) und **Lineal-Ticks** auf der +x-Achse (§3-Motiv).
+  Opt-out für ruhige Szenen: `staging="plain"`. Hairline-Rahmen der Karte bleibt.
 - **Wirkung geometrisch zeigen, nicht nur einfärben:** der Hebel neigt sich
   unter Last (Drehwinkel ∝ Drehmoment), Zahnräder drehen im echten
   Drehzahlverhältnis, ein überlasteter Stab biegt sichtbar durch. Der
-  Kraftvektor ist ein **Ampel-Pfeil** (`--ok → --warn → --fehl`) mit
-  `--ink`-Kontur und kräftiger Spitze — Betrag bleibt auch im grünen Bereich
-  lesbar. Alle Zahlen aus der Engine (Eiserne Regel 1).
+  Kraftvektor ist ein **Ampel-Pfeil** (`AmpelArrow`: eine geschlossene
+  Silhouette mit `--ink`-Kontur und kräftiger Spitze — Betrag bleibt auch im
+  grünen Bereich lesbar). Farbe über `ampelColor` mit verbindlichen Schwellen:
+  < 0,5 → `--ok` · < 0,8 → `--warn` · sonst `--fehl`. Alle Zahlen aus der
+  Engine (Eiserne Regel 1).
 - **Explosionsansicht** (`packages/iso/explode`): Belohnungsmoment am
-  Meilenstein — Teile gleiten gestaffelt auseinander, Maßlinien beschriften sie.
+  Meilenstein — Teile gleiten per one-shot rAF (900 ms, Standard-Easing-Gefühl)
+  auseinander, Maßlinien (dünne Akzent-Leader, Mono-Labels) beschriften sie.
+  Reduzierte Bewegung → sofort explodierte Endlage.
 - **Ziel-Korridor** (bei `target`-Aufgaben): der zulässige Bereich wird als
   dezentes `--ok`-Band auf der Ergebnis-Skala der Canvas markiert.
 
@@ -199,13 +237,19 @@ wiederverwendbaren Bühnen-Primitiven liegen in `packages/ui/src/iso-scene/`
 - **Tap-Targets ≥ 44 px** (Buttons, Stepper, Chips, Navigationspunkte).
 - **Fokus sichtbar:** `:focus-visible`-Ring (§4) überall, auch auf SVG.
 - **Interaktive Canvases:** jede Sim hat `role="img"` + sprechendes
-  `aria-label` mit Live-Werten („Zahnradpaar, z1 20, z2 60, Übersetzung 3,0");
+  `aria-label` mit Live-Werten („Zahnradpaar, z1 20, z2 60, Übersetzung 3,0")
+  **und** ein statisches `<desc>`-Kind, das die Szenen-Konstruktion beschreibt;
   die Mono-Ergebniszeile trägt `aria-live="polite"`. **Pflicht:** zu jedem
-  SVG-Slider existiert ein paralleles natives `<input type="range">`
-  (Muster: `packages/ui/src/Slider.tsx`) — das gilt für alle Komponenten der
-  Registry, ohne Ausnahme.
-- **Popover/Panels:** `role="dialog"`, Fokus hinein und beim Schließen zurück,
-  `Esc` schließt. Keine Fokus-Falle bei leichten Popovers.
+  SVG-Slider existiert ein paralleles natives `<input type="range">` mit
+  `aria-valuetext` (Wert + Einheit; Muster: `packages/ui/src/Slider.tsx`) —
+  das gilt für alle Komponenten der Registry, ohne Ausnahme. Kontinuierliche
+  Wertansagen laufen debounced über die globale Live-Region (`useAnnounce`).
+- **Popover/Panels:** `role="dialog"`, Fokus hinein und beim Schließen zurück
+  (`useFocusReturn`), `Esc` schließt. Keine Fokus-Falle bei leichten Popovers;
+  modale Dialoge nutzen das `Dialog`-Primitiv (echte Falle, `useFocusTrap`).
+- **Fehlertexte an Eingaben:** immer per `aria-describedby` mit dem Feld
+  verknüpft, Feld bekommt `aria-invalid`; eigenständige Fehlermeldungen
+  tragen `role="alert"`.
 - **Reduzierte Bewegung:** `prefers-reduced-motion` **oder** die App-Einstellung
   (ODER-verknüpft) ersetzt jede Animation aus §8 durch den sofortigen Endzustand.
 - **Nie nur Farbe:** Status immer mit Symbol/Text (§5).
