@@ -113,7 +113,10 @@ export default function SkillMap() {
       <div className="space-y-6 md:hidden">
         {skillmapLayout.groups.map((g) => (
           <section key={g.id} aria-label={g.label}>
-            <h2 className="mb-2 border-b border-black/10 pb-1 font-mono text-xs uppercase tracking-widest text-ink-2">{g.label}</h2>
+            <h2 className="mb-2 border-b border-black/10 pb-1 font-mono text-xs uppercase tracking-widest text-ink-2">
+              <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
+              {g.label}
+            </h2>
             <ul className="space-y-1">
               {concepts.filter((c) => c.group === g.id).map((c) => {
                 const { status, due } = nodeState(states[c.id]);

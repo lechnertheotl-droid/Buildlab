@@ -20,7 +20,7 @@ export function CalculatorDrawer(calcProps: CalculatorProps = {}) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Rechner öffnen"
-        className="fixed bottom-20 right-0 z-40 flex flex-col items-center gap-2 rounded-l border border-r-0 border-black/10 bg-paper-2 px-2 py-4 shadow transition-colors hover:bg-paper-sink md:bottom-auto md:top-1/2 md:-translate-y-1/2"
+        className="fixed bottom-32 right-0 z-40 flex flex-col items-center gap-2 rounded-l border border-r-0 border-black/10 bg-paper-2 px-2 py-4 shadow transition-colors hover:bg-paper-sink md:bottom-auto md:top-1/2 md:-translate-y-1/2"
       >
         <span className="text-lg" aria-hidden>🧮</span>
         <span className="font-mono text-[10px] uppercase tracking-widest text-ink-2 [writing-mode:vertical-rl]">
