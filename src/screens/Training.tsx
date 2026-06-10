@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ContentProvider, ScreenSkeleton, TaskView,
+  Button, ContentProvider, EmptyState, ScreenSkeleton, TaskView, buttonClass,
   type Concept, type Formula, type TaskBlock, type TaskResult,
 } from '@buildlab/ui';
 import {
@@ -76,38 +76,38 @@ export default function Training() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="mb-2 font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">Training</h1>
+      <h1 className="mb-2 font-display text-display-sm text-ink-strong md:text-display">Training</h1>
 
       {session.length === 0 ? (
-        <div className="mt-4 rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
-          <p className="font-display text-lg">Nichts fällig. Dein Kopf ist auf Stand — bau lieber was.</p>
-          <Link
-            to="/projekte"
-            className="mt-4 inline-flex min-h-11 items-center rounded bg-accent px-5 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
-          >
-            zu den Projekten →
-          </Link>
+        <div className="mt-4">
+          <EmptyState
+            title="Nichts fällig. Dein Kopf ist auf Stand — bau lieber was."
+            action={
+              <Link to="/projekte" className={buttonClass()}>
+                zu den Projekten →
+              </Link>
+            }
+          />
         </div>
       ) : done ? (
-        <div className="mt-4 rounded border border-black/10 bg-paper-2 p-6 shadow">
-          <p className="font-display text-lg">
+        <div className="bl-gleiten mt-4 rounded-lg border border-black/10 bg-paper-2 p-6 shadow">
+          <p className="font-display text-lead font-medium text-ink">
             Heute gefestigt:{' '}
             {session.map((e) => conceptById.get(e.conceptId)?.name ?? e.conceptId).join(' · ')}
           </p>
           <ul className="mt-3 space-y-1 font-mono text-sm">
             {session.map((e) => (
               <li key={e.conceptId} className="flex items-center gap-2">
-                <span className={results[e.conceptId] ? 'text-[color:var(--ok)]' : 'text-[color:var(--warn)]'}>
-                  {results[e.conceptId] ? '▲ Box rauf' : '▼ nochmal bald'}
+                {/* Symbol trägt die Farbe, Text bleibt kontraststark (DESIGN.md §5). */}
+                <span aria-hidden className={results[e.conceptId] ? 'text-ok' : 'text-warn'}>
+                  {results[e.conceptId] ? '▲' : '▼'}
                 </span>
-                <span className="text-ink-2">{conceptById.get(e.conceptId)?.name}</span>
+                <span>{results[e.conceptId] ? 'Box rauf' : 'nochmal bald'}</span>
+                <span className="text-ink-2">· {conceptById.get(e.conceptId)?.name}</span>
               </li>
             ))}
           </ul>
-          <Link
-            to="/"
-            className="mt-4 inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
-          >
+          <Link to="/" className={`mt-4 ${buttonClass({ variant: 'secondary' })}`}>
             zum Start →
           </Link>
         </div>
@@ -126,26 +126,18 @@ export default function Training() {
               {conceptById.get(current.conceptId)?.name}
             </Link>
           </p>
-          <div key={`${current.conceptId}-${sessionIndex}`} className="bl-wechsel">
+          <div key={`${current.conceptId}-${sessionIndex}`} className="bl-gleiten">
             <TaskView
               block={current.task}
               onResult={(r) => onResult(current.conceptId, r)}
             />
           </div>
           <div className="mt-4 flex justify-between">
-            <button
-              onClick={() => setSessionIndex((i) => i + 1)}
-              className="min-h-11 rounded px-3 text-sm text-ink-faint outline-none hover:text-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <Button variant="ghost" onClick={() => setSessionIndex((i) => i + 1)}>
               überspringen
-            </button>
+            </Button>
             {results[current.conceptId] !== undefined && (
-              <button
-                onClick={() => setSessionIndex((i) => i + 1)}
-                className="min-h-11 rounded bg-accent px-5 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
-              >
-                nächste Karte ›
-              </button>
+              <Button onClick={() => setSessionIndex((i) => i + 1)}>nächste Karte ›</Button>
             )}
           </div>
         </ContentProvider>

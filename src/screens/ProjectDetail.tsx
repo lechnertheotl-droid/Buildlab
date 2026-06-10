@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ScreenSkeleton } from '@buildlab/ui';
+import { Collapse, ScreenSkeleton, StatusBadge, buttonClass } from '@buildlab/ui';
 import { conceptById, missingPrerequisites, projectById } from '../content';
 import { useAllProgress } from '../db/repo';
 
@@ -39,7 +39,7 @@ export default function ProjectDetail() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="font-display text-[2rem] leading-[1.1] tracking-tight md:text-[2.75rem]">
+      <h1 className="font-display text-display-sm text-ink-strong md:text-display">
         <span aria-hidden className="mr-3 font-mono">{project.icon}</span>
         {project.title}
       </h1>
@@ -64,7 +64,7 @@ export default function ProjectDetail() {
               <Link
                 key={c}
                 to={`/konzept/${c}`}
-                className="rounded border border-black/10 bg-paper px-2 py-0.5 text-xs text-accent-ink outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
+                className="rounded-sm border border-black/10 bg-paper px-2 py-0.5 text-xs text-accent-ink outline-none transition-colors hover:border-rule-strong focus-visible:ring-2 focus-visible:ring-accent"
               >
                 {conceptById.get(c)?.name ?? c}
               </Link>
@@ -76,23 +76,20 @@ export default function ProjectDetail() {
       {missing.length > 0 && !progress && (
         <section
           aria-label="Hinweis zu Voraussetzungen"
-          className="mt-4 rounded border border-black/10 bg-paper-sink p-4"
+          className="mt-4 rounded border border-black/10 border-l-4 border-l-warn bg-paper-2 p-4 shadow"
         >
-          <p className="text-sm">
-            <span className="font-mono text-xs uppercase tracking-wider text-[color:var(--viz-mid)]">⚠ </span>
+          <StatusBadge tone="warn">Voraussetzung offen</StatusBadge>
+          <p className="mt-2 text-sm leading-relaxed">
             Dir fehlen noch: <strong>{missingConcepts.join(' · ') || missing.map((m) => m.title).join(' · ')}</strong> — ein
             paar Minuten in „{missing[0].title}“, oder du legst direkt los und holst es unterwegs nach.
           </p>
-          <div className="mt-3 flex gap-3">
-            <Link
-              to={`/projekt/${missing[0].id}`}
-              className="inline-flex min-h-11 items-center rounded border border-black/10 px-4 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
-            >
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link to={`/projekt/${missing[0].id}`} className={buttonClass({ variant: 'secondary' })}>
               Erst auffrischen
             </Link>
             <button
               onClick={() => navigate(`/projekt/${project.id}/schritt/1`)}
-              className="inline-flex min-h-11 items-center rounded bg-accent px-4 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
+              className={buttonClass()}
             >
               Trotzdem starten
             </button>
@@ -105,16 +102,15 @@ export default function ProjectDetail() {
           <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
           Schritte
         </h2>
-        <ol className="space-y-1">
-          {project.steps.map((s, i) => {
-            const lastVisible = progress ? progress.maxStepReached + 1 : 2;
-            if (!showAllSteps && i > lastVisible) return null;
+        {(() => {
+          const lastVisible = progress ? progress.maxStepReached + 1 : 2;
+          const renderStep = (s: (typeof project.steps)[number], i: number) => {
             const reachable = progress && i <= progress.maxStepReached;
             const row = (
               <>
                 <span className="w-6 text-right font-mono text-xs text-ink-faint">{i + 1}</span>
                 <span className={done.has(s.id) ? 'text-ink-2' : ''}>{s.title}</span>
-                {done.has(s.id) && <span className="ml-auto font-mono text-xs text-[color:var(--viz-low)]">✓</span>}
+                {done.has(s.id) && <span className="ml-auto font-mono text-xs text-ok">✓</span>}
                 {progress && i === progress.currentStep && !progress.completedAt && (
                   <span className="ml-auto font-mono text-xs text-accent-ink">▸ aktuell</span>
                 )}
@@ -134,25 +130,38 @@ export default function ProjectDetail() {
                 )}
               </li>
             );
-          })}
-        </ol>
-        {project.steps.length > (progress ? progress.maxStepReached + 2 : 3) && (
-          <button
-            type="button"
-            onClick={() => setShowAllSteps((v) => !v)}
-            aria-expanded={showAllSteps}
-            className="mt-1 inline-flex min-h-11 items-center px-2 font-mono text-xs text-accent-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            {showAllSteps ? 'weniger anzeigen' : `alle ${project.steps.length} Schritte anzeigen ›`}
-          </button>
-        )}
+          };
+          const rest = project.steps.slice(lastVisible + 1);
+          return (
+            <>
+              <ol className="space-y-1">
+                {project.steps.slice(0, lastVisible + 1).map((s, i) => renderStep(s, i))}
+              </ol>
+              {rest.length > 0 && (
+                <>
+                  <Collapse open={showAllSteps} id="schrittliste-rest">
+                    <ol className="space-y-1 pt-1">
+                      {rest.map((s, i) => renderStep(s, lastVisible + 1 + i))}
+                    </ol>
+                  </Collapse>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllSteps((v) => !v)}
+                    aria-expanded={showAllSteps}
+                    aria-controls="schrittliste-rest"
+                    className="mt-1 inline-flex min-h-11 items-center px-2 font-mono text-xs text-accent-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    {showAllSteps ? 'weniger anzeigen' : `alle ${project.steps.length} Schritte anzeigen ›`}
+                  </button>
+                </>
+              )}
+            </>
+          );
+        })()}
       </section>
 
       {(missing.length === 0 || progress) && (
-        <Link
-          to={`/projekt/${project.id}/schritt/${nextStep}`}
-          className="mt-6 inline-flex min-h-11 items-center rounded bg-accent px-6 text-sm text-paper outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px"
-        >
+        <Link to={`/projekt/${project.id}/schritt/${nextStep}`} className={`mt-6 ${buttonClass()}`}>
           {progress ? (progress.completedAt ? 'Nochmal ansehen →' : 'Fortsetzen →') : 'Starten →'}
         </Link>
       )}
