@@ -88,7 +88,7 @@ STL-Download hinter Constraints; `pnpm verify` grün.
 **DoD:** alle Routen erreichbar, Leerzustände nach `SCREENS.md`;
 `pnpm verify` grün.
 
-## Phase R6 — Politur & Gate ⏳ (fast fertig)
+## Phase R6 — Politur & Gate ✅
 **Ziel:** A11y und Motion verbindlich, Gesamtdurchlauf.
 - [x] Fokus-Ringe (`:focus-visible`), aria-labels auf Sims, `aria-live` auf
       Ergebniszeilen, native Range-Inputs + −/+-Stepper, Tap-Targets ≥ 44 px.
@@ -96,9 +96,13 @@ STL-Download hinter Constraints; `pnpm verify` grün.
       Bewegung (System ODER Einstellung, `html.bl-reduced-motion`).
       Offen: `zaehlen` (rAF-Hochzählen der Ergebniszahl).
 - [x] Rechner-Verlauf persistent (`calcHistory`) + „⇥ in Aufgabe einsetzen".
-- [ ] Manueller Gesamtdurchlauf im Browser nach `VERIFICATION.md`-DoD
-      (automatisiert geprüft: 74 Tests, SSR-Smoke aller Kernkomponenten,
-      Dev-Server bootet; der klickende Durchlauf steht noch aus).
+- [x] Gesamtdurchlauf im Browser (Playwright, headless) nach
+      `VERIFICATION.md`-DoD: Onboarding (Persona→Tiefe) → Getriebe
+      Schritt 1–8 (estimate · numeric inkl. Kehrwert-Heuristik · error-find ·
+      target-Auto-Quittung bei m=2 · steps mit $prev · Einheitenwahl · single ·
+      match · build mit Constraints + aktivem STL nach WASM-Kompilat ·
+      Meilenstein) → Reload: Fortschritt erhalten → Werkstatt-Abschluss →
+      Backup-Download. Alle Punkte PASS (10.06.2026).
 **DoD:** `pnpm verify` grün; Durchlauf Onboarding → Meilenstein ohne Bruch.
 
 ## Phase R7 — Content-Ausbau (laufend, nach dem Redesign)
