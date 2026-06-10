@@ -17,3 +17,4 @@ export { StatusBadge, type StatusBadgeProps, type BadgeTone } from './StatusBadg
 export { ProgressBar, type ProgressBarProps } from './ProgressBar';
 export { Collapse, type CollapseProps } from './Collapse';
 export { useAnnounce } from './announce';
+export { reducedMotionActive } from './motion';

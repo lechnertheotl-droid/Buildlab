@@ -11,7 +11,7 @@ import { project, rotateY, toPolygonPoints, shade, type Vec2, type Vec3 } from '
 import { Latex } from '../Latex';
 import { useContent } from '../content-context';
 import { Slider } from '../Slider';
-import { useEngineValue } from '../iso-scene';
+import { AmpelArrow, ampelColor, useEngineValue } from '../iso-scene';
 
 export interface LeverSliderParams {
   formulaId?: string;
@@ -240,8 +240,7 @@ export function LeverSlider({
   const torqueFrac = torque ? Math.min(1, torque / maxTorque) : 0;
 
   // Ampel-Farbe des Kraftvektors nach Betrag (Viz-Skala, nur Sim-Overlay).
-  const vecColor =
-    forceFrac < 0.5 ? 'var(--viz-low)' : forceFrac < 0.8 ? 'var(--viz-mid)' : 'var(--viz-high)';
+  const vecColor = ampelColor(forceFrac);
 
   // ── aktuelle Szene ───────────────────────────────────────────────────────────
   const armX = ARM_MIN_X + armFrac * ARM_SPAN; // Kraftposition entlang des Balkens
@@ -273,25 +272,11 @@ export function LeverSlider({
   // Pfeil bleibt senkrecht (Schwerkraft): Schaft in Bildschirm-px über dem Fuß.
   const tail = { x: tip.x, y: tip.y - arrowLen * FRAME.scale };
 
-  // Kraftvektor als EINE geschlossene Silhouette (Schaft + Spitze), senkrecht
-  // nach unten zeigend → eine durchgehende, gleichmäßige Kontur.
+  // Kraftvektor: Ampel-Pfeil aus der iso-scene-Primitive (DESIGN.md §6).
+  // Der Drehwirkungs-Pfeil unten teilt sich die Maße (gleiche Formsprache).
   const ah = 8; // halbe Pfeilkopf-Breite (Bildschirm-px)
   const headLen = 13; // Länge der Pfeilspitze
   const sw = 2.2; // halbe Schaftbreite
-  const cx = tip.x;
-  const yHead = tip.y - headLen; // Kopfbasis
-  const yTail = Math.min(tail.y, yHead - 2); // immer etwas Schaft, nie invertiert
-  const arrowPts = [
-    [cx - sw, yTail],
-    [cx - sw, yHead],
-    [cx - ah, yHead],
-    [cx, tip.y],
-    [cx + ah, yHead],
-    [cx + sw, yHead],
-    [cx + sw, yTail],
-  ]
-    .map(([x, y]) => `${r2(x)},${r2(y)}`)
-    .join(' ');
 
   const pivot = proj({ x: 0, y: 0, z: 0 });
   const arcR = 18 + torqueFrac * 22;
@@ -499,15 +484,8 @@ export function LeverSlider({
             strokeLinejoin="round"
           />
 
-          {/* Kraftvektor (2.5D): EIN Polygon (Schaft + Spitze) mit durchgehender,
-              gleichmäßiger Ink-Kontur — Ampel-Farbe je Kraftbetrag. */}
-          <polygon
-            points={arrowPts}
-            fill={vecColor}
-            stroke="var(--ink)"
-            strokeWidth={1.4}
-            strokeLinejoin="round"
-          />
+          {/* Kraftvektor (2.5D): Ampel-Pfeil aus der iso-scene-Primitive. */}
+          <AmpelArrow tip={tip} length={arrowLen * FRAME.scale} frac={forceFrac} />
 
           {/* Kraft-Label als dezentes Mess-Tag (Mono auf Papier-Chip) */}
           <g pointerEvents="none">

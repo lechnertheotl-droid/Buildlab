@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 import {
   project, projectAll, toPolygonPoints, shade,
-  type IsoOptions, type Vec3,
+  type IsoOptions, type Vec2, type Vec3,
 } from '@buildlab/iso';
 import { evaluateById } from '@buildlab/engine';
 import { useContent } from '../content-context';
@@ -20,12 +20,18 @@ export interface IsoStageProps {
   floor?: number;
   iso?: IsoOptions;
   label: string;
+  /** Statische Szenen-Beschreibung für Screenreader (DESIGN.md §7). */
+  desc?: string;
+  /** 'plain' lässt Lichtfleck + Lineal-Ticks weg (nur Gitter). */
+  staging?: 'voll' | 'plain';
   children: React.ReactNode;
 }
 
 /**
- * Isometrische Bühne: projizierter Boden mit Welt-Gitter (Millimeterpapier in
- * 3D) + Gauß-Blur-Filter `iso-soft` für weiche Schatten unter Körpern.
+ * Isometrische Bühne (DESIGN.md §6): projizierter Boden mit Welt-Gitter
+ * (Millimeterpapier in 3D, zum Rand auslaufend), Licht-Pool unter dem
+ * Ursprung, Lineal-Ticks auf der +x-Achse + Gauß-Blur-Filter `iso-soft`
+ * für weiche Schatten unter Körpern.
  */
 export function IsoStage({
   width = 460,
@@ -34,6 +40,8 @@ export function IsoStage({
   floor = 110,
   iso = {},
   label,
+  desc,
+  staging = 'voll',
   children,
 }: IsoStageProps) {
   const lines: React.ReactNode[] = [];
@@ -44,24 +52,127 @@ export function IsoStage({
     const b = project({ x: t, y: floor, z: 0 }, iso);
     const c = project({ x: -floor, y: t, z: 0 }, iso);
     const d = project({ x: floor, y: t, z: 0 }, iso);
+    // Gitter läuft zum Rand hin aus (Licht in der Mitte, Achsen kräftiger).
+    const fade = 0.22 - 0.14 * (Math.abs(i) / steps);
+    const op = i === 0 ? 0.35 : fade;
     lines.push(
-      <line key={`gx${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--ink-faint)" strokeOpacity={i === 0 ? 0.35 : 0.15} />,
-      <line key={`gy${i}`} x1={c.x} y1={c.y} x2={d.x} y2={d.y} stroke="var(--ink-faint)" strokeOpacity={i === 0 ? 0.35 : 0.15} />,
+      <line key={`gx${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--ink-faint)" strokeOpacity={op} />,
+      <line key={`gy${i}`} x1={c.x} y1={c.y} x2={d.x} y2={d.y} stroke="var(--ink-faint)" strokeOpacity={op} />,
     );
   }
 
+  // Lineal-Ticks auf der +x-Bodenachse (DESIGN.md §3: Tick-Marks als Motiv).
+  const ticks: React.ReactNode[] = [];
+  if (staging === 'voll') {
+    for (let i = 1; i <= steps; i++) {
+      const p = project({ x: (i / steps) * floor, y: 0, z: 0 }, iso);
+      ticks.push(
+        <line key={`tick${i}`} x1={p.x} y1={p.y - 2} x2={p.x} y2={p.y + 2} stroke="var(--ink-faint)" strokeOpacity={0.6} />,
+      );
+    }
+  }
+
+  const pool = project({ x: 0, y: 0, z: 0 }, iso);
+
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label={label}>
+      {desc && <desc>{desc}</desc>}
       <defs>
         <filter id="iso-soft" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="4" />
         </filter>
+        <radialGradient id="iso-floorlight">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
       </defs>
       <g transform={`translate(${origin.x} ${origin.y})`}>
-        <g className="bl-einzeichnen">{lines}</g>
+        <g className="bl-einzeichnen">
+          {staging === 'voll' && (
+            <ellipse
+              cx={pool.x}
+              cy={pool.y}
+              rx={floor * 1.1}
+              ry={floor * 0.5}
+              fill="url(#iso-floorlight)"
+            />
+          )}
+          {lines}
+          {ticks}
+        </g>
         {children}
       </g>
     </svg>
+  );
+}
+
+/**
+ * Weicher Kontaktschatten unter einem Körper (DESIGN.md §6: Gauß-Blur,
+ * niedriges Alpha — kein harter Schlagschatten). In einer IsoStage verwenden
+ * (braucht deren `iso-soft`-Filter).
+ */
+export function isoContactShadow(at: Vec3, rx: number, iso: IsoOptions = {}, opacity = 0.16): React.ReactNode {
+  const p = project(at, iso);
+  return (
+    <ellipse cx={p.x} cy={p.y} rx={rx} ry={rx * 0.42} fill="#000" opacity={opacity} filter="url(#iso-soft)" />
+  );
+}
+
+/** Ampel-Farbe nach Auslastungsanteil (DESIGN.md §6: ok → warn → fehl).
+    Schwellen verbindlich: < 0,5 grün · < 0,8 gelb · sonst rot. */
+export function ampelColor(frac: number): string {
+  return frac < 0.5 ? 'var(--viz-low)' : frac < 0.8 ? 'var(--viz-mid)' : 'var(--viz-high)';
+}
+
+export interface AmpelArrowSpec {
+  /** Pfeilspitze in Bildschirm-Koordinaten; der Pfeil zeigt senkrecht nach unten. */
+  tip: Vec2;
+  /** Schaftlänge in Bildschirm-px (Spitze → Schwanz). */
+  length: number;
+  /** Auslastung 0–1 → Ampel-Farbe. */
+  frac: number;
+  /** Halbe Schaftbreite / halbe Kopfbreite / Kopflänge (Bildschirm-px). */
+  shaftHalf?: number;
+  headHalf?: number;
+  headLen?: number;
+}
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Kraftvektor als Ampel-Pfeil (DESIGN.md §6): EINE geschlossene Silhouette
+ * (Schaft + Spitze) mit durchgehender Ink-Kontur und kräftiger Spitze —
+ * der Betrag bleibt auch im grünen Bereich lesbar.
+ */
+export function AmpelArrow({
+  tip,
+  length,
+  frac,
+  shaftHalf = 2.2,
+  headHalf = 8,
+  headLen = 13,
+}: AmpelArrowSpec) {
+  const yHead = tip.y - headLen; // Kopfbasis
+  const yTail = Math.min(tip.y - length, yHead - 2); // immer etwas Schaft, nie invertiert
+  const points = [
+    [tip.x - shaftHalf, yTail],
+    [tip.x - shaftHalf, yHead],
+    [tip.x - headHalf, yHead],
+    [tip.x, tip.y],
+    [tip.x + headHalf, yHead],
+    [tip.x + shaftHalf, yHead],
+    [tip.x + shaftHalf, yTail],
+  ]
+    .map(([x, y]) => `${r2(x)},${r2(y)}`)
+    .join(' ');
+  return (
+    <polygon
+      points={points}
+      fill={ampelColor(frac)}
+      stroke="var(--ink)"
+      strokeWidth={1.4}
+      strokeLinejoin="round"
+    />
   );
 }
 

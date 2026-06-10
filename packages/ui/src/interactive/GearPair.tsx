@@ -9,6 +9,7 @@ import { project, shade } from '@buildlab/iso';
 import { Slider } from '../Slider';
 import { useContent } from '../content-context';
 import { IsoStage, groundRotationMatrix, useEngineValue } from '../iso-scene';
+import { reducedMotionActive } from '../primitives/motion';
 
 export interface GearPairParams {
   z1?: number;
@@ -43,15 +44,6 @@ function gearOutline(z: number, rootR: number, tipR: number): string {
     push(rootR, a + 0.62 * pitch);
   }
   return points.join(' ');
-}
-
-function reducedMotionActive(): boolean {
-  return (
-    (typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) ||
-    (typeof document !== 'undefined' &&
-      document.documentElement.classList.contains('bl-reduced-motion'))
-  );
 }
 
 function Gear({
@@ -146,8 +138,20 @@ export function GearPair({ params, caption }: { params: GearPairParams; caption?
       }
       raf = requestAnimationFrame(tick);
     };
+    // rAF pausiert in verdeckten Tabs (kein Batterie-Verbrauch im Hintergrund).
+    const onVisibility = () => {
+      cancelAnimationFrame(raf);
+      if (!document.hidden) {
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   const height = 14;

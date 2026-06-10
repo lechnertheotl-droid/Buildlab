@@ -12,6 +12,7 @@ import { Calculator } from './Calculator';
 import { TaskView } from './task/TaskView';
 import { WorkspaceStep } from './workspace/WorkspaceStep';
 import { classifyMiss, isWithin, parseGermanNumber } from './task/feedback';
+import { AmpelArrow, IsoStage, ampelColor } from './iso-scene';
 import { useWorkspaceStore } from './store';
 import type {
   BuildBlock, Concept, Formula, InteractiveBlock, Project, TaskBlock,
@@ -340,5 +341,71 @@ describe('Calculator', () => {
     expect(html).toContain('Verlauf');
     expect(html).toContain('Σ Formeln');
     expect(html).toContain('sin');
+  });
+
+  it('zeigt Skeleton-Zeilen, solange der Verlauf lädt', () => {
+    const html = wrap(<Calculator historyLoading />);
+    expect(html).toContain('bl-schimmer');
+    expect(html).toContain('Verlauf lädt');
+  });
+});
+
+describe('iso-scene (DESIGN.md §6)', () => {
+  it('ampelColor: verbindliche Schwellen 0,5 / 0,8', () => {
+    expect(ampelColor(0)).toBe('var(--viz-low)');
+    expect(ampelColor(0.49)).toBe('var(--viz-low)');
+    expect(ampelColor(0.5)).toBe('var(--viz-mid)');
+    expect(ampelColor(0.79)).toBe('var(--viz-mid)');
+    expect(ampelColor(0.8)).toBe('var(--viz-high)');
+    expect(ampelColor(1)).toBe('var(--viz-high)');
+  });
+
+  it('AmpelArrow: eine geschlossene Silhouette mit Ink-Kontur', () => {
+    const html = renderToStaticMarkup(<AmpelArrow tip={{ x: 50, y: 80 }} length={30} frac={0.9} />);
+    expect(html).toContain('<polygon');
+    expect(html).toContain('var(--viz-high)');
+    expect(html).toContain('var(--ink)');
+  });
+
+  it('IsoStage: Bühne mit Licht-Pool, Gitter-Fade und <desc>', () => {
+    const html = renderToStaticMarkup(
+      <IsoStage label="Testbühne" desc="Eine leere Bühne.">
+        <circle r="4" />
+      </IsoStage>,
+    );
+    expect(html).toContain('iso-floorlight');
+    expect(html).toContain('iso-soft');
+    expect(html).toContain('<desc>Eine leere Bühne.</desc>');
+  });
+});
+
+describe('Meilenstein (SCREENS.md §6.3)', () => {
+  it('Explosionsansicht mit Maßlinien-Beschriftung der Teile', () => {
+    const msIndex = project.steps.findIndex((s) => s.kind === 'meilenstein');
+    expect(msIndex).toBeGreaterThan(-1);
+    const required = project.steps[msIndex].blocks
+      .map((b, i) => ({ b, i }))
+      .filter(({ b }) => b.type === 'task' && (b as TaskBlock).minDepth === undefined)
+      .map(({ i }) => i);
+    const taskStates = Object.fromEntries(
+      required.map((i) => [i, { solved: true, attempts: 1, usedHelp: false }]),
+    );
+    const html = wrap(
+      <WorkspaceStep
+        project={project}
+        stepIndex={msIndex}
+        maxStepReached={project.steps.length - 1}
+        depth="practical"
+        seenConcepts={new Set<string>()}
+        taskStates={taskStates}
+        onTaskResult={() => {}}
+        onNavigate={() => {}}
+        onStepComplete={() => {}}
+      />,
+    );
+    expect(html).toContain('Explosionsansicht');
+    expect(html).toContain('Grundplatte');
+    expect(html).toContain('Deckel');
+    expect(html).toContain('Dein Bauteil wartet in der Werkstatt.');
   });
 });

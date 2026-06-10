@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
+import { explodePoint, shade } from '@buildlab/iso';
 import { BlockRenderer } from '../blocks';
 import { useContent } from '../content-context';
 import { useCountUp } from '../useCountUp';
@@ -13,6 +14,7 @@ import { useWorkspaceStore } from '../store';
 import { CadBuild } from '../build/CadBuild';
 import { buttonClass } from '../primitives/Button';
 import { focusRing } from '../primitives/focus';
+import { reducedMotionActive } from '../primitives/motion';
 import type { Block, Layer, Project, Step, TaskResult } from '../types';
 
 export interface WorkspaceStepProps {
@@ -132,28 +134,82 @@ function RefreshCard({
   );
 }
 
-/** Meilenstein-Abschluss: Explosions-Inszenierung (rein dekorativ, iso-Stil). */
-function MilestoneFinale({ project }: { project: Project }) {
+// Explosionsansicht (SCREENS.md §6.3 / DESIGN.md §6): die Teile des Bauteils
+// gleiten per `packages/iso`-explode auseinander (one-shot rAF, 900 ms),
+// Maßlinien beschriften sie. Reduzierte Bewegung → sofort explodiert.
+const FINALE_PARTS: { label: string; r: number; h: number; color: string }[] = [
+  { label: 'Grundplatte', r: 46, h: 9, color: '#9a9489' },
+  { label: 'Rad 1', r: 34, h: 12, color: '#a9a294' },
+  { label: 'Rad 2', r: 22, h: 12, color: '#a9a294' },
+  { label: 'Deckel', r: 11, h: 8, color: '#9a9489' },
+];
+
+function FinaleDisc({ cx, bottomY, r, h, color }: { cx: number; bottomY: number; r: number; h: number; color: string }) {
+  const ry = r * 0.42;
   return (
-    <div className="bl-einzeichnen rounded border border-black/10 bg-paper-2 p-5 text-center shadow">
-      <svg viewBox="0 0 200 120" className="mx-auto w-48" role="img" aria-label="Explosionsansicht des fertigen Bauteils">
-        {[0, 1, 2].map((layer) => (
-          <g key={layer} className={`bl-einzeichnen bl-einzeichnen-d${layer + 1}`}>
-            <ellipse
-              cx={100}
-              cy={90 - layer * 28}
-              rx={56 - layer * 14}
-              ry={20 - layer * 5}
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth={1.2}
-              strokeDasharray={layer === 1 ? '4 3' : undefined}
-            />
-            <line x1={100} y1={95 - layer * 28} x2={100} y2={78 - layer * 28} stroke="var(--ink-faint)" />
-          </g>
+    <g>
+      <ellipse cx={cx} cy={bottomY} rx={r} ry={ry} fill={shade(color, -0.24)} stroke="var(--ink)" strokeOpacity={0.3} strokeWidth={0.6} />
+      <rect x={cx - r} y={bottomY - h} width={r * 2} height={h} fill={shade(color, -0.1)} />
+      <ellipse cx={cx} cy={bottomY - h} rx={r} ry={ry} fill={shade(color, 0.22)} stroke="var(--ink)" strokeOpacity={0.35} strokeWidth={0.7} />
+      <ellipse cx={cx} cy={bottomY - h} rx={r * 0.22} ry={ry * 0.22} fill="none" stroke="var(--ink)" strokeOpacity={0.3} strokeWidth={0.6} />
+    </g>
+  );
+}
+
+function MilestoneFinale({ project }: { project: Project }) {
+  const [factor, setFactor] = useState(0);
+  useEffect(() => {
+    if (reducedMotionActive()) {
+      setFactor(1);
+      return;
+    }
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - t0) / 900);
+      setFactor(1 - (1 - t) ** 3);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Montierte Unterkanten der Teile (Bildschirm-y), Explosion vom Boden aus.
+  const cx = 92;
+  const baseY = 168;
+  const center = { x: 0, y: baseY, z: 0 };
+  let stackY = baseY;
+  const placed = FINALE_PARTS.map((part) => {
+    const assembled = stackY;
+    stackY -= part.h + 2;
+    const bottomY = explodePoint({ x: 0, y: assembled, z: 0 }, center, factor * 1.4).y;
+    return { ...part, bottomY };
+  });
+
+  return (
+    <div className="bl-einzeichnen rounded-lg border border-black/10 bg-paper-2 p-6 text-center shadow">
+      <svg viewBox="0 0 240 190" className="mx-auto w-60" role="img" aria-label="Explosionsansicht des fertigen Bauteils">
+        <desc>Die Teile des Bauteils gleiten auseinander; Maßlinien beschriften {FINALE_PARTS.map((p) => p.label).join(', ')}.</desc>
+        <ellipse cx={cx} cy={baseY + 8} rx={56} ry={12} fill="#000" opacity={0.1} />
+        {placed.map((p) => (
+          <FinaleDisc key={p.label} cx={cx} bottomY={p.bottomY} r={p.r} h={p.h} color={p.color} />
         ))}
+        {/* Maßlinien (DESIGN.md §3): dünne Akzent-Leader mit Mono-Labels. */}
+        {placed.map((p, i) => {
+          const y = p.bottomY - p.h / 2;
+          return (
+            <g key={p.label} className={`bl-einzeichnen ${i ? `bl-einzeichnen-d${Math.min(i, 3)}` : ''}`}>
+              <line x1={cx + p.r + 5} y1={y} x2={172} y2={y} stroke="var(--accent)" strokeWidth={0.8} strokeDasharray="3 2" />
+              <circle cx={cx + p.r + 5} cy={y} r={1.4} fill="var(--accent)" />
+              <text x={176} y={y + 3} fontSize={10} className="fill-[color:var(--ink-2)] font-mono">
+                {p.label}
+              </text>
+            </g>
+          );
+        })}
       </svg>
-      <p className="mt-2 font-display text-lg">Steht. {project.buildResult}</p>
+      <p className="mt-3 font-display text-display-sm text-ink-strong">Steht.</p>
+      <p className="mt-1 font-display text-lg text-ink">{project.buildResult}</p>
       <p className="mt-1 font-mono text-sm text-ink-2">Dein Bauteil wartet in der Werkstatt.</p>
     </div>
   );
