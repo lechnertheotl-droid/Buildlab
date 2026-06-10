@@ -20,6 +20,7 @@ export interface SegmentedControlProps<T extends string> {
   /** Aktiver Tab als Outline statt Füllung (lokale Abweichung, DESIGN.md §4). */
   outlineActive?: boolean;
   size?: 'md' | 'sm';
+  disabled?: boolean;
 }
 
 export function SegmentedControl<T extends string>({
@@ -29,6 +30,7 @@ export function SegmentedControl<T extends string>({
   ariaLabel,
   outlineActive = false,
   size = 'md',
+  disabled = false,
 }: SegmentedControlProps<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const hasActive = options.some((o) => o.id === value);
@@ -57,6 +59,7 @@ export function SegmentedControl<T extends string>({
             role="radio"
             aria-checked={active}
             tabIndex={tabbable ? 0 : -1}
+            disabled={disabled}
             title={o.title}
             onClick={() => onChange(o.id)}
             onKeyDown={(e) => {
@@ -68,7 +71,7 @@ export function SegmentedControl<T extends string>({
                 move(i, -1);
               }
             }}
-            className={`${focusRing} ${sizeClass} font-mono transition-colors duration-150 ${
+            className={`${focusRing} ${sizeClass} font-mono transition-colors duration-150 disabled:cursor-default ${
               active
                 ? outlineActive
                   ? 'shadow-[inset_0_0_0_2px_var(--accent)] text-accent-ink'

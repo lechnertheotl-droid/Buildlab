@@ -3,10 +3,13 @@
 // Lösungsweg (engine-gerechnet, nie hartkodiert). Persistenz-agnostisch:
 // Zustand kommt als Prop, Ergebnisse gehen über onResult nach draußen.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { evaluateById } from '@buildlab/engine';
 import { Latex } from '../Latex';
 import { useContent } from '../content-context';
+import { buttonClass } from '../primitives/Button';
+import { Collapse } from '../primitives/Collapse';
+import { SegmentedControl } from '../primitives/SegmentedControl';
 import { useWorkspaceStore } from '../store';
 import {
   HEURISTIC_TEXT, classifyMiss, isWithin, parseGermanNumber, praise,
@@ -36,6 +39,8 @@ interface Flow {
 }
 
 function useFlow(block: TaskBlock, state: TaskResult | undefined, onResult?: (r: TaskResult) => void) {
+  // Verknüpft Eingabefelder mit der Feedback-Zeile (aria-describedby, §7).
+  const msgId = useId();
   const [flow, setFlow] = useState<Flow>({
     attempts: state?.attempts ?? 0,
     helpUsed: state?.usedHelp ?? false,
@@ -80,7 +85,7 @@ function useFlow(block: TaskBlock, state: TaskResult | undefined, onResult?: (r:
     if (hintVisible) setFlow((f) => (f.helpUsed ? f : { ...f, helpUsed: true }));
   }, [hintVisible]);
 
-  return { flow, fail, succeed, hintVisible, showSolution, openSolution };
+  return { flow, fail, succeed, hintVisible, showSolution, openSolution, msgId };
 }
 
 // ── Gemeinsame Bausteine ─────────────────────────────────────────────────────
@@ -89,7 +94,7 @@ function StatusCorner({ flow }: { flow: Flow }) {
   if (!flow.solved) return null;
   return (
     <span
-      className={`absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full font-mono text-xs text-paper ${
+      className={`bl-quittung-pop absolute right-3 top-3 inline-flex h-6 w-6 items-center justify-center rounded-full font-mono text-xs text-paper ${
         flow.solvedWithHelp ? 'bg-ok/70 ring-2 ring-ok/40' : 'bg-ok'
       }`}
       title={flow.solvedWithHelp ? 'gelöst mit Hilfe' : 'gelöst'}
@@ -100,13 +105,19 @@ function StatusCorner({ flow }: { flow: Flow }) {
   );
 }
 
-function Message({ flow }: { flow: Flow }) {
-  if (!flow.message) return null;
+function Message({ flow, id }: { flow: Flow; id?: string }) {
+  // Farbe nie allein (DESIGN.md §5): Symbol trägt die Bedeutung mit.
   const tone =
     flow.messageTone === 'ok' ? 'text-ok' : flow.messageTone === 'warn' ? 'text-warn' : 'text-fehl';
+  const symbol = flow.messageTone === 'ok' ? '✓' : flow.messageTone === 'warn' ? '⚠' : '✗';
   return (
-    <p className={`bl-quittung mt-3 font-mono text-sm ${tone}`} aria-live="polite">
-      {flow.message}
+    <p id={id} className={`bl-quittung mt-3 font-mono text-sm ${tone} ${flow.message ? '' : 'hidden'}`} aria-live="polite">
+      {flow.message && (
+        <>
+          <span aria-hidden>{symbol} </span>
+          {flow.message}
+        </>
+      )}
     </p>
   );
 }
@@ -164,18 +175,14 @@ function HintAndSolution({
 
   return (
     <div className="mt-3 space-y-2">
-      {hintVisible && (
-        <p className="bl-quittung rounded border border-black/10 bg-paper-sink/60 p-2 text-sm text-ink-2">
+      <Collapse open={hintVisible}>
+        <p className="rounded border border-black/10 bg-paper-sink/60 p-2 text-sm text-ink-2">
           <span className="font-mono text-xs uppercase tracking-wider text-ink-faint">Hinweis · </span>
           {block.hint}
         </p>
-      )}
+      </Collapse>
       {!flow.solved && flow.attempts >= 3 && !showSolution && (
-        <button
-          type="button"
-          onClick={openSolution}
-          className="min-h-11 rounded border border-black/10 px-3 text-sm text-ink-2 outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
-        >
+        <button type="button" onClick={openSolution} className={buttonClass({ variant: 'secondary' })}>
           Zeig mir den Weg
         </button>
       )}
@@ -201,9 +208,8 @@ function HintAndSolution({
 }
 
 const inputClass =
-  'min-h-11 w-36 rounded border border-black/15 bg-paper-sink px-3 font-mono text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent';
-const checkButtonClass =
-  'min-h-11 rounded border border-black/10 bg-accent px-4 text-sm text-paper outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40';
+  'min-h-11 w-36 rounded border border-black/15 bg-paper-sink px-3 font-mono text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60';
+const checkButtonClass = buttonClass();
 
 // ── single / multi ───────────────────────────────────────────────────────────
 
@@ -273,7 +279,7 @@ function ChoiceBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<
 // ── numeric (mit optionaler Einheiten-Wahl) ──────────────────────────────────
 
 function NumericBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<typeof useFlow> }) {
-  const { flow, fail, succeed } = flowApi;
+  const { flow, fail, succeed, msgId } = flowApi;
   const [raw, setRaw] = useState('');
   const [unitPick, setUnitPick] = useState<string | null>(null);
   const setAnswerSink = useWorkspaceStore((s) => s.setAnswerSink);
@@ -322,25 +328,17 @@ function NumericBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType
           className={inputClass}
           placeholder="Wert"
           aria-label="Antwort"
+          aria-describedby={msgId}
+          aria-invalid={!flow.solved && flow.messageTone === 'fehl' && !!flow.message}
         />
         {block.unitChoices ? (
-          <span className="inline-flex rounded border border-black/10" role="radiogroup" aria-label="Einheit">
-            {block.unitChoices.map((u) => (
-              <button
-                key={u}
-                type="button"
-                role="radio"
-                aria-checked={unitPick === u}
-                disabled={flow.solved}
-                onClick={() => setUnitPick(u)}
-                className={`min-h-11 px-3 font-mono text-sm outline-none first:rounded-l last:rounded-r focus-visible:ring-2 focus-visible:ring-accent ${
-                  unitPick === u ? 'bg-accent text-paper' : 'bg-paper-sink/40 text-ink-2 hover:text-ink'
-                }`}
-              >
-                {u.replace('*', '·')}
-              </button>
-            ))}
-          </span>
+          <SegmentedControl
+            value={unitPick ?? ''}
+            onChange={(u) => setUnitPick(u)}
+            options={block.unitChoices.map((u) => ({ id: u, label: u.replace('*', '·') }))}
+            ariaLabel="Einheit"
+            disabled={flow.solved}
+          />
         ) : (
           block.unit && block.unit !== '-' && (
             <span className="font-mono text-sm text-ink-faint">{block.unit.replace('*', '·')}</span>
@@ -641,7 +639,7 @@ function MatchBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<t
 // ── steps (geführter Rechenweg, $prev = Lernenden-Wert) ──────────────────────
 
 function StepsBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<typeof useFlow> }) {
-  const { flow, fail, succeed } = flowApi;
+  const { flow, fail, succeed, msgId } = flowApi;
   const { formulas } = useContent();
   const stages = block.steps ?? [];
   const [stageIndex, setStageIndex] = useState(0);
@@ -719,6 +717,8 @@ function StepsBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<t
                   className={inputClass}
                   placeholder="Wert"
                   aria-label={`Antwort Stufe ${i + 1}`}
+                  aria-describedby={msgId}
+                  aria-invalid={!!stageMsg}
                 />
                 <span className="font-mono text-sm text-ink-faint">
                   {formula?.result.unit && formula.result.unit !== '-' ? formula.result.unit.replace('*', '·') : ''}
@@ -742,7 +742,7 @@ function StepsBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<t
 
 export function TaskView({ block, state, onResult, depth }: TaskViewProps) {
   const flowApi = useFlow(block, state, onResult);
-  const { flow, hintVisible, showSolution, openSolution } = flowApi;
+  const { flow, hintVisible, showSolution, openSolution, msgId } = flowApi;
 
   // Vertiefungsaufgaben nur auf Ebene „genau“ (LERNMODELL.md §2.3).
   if (block.minDepth === 'rigorous' && depth !== 'rigorous') return null;
@@ -783,7 +783,7 @@ export function TaskView({ block, state, onResult, depth }: TaskViewProps) {
         {block.question}
       </p>
       <div className="mt-3">{body()}</div>
-      <Message flow={flow} />
+      <Message flow={flow} id={msgId} />
       <HintAndSolution
         block={block}
         flow={flow}

@@ -183,6 +183,14 @@
   visibility: hidden;
   transition: visibility 0s 300ms;
 }
+/* Sonderfall Workspace-Canvas: ab md immer offen (der Toggle existiert nur
+   mobil) — die grid-rows setzt dort eine md:-Utility zurück, die Sichtbarkeit
+   diese Regel. */
+@media (min-width: 768px) {
+  .bl-aufklappen.bl-md-offen[data-open='false'] > * {
+    visibility: visible;
+  }
+}
 
 /* gleiten: Drawer, Bottom-Sheet, Dialog, Trainings-Kartenwechsel. */
 @keyframes bl-gleiten {

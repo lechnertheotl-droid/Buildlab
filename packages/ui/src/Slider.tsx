@@ -2,10 +2,14 @@
 // Schiene, aktueller Wert in Mono am Griff, Live-Feedback ohne Verzögerung).
 
 import { useId } from 'react';
+import { focusRing, hitArea } from './primitives/focus';
 
 function fmt(n: number): string {
   return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 3 }).format(n);
 }
+
+// Sichtbar 28 px, Trefffläche ≥ 44 px (hitArea-Technik, DESIGN.md §4).
+const stepperClass = `${hitArea} ${focusRing} h-7 w-7 shrink-0 rounded border border-black/10 font-mono text-xs leading-none text-ink-2 transition-colors hover:border-rule-strong active:translate-y-px`;
 
 export function Slider({
   label,
@@ -52,7 +56,7 @@ export function Slider({
           type="button"
           aria-label={`${label} verringern`}
           onClick={() => onChange(Math.max(min, Math.round((value - step) / step) * step))}
-          className="h-7 w-7 shrink-0 rounded border border-black/10 font-mono text-xs leading-none text-ink-2 outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
+          className={stepperClass}
         >
           −
         </button>
@@ -73,6 +77,7 @@ export function Slider({
             step={step}
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
+            aria-valuetext={`${fmt(value)}${unit && unit !== '-' ? ` ${unit}` : ''}`}
             className="bl-range relative z-10 w-full cursor-pointer appearance-none bg-transparent"
           />
         </div>
@@ -80,7 +85,7 @@ export function Slider({
           type="button"
           aria-label={`${label} erhöhen`}
           onClick={() => onChange(Math.min(max, Math.round((value + step) / step) * step))}
-          className="h-7 w-7 shrink-0 rounded border border-black/10 font-mono text-xs leading-none text-ink-2 outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px"
+          className={stepperClass}
         >
           +
         </button>

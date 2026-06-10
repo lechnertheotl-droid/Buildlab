@@ -11,6 +11,8 @@ import { useContent } from '../content-context';
 import { useCountUp } from '../useCountUp';
 import { useWorkspaceStore } from '../store';
 import { CadBuild } from '../build/CadBuild';
+import { buttonClass } from '../primitives/Button';
+import { focusRing } from '../primitives/focus';
 import type { Block, Layer, Project, Step, TaskResult } from '../types';
 
 export interface WorkspaceStepProps {
@@ -113,7 +115,7 @@ function RefreshCard({
           <button
             type="button"
             onClick={() => onOpenConcept(conceptId)}
-            className="min-h-9 text-accent-ink underline decoration-black/20 underline-offset-2 outline-none hover:decoration-current focus-visible:ring-2 focus-visible:ring-accent"
+            className={`min-h-11 text-accent-ink underline decoration-black/20 underline-offset-2 hover:decoration-current ${focusRing}`}
           >
             tiefer eintauchen →
           </button>
@@ -121,7 +123,7 @@ function RefreshCard({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="min-h-9 text-ink-faint outline-none hover:text-ink-2 focus-visible:ring-2 focus-visible:ring-accent"
+          className={`min-h-11 rounded px-2 text-ink-faint hover:bg-paper-sink hover:text-ink-2 ${focusRing}`}
         >
           zuklappen
         </button>
@@ -280,34 +282,41 @@ export function WorkspaceStep({
         >
           <div className="sticky top-0 z-10 bg-paper md:static md:bg-transparent">
             {canvasCollapsed && (
-              <div className="md:hidden">
+              <div className="bl-wechsel md:hidden">
                 <CanvasResultLine project={project} step={step} />
               </div>
             )}
+            {/* Motion „aufklappen" (DESIGN.md §8): grid-rows 1fr↔0fr statt
+                hartem hidden. Ab md immer offen (Toggle existiert nur mobil). */}
             <div
               id="canvas-inhalt"
-              className={
+              data-open={!canvasCollapsed}
+              className={`bl-aufklappen bl-md-offen grid ${
                 canvasCollapsed
-                  ? 'hidden md:block'
-                  : 'max-h-[45vh] overflow-auto md:max-h-none'
-              }
+                  ? '[grid-template-rows:0fr] md:[grid-template-rows:1fr]'
+                  : '[grid-template-rows:1fr]'
+              }`}
             >
-              {canvasBlock ? (
-                canvasBlock.type === 'build' ? (
-                  <CadBuild block={canvasBlock} onExport={onExport} />
-                ) : (
-                  <BlockRenderer block={canvasBlock} depth={depth} />
-                )
-              ) : step.kind === 'meilenstein' ? (
-                <MilestoneFinale project={project} />
-              ) : (
-                <div className="flex min-h-40 items-center justify-center rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
-                  <p className="font-display text-xl text-ink-2">
-                    <span aria-hidden className="mr-2 font-mono">{project.icon}</span>
-                    {project.title}
-                  </p>
+              <div className="min-h-0 overflow-hidden">
+                <div className="max-h-[45vh] overflow-auto md:max-h-none">
+                  {canvasBlock ? (
+                    canvasBlock.type === 'build' ? (
+                      <CadBuild block={canvasBlock} onExport={onExport} />
+                    ) : (
+                      <BlockRenderer block={canvasBlock} depth={depth} />
+                    )
+                  ) : step.kind === 'meilenstein' ? (
+                    <MilestoneFinale project={project} />
+                  ) : (
+                    <div className="flex min-h-40 items-center justify-center rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
+                      <p className="font-display text-xl text-ink-2">
+                        <span aria-hidden className="mr-2 font-mono">{project.icon}</span>
+                        {project.title}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
             {/* Griff-Leiste (Doppel-Strich): klappt die Ansicht auf die Ergebniszeile. */}
             <button
@@ -330,11 +339,11 @@ export function WorkspaceStep({
         <section aria-label="Lektion" className="order-2 min-w-0 md:order-1">
           <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
             <span aria-hidden className="mr-2 inline-block h-2.5 w-0.5 bg-accent align-[-2px]" />
-            Ziel
+            Ziel · Schritt {stepIndex + 1}/{project.steps.length} · {step.kind}
           </p>
-          <h2 className="mt-1 font-display text-xl leading-snug">{step.goal}</h2>
+          <h2 className="mt-1 font-display text-title text-ink-strong">{step.goal}</h2>
 
-          <div key={stepIndex} className="bl-wechsel mt-5 space-y-5">
+          <div key={stepIndex} className="bl-wechsel mt-5 space-y-6">
             {lessonBlocks.map(({ b, i }) => renderBlock(b, i))}
             {step.kind === 'meilenstein' && stepDone && canvasBlock !== null && (
               <MilestoneFinale project={project} />
@@ -350,20 +359,21 @@ export function WorkspaceStep({
               Desktop inline am Lektion-Ende. */}
           <nav
             aria-label="Schritte"
-            className="fixed bottom-14 left-0 right-0 z-30 flex items-center gap-3 border-t border-black/10 bg-paper-2 px-4 py-2 md:static md:mt-8 md:border-t md:bg-transparent md:px-0 md:pt-4"
+            className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 flex items-center gap-3 border-t border-black/10 bg-paper-2 px-4 py-2 md:static md:mt-8 md:border-t md:bg-transparent md:px-0 md:pt-4"
           >
             <button
               type="button"
               onClick={() => onNavigate(stepIndex - 1)}
               disabled={stepIndex === 0}
-              className="min-h-11 whitespace-nowrap rounded border border-black/10 px-3 text-sm outline-none hover:border-ink-2 focus-visible:ring-2 focus-visible:ring-accent active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 md:px-4"
+              className={`${buttonClass({ variant: 'secondary' })} whitespace-nowrap !px-3 md:!px-4`}
             >
               ‹ Zurück
             </button>
-            <div className="flex flex-1 items-center justify-center gap-1.5 md:gap-2" role="list">
+            <div className="flex flex-1 items-center justify-center md:gap-1" role="list">
               {project.steps.map((s, i) => {
                 const reachable = i <= maxStepReached;
                 const current = i === stepIndex;
+                const done = i < maxStepReached;
                 return (
                   <button
                     key={s.id}
@@ -373,14 +383,23 @@ export function WorkspaceStep({
                     aria-current={current ? 'step' : undefined}
                     disabled={!reachable}
                     onClick={() => onNavigate(i)}
-                    className={`h-3.5 w-3.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper ${
-                      current
-                        ? 'bg-accent ring-2 ring-accent/30'
-                        : reachable
-                          ? 'bg-ink-faint/60 hover:bg-ink-2'
-                          : 'bg-paper-sink'
-                    }`}
-                  />
+                    className={`group relative flex h-11 w-6 items-center justify-center rounded ${focusRing} disabled:cursor-not-allowed md:w-7`}
+                  >
+                    <span
+                      aria-hidden
+                      className={`block h-3.5 w-3.5 rounded-full transition-[transform,background-color] duration-200 ${
+                        current
+                          ? 'scale-125 bg-accent ring-2 ring-accent/30'
+                          : reachable
+                            ? 'bg-ink-faint/60 group-hover:bg-ink-2'
+                            : 'bg-paper-deep'
+                      }`}
+                    />
+                    {/* Lineal-Tick unter erledigten Schritten (DESIGN.md §3). */}
+                    {done && (
+                      <span aria-hidden className="absolute bottom-1.5 h-1 w-px bg-ink-faint" />
+                    )}
+                  </button>
                 );
               })}
             </div>
@@ -389,7 +408,7 @@ export function WorkspaceStep({
               onClick={() => onNavigate(stepIndex + 1)}
               disabled={!stepDone || stepIndex >= project.steps.length - 1}
               title={stepDone ? undefined : 'Noch eine Aufgabe offen — sie ist direkt über mir.'}
-              className="min-h-11 whitespace-nowrap rounded bg-accent px-3 text-sm text-paper outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 md:px-4"
+              className={`${buttonClass()} whitespace-nowrap !px-3 md:!px-4`}
             >
               Weiter ›
             </button>
