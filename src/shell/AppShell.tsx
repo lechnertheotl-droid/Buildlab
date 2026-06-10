@@ -4,8 +4,8 @@
 
 import { useEffect } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useMatches } from 'react-router-dom';
-import { CalculatorDrawer } from '@buildlab/ui';
-import { concepts } from '../content';
+import { CalculatorDrawer, ContentProvider, type Concept, type Formula } from '@buildlab/ui';
+import { componentIds, concepts, formulas } from '../content';
 import { addCalcEntry, useCalcHistory, useConceptStates, useSettings, isDbHealthy } from '../db/repo';
 import {
   IconEinstellungen, IconKarte, IconProjekte, IconStart, IconTraining, IconWerkstatt,
@@ -77,6 +77,13 @@ export default function AppShell() {
      ${isActive ? 'text-ink before:absolute before:left-0 before:top-2 before:hidden before:h-7 before:w-0.5 before:bg-accent md:before:block' : ''}`;
 
   return (
+    // ContentProvider umschließt die GANZE Shell: der Rechner (useContent)
+    // muss auf jedem Screen funktionieren, nicht nur im Workspace.
+    <ContentProvider
+      formulas={formulas as unknown as Formula[]}
+      concepts={concepts as unknown as Concept[]}
+      componentIds={componentIds}
+    >
     <div className="mm-grid flex min-h-screen flex-col bg-paper font-body text-ink antialiased md:flex-row">
       {/* Rail (Desktop) */}
       <nav
@@ -139,6 +146,7 @@ export default function AppShell() {
 
       <PersistentCalculator />
     </div>
+    </ContentProvider>
   );
 }
 
