@@ -68,7 +68,8 @@ Host, auch GitHub Pages, ohne Server-Rewrites).
   ≥ 768 px — globaler Fortschritt ist mobil nicht aufgaben-relevant, die
   Skill-Map zeigt ihn vollständig.
 - Rechner-Lasche → schwebende Lasche unten rechts, **über** der Bottom-Bar
-  (12 px Abstand), damit beide bedienbar bleiben.
+  **und** der fixen Schritt-Leiste des Workspace (≥ 12 px Abstand), damit
+  alle drei bedienbar bleiben.
 
 ---
 
