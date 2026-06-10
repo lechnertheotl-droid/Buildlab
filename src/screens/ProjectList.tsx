@@ -13,10 +13,11 @@ const LEVEL_LABELS: Record<number, string> = {
   4: 'Niveau 4 — Meisterstück',
 };
 
+// Mobil ausgeblendet (SCREENS.md §5.1): auf schmalen Karten zählt der Status.
 function Difficulty({ value }: { value?: number }) {
   if (!value) return null;
   return (
-    <span className="font-mono text-xs text-ink-faint" aria-label={`Schwierigkeit ${value} von 5`}>
+    <span className="hidden font-mono text-xs text-ink-faint md:inline" aria-label={`Schwierigkeit ${value} von 5`}>
       {'●'.repeat(value)}
       {'○'.repeat(5 - value)}
     </span>
@@ -101,10 +102,6 @@ export default function ProjectList() {
           </div>
         </section>
       ))}
-      <p className="text-xs text-ink-faint">
-        Weitere Projekte aus dem Curriculum (siehe PROJECTS.md) erscheinen hier, sobald ihre
-        Bausteine fertig sind.
-      </p>
     </div>
   );
 }

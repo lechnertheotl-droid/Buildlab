@@ -1,6 +1,7 @@
 // src/screens/ProjectDetail.tsx — Briefing vor dem Start (SCREENS.md §5.2):
 // Challenge, Konzept-Chips, Schrittliste, Soft-Lock-Hinweiskasten, CTA.
 
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { conceptById, missingPrerequisites, projectById } from '../content';
 import { useAllProgress } from '../db/repo';
@@ -10,6 +11,9 @@ export default function ProjectDetail() {
   const navigate = useNavigate();
   const allProgress = useAllProgress();
   const project = id ? projectById.get(id) : undefined;
+  // Schrittliste: erledigt + aktuell + nächster sichtbar, Rest auf Wunsch
+  // (SCREENS.md §5.2 — nur zeigen, was gerade wichtig ist).
+  const [showAllSteps, setShowAllSteps] = useState(false);
 
   if (!project) {
     return (
@@ -34,13 +38,12 @@ export default function ProjectDetail() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
-      <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">Niveau {project.level}</p>
-      <h1 className="mt-1 font-display text-3xl">
+      <h1 className="font-display text-3xl">
         <span aria-hidden className="mr-3 font-mono">{project.icon}</span>
         {project.title}
       </h1>
       <p className="mt-2 font-mono text-xs text-ink-2">
-        ~{project.durationMin ?? '?'} min · {project.steps.length} Schritte
+        Niveau {project.level} · ~{project.durationMin ?? '?'} min · {project.steps.length} Schritte
       </p>
 
       <section aria-label="Deine Challenge" className="mt-6 rounded border border-black/10 bg-paper-2 p-5 shadow">
@@ -97,6 +100,8 @@ export default function ProjectDetail() {
         <h2 className="mb-2 font-mono text-xs uppercase tracking-widest text-ink-2">Schritte</h2>
         <ol className="space-y-1">
           {project.steps.map((s, i) => {
+            const lastVisible = progress ? progress.maxStepReached + 1 : 2;
+            if (!showAllSteps && i > lastVisible) return null;
             const reachable = progress && i <= progress.maxStepReached;
             const row = (
               <>
@@ -124,6 +129,16 @@ export default function ProjectDetail() {
             );
           })}
         </ol>
+        {project.steps.length > (progress ? progress.maxStepReached + 2 : 3) && (
+          <button
+            type="button"
+            onClick={() => setShowAllSteps((v) => !v)}
+            aria-expanded={showAllSteps}
+            className="mt-1 inline-flex min-h-11 items-center px-2 font-mono text-xs text-accent-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {showAllSteps ? 'weniger anzeigen' : `alle ${project.steps.length} Schritte anzeigen ›`}
+          </button>
+        )}
       </section>
 
       {(missing.length === 0 || progress) && (
