@@ -65,14 +65,16 @@ function withValues(formula: Formula, values: Record<string, number>): string {
   return expr;
 }
 
+// Klassische Anordnung: Ziffernblock zusammenhängend (7–9 / 4–6 / 1–3 / 0),
+// Operatoren als rechte Spalte, wissenschaftliche Funktionen darunter.
 const KEYS: { label: string; insert?: string; action?: 'eval' | 'clear' | 'back' }[] = [
   { label: '7', insert: '7' }, { label: '8', insert: '8' }, { label: '9', insert: '9' }, { label: '÷', insert: '/' },
-  { label: 'sin', insert: 'sin(' }, { label: 'cos', insert: 'cos(' }, { label: 'tan', insert: 'tan(' }, { label: '√', insert: 'sqrt(' },
   { label: '4', insert: '4' }, { label: '5', insert: '5' }, { label: '6', insert: '6' }, { label: '×', insert: '*' },
-  { label: 'π', insert: 'pi' }, { label: 'e', insert: 'e' }, { label: 'x²', insert: '^2' }, { label: 'xⁿ', insert: '^' },
   { label: '1', insert: '1' }, { label: '2', insert: '2' }, { label: '3', insert: '3' }, { label: '−', insert: '-' },
+  { label: '0', insert: '0' }, { label: ',', insert: '.' }, { label: 'DEL', action: 'back' }, { label: '+', insert: '+' },
+  { label: 'sin', insert: 'sin(' }, { label: 'cos', insert: 'cos(' }, { label: 'tan', insert: 'tan(' }, { label: '√', insert: 'sqrt(' },
+  { label: 'π', insert: 'pi' }, { label: 'e', insert: 'e' }, { label: 'x²', insert: '^2' }, { label: 'xⁿ', insert: '^' },
   { label: '(', insert: '(' }, { label: ')', insert: ')' }, { label: 'ans', insert: 'ans' }, { label: 'C', action: 'clear' },
-  { label: '0', insert: '0' }, { label: ',', insert: '.' }, { label: '+', insert: '+' }, { label: 'DEL', action: 'back' },
 ];
 
 const UNITS = ['N', 'mm', 'm', 'kg', 'MPa', 'N*m', 'deg', 'm/s^2'];
