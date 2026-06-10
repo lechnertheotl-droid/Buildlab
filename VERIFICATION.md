@@ -1,8 +1,9 @@
 # VERIFICATION.md — Selbstprüfung
 
-Das ist das Sicherheitsnetz, das KI-generierten Content prüfungsgenau hält und
-verhindert, dass Claude Code mit kaputtem Stand weiterbaut. Ein einziger Befehl
-prüft alles, und Claude Code ruft ihn automatisch auf.
+> Das Sicherheitsnetz, das KI-generierten Content prüfungsgenau hält und
+> verhindert, dass mit kaputtem Stand weitergebaut wird. Ein Befehl prüft alles,
+> Claude Code ruft ihn automatisch auf — und der Verifier prüft sich selbst
+> (Fixtures, §4).
 
 ## Der eine Befehl
 
@@ -12,83 +13,101 @@ pnpm verify
 
 führt nacheinander aus (bricht beim ersten Fehler ab):
 
-1. **lint** — Code-Stil (eslint).
+1. **lint** — eslint.
 2. **typecheck** — `tsc --noEmit`.
-3. **schema** — jede Datei in `/content` gegen `schema/content.schema.json`
-   (via ajv). Unbekannte Felder = Fehler.
-4. **units** — Dimensionsanalyse: jede Formel wird mit Einheiten ausgewertet;
-   passt die Einheit des Ergebnisses nicht zu `result.unit`, ist es ein Fehler.
-5. **examples** — *Run-the-example*: für jeden `calc`-Block werden die Eingaben
-   in `expr` durch `packages/engine` gerechnet. Weicht das Ergebnis vom im JSON
-   genannten Wert ab (über Toleranz), ist es ein Fehler. **So kann kein falsch
-   gerechnetes Beispiel je live gehen.**
-6. **ranges** — liegt ein Ergebnis außerhalb des plausiblen `typicalRange`,
-   wird es markiert (Warnung bei Lernbeispielen, Fehler bei Sollwerten).
-7. **golden** — Golden Tests (siehe unten).
-8. **build** — `vite build` muss durchlaufen.
+3. **verify:content** — `node tools/verify/index.mjs` (alle Content-Prüfungen, §2).
+4. **test** — `vitest run` (Golden Tests, Render-Tests, Iso/CAD-Tests,
+   Verifier-Selbsttest).
+5. **build** — `vite build` muss durchlaufen.
 
-## Golden Tests — das Herz der Prüfungsgenauigkeit
+## §1 Basis-Prüfungen (Bestand)
 
-In `packages/engine/golden/` liegen **Klausur-/Lehrbuchaufgaben mit bekannter
-Lösung**. Beispiel:
+1. **schema** — jede Datei in `/content` gegen die Schemas (ajv).
+   Unbekannte Felder = Fehler (`additionalProperties: false`).
+2. **units** — Dimensionsanalyse: jede Formel einheitenbehaftet ausgewertet;
+   passt die Ergebnis-Einheit nicht zu `result.unit` → Fehler.
+3. **examples** — *Run-the-example*: jeder `calc`-Block wird durch
+   `packages/engine` nachgerechnet; Abweichung über Toleranz → Fehler.
+   **Kein falsch gerechnetes Beispiel geht je live.**
+4. **ranges** — Ergebnis außerhalb `typicalRange` → Warnung (Lernbeispiele)
+   bzw. Fehler (Sollwerte).
+5. **cross-refs** — jedes referenzierte Konzept, jede Formel, jede
+   Komponenten-ID existiert.
 
-```ts
-// golden/uebersetzung.test.ts
-test("Getriebe-Übersetzung z1=20, z2=60", () => {
-  expect(engine.eval("z2 / z1", { z1: 20, z2: 60 })).toBeCloseTo(3, 6);
-});
-```
+## §2 Aufgaben- & Struktur-Prüfungen (Redesign)
 
-Regel: **Bevor eine Formel in der Formel-Bibliothek landet, gibt es mindestens
-einen Golden Test dafür.** Ändert jemand die Engine und ein Golden Test bricht,
-ist „prüfungsgenau" sofort verletzt — und `pnpm verify` ist rot.
+6. **task/source** — `numeric`-Aufgaben **müssen** eine `source`
+   (`formulaId` + `inputs`) tragen; die Engine rechnet `answer` nach
+   (Toleranz wie `calc`). `estimate` ebenso (der Referenzwert der Log-Skala).
+7. **task/target** — `target.proof.pass` muss das Ziel erfüllen,
+   `target.proof.fail` muss es verfehlen (beides via `evaluateById`).
+   Ohne Beweis-Paar → Fehler.
+8. **task/error-find** — genau **eine** Zeile weicht von der Engine ab
+   (über Toleranz); alle anderen stimmen. 0 oder ≥ 2 Abweichungen → Fehler.
+9. **task/steps** — jede Stufe wird wie ein `calc`-Beispiel nachgerechnet;
+   `"$prev"` in den Inputs referenziert das Ergebnis der Vorstufe.
+10. **task/order+match** — Indizes vollständig und eindeutig; `match`-Paare
+    eindeutig.
+11. **task/options** — `single`/`multi`: jede **falsche** Option trägt ein
+    `why` (Feedback-Pflicht); `multi` hat ≥ 2 richtige Optionen.
+12. **build/constraints** — jeder Constraint hat `proof.pass`/`proof.fail`;
+    beide werden über mathjs mit den Build-Parametern ausgewertet
+    (pass → erfüllt, fail → verfehlt, sonst Fehler).
+13. **konzept-abdeckung** — jedes `conceptsIntroduced` eines Projekts wird von
+    ≥ 1 `task.concepts` desselben Projekts referenziert, sonst **Warnung**
+    („Konzept ohne Prüfung").
+14. **loop-check** — `lernen`-Schritt ohne `task`-Block oder ohne
+    `interactive`/`calc` → Warnung. Projekt ohne genau einen
+    `meilenstein`-Schritt (als letzter Schritt) → **Fehler**.
+15. **einführungs-eindeutigkeit** — jedes Konzept wird projektübergreifend
+    höchstens einmal `introduces`-t (draft-Projekte zählen mit) → sonst Fehler.
+16. **registry-status** — Komponenten mit `status: "geplant"` dürfen nur in
+    Projekten mit `draft: true` verwendet werden. Draft-Projekte erscheinen
+    nicht in der App.
+17. **index-generierung** — der Verifier erzeugt `content/_index.json`
+    (Konzept → { introducedIn, usedIn } mit Projekt/Schritt) deterministisch
+    aus den `introduces`/`uses`-Feldern. Die Datei wird committet; Drift
+    zwischen generiert und committet → Fehler.
 
-## Verdrahtung in Claude Code (die Selbst-Prüfung)
+## §3 Golden Tests — das Herz der Prüfungsgenauigkeit
 
-### 1) Hook: nach jeder Änderung automatisch prüfen
-`.claude/settings.json`:
+In `packages/engine/golden/cases.json` liegen Klausur-/Lehrbuchaufgaben mit
+bekannter Lösung. Regeln:
 
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          { "type": "command", "command": "pnpm verify" }
-        ]
-      }
-    ]
-  }
-}
-```
+- **Bevor eine Formel in die Bibliothek kommt, existiert ≥ 1 Golden Test.**
+  Der Test-Runner (`golden.test.ts`) erzwingt die Abdeckung.
+- Standard-Toleranz relativ 1e-3, pro Fall überschreibbar (`tol`).
+- Bricht ein Golden Test, ist „prüfungsgenau" verletzt → `pnpm verify` rot.
 
-Damit prüft sich Claude Code nach jeder Datei-Änderung selbst. Rotes Ergebnis →
-Claude Code repariert, bevor es weitermacht.
+## §4 Der Verifier prüft sich selbst
 
-### 2) Command: gezielt nur den Content prüfen
-`.claude/commands/verify-content.md`:
+`tools/verify/fixtures/` enthält **pro Prüfregel aus §2 ein absichtlich
+kaputtes Beispiel** (z. B. `task-numeric-ohne-source.json`,
+`error-find-zwei-fehler.json`, `constraint-ohne-proof.json`).
+`tools/verify/verify.test.mjs` (vitest) führt den Verifier gegen jedes Fixture
+aus und erwartet den jeweiligen Fehler. Neue Prüfregel ohne Fixture = die Regel
+gilt als nicht existent (Review-Mangel).
 
-```md
-Prüfe ausschließlich den generierten Content, nicht den App-Code.
-Führe aus: pnpm verify:content
-Berichte pro Datei: schema ok?, units ok?, examples ok?, ranges ok?
-Bei Fehlern: nenne Datei, Block-ID und die genaue Abweichung. Nichts raten.
-```
+## §5 Verdrahtung in Claude Code
 
-Aufruf in Claude Code: `/verify-content`.
+**Hook** (`.claude/settings.json`): `PostToolUse` auf `Edit|Write` führt
+`pnpm verify` aus — Claude Code prüft sich nach jeder Änderung selbst; rot →
+reparieren, bevor es weitergeht.
 
-### 3) Phasen-Gate als feste Regel
-Steht bereits in `CLAUDE.md` und `BUILD_PLAN.md`: keine Phase gilt als fertig und
-es wird nicht committet, solange `pnpm verify` nicht grün ist.
+**Command** `/verify-content`: prüft nur den Content (`pnpm verify:content`),
+berichtet pro Datei (schema/units/examples/tasks/ranges) und nennt bei Fehlern
+Datei, Block-ID und die genaue Abweichung — nichts raten.
 
-## Was die Autoren-Pipeline zusätzlich prüft
+**Phasen-Gate:** keine Phase fertig, kein Commit, ohne grünes `pnpm verify`
+(siehe `BUILD_PLAN.md`).
 
-Die Generierung läuft **in Claude Code über dein Abo** (kein API-Key). Generierter
-Content wird **erst** gespeichert, wenn `pnpm verify` darauf grün ist, und durchläuft
-vorher einen **Selbstkritik-Pass** (zweiter Durchlauf in derselben Session: „Prüfe
-diesen Schritt gegen das Lernziel, finde Fehler"). So bleibt der Mensch nur für die
-Stichprobe je *neuem Projekttyp* in der Schleife.
+## §6 Autoren-Pipeline
+
+Generierung läuft **in Claude Code über das Abo** (kein API-Key). Generierter
+Content wird erst gespeichert, wenn `pnpm verify` darauf grün ist, und
+durchläuft vorher einen Selbstkritik-Pass (zweiter Durchlauf: „prüfe gegen das
+Lernziel und die Generator-Regeln aus `PROJECT_SPECS.md`"). Mensch bleibt für
+die Stichprobe je neuem Projekttyp in der Schleife.
 
 ## package.json — Skript-Konventionen
 
@@ -102,8 +121,8 @@ Stichprobe je *neuem Projekttyp* in der Schleife.
 }
 ```
 
-> Hinweis: Es gibt bewusst **kein** `gen`-npm-Skript. Content wird über den
-> Claude-Code-Skill `/generate-project` erzeugt (Abo), nicht über einen API-Aufruf.
+> Bewusst **kein** `gen`-npm-Skript: Content entsteht über `/generate-project`
+> (Abo), nicht über einen API-Aufruf.
 
 Merksatz: **Wenn `pnpm verify` grün ist, ist der Stand auslieferbar — und die
 Mathematik stimmt.**

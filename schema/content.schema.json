@@ -3,27 +3,34 @@
   "$id": "content.schema.json",
   "title": "Projekt",
   "type": "object",
-  "required": ["id", "title", "level", "buildResult", "challenge", "steps"],
+  "required": ["id", "title", "version", "level", "icon", "buildResult", "challenge", "steps"],
   "additionalProperties": false,
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
     "title": { "type": "string" },
+    "version": { "type": "integer", "const": 2, "description": "Schema-Version des Projekts" },
     "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "icon": { "type": "string", "description": "Kurz-Glyphe fuer Karten (z. B. ⚙)" },
+    "durationMin": { "type": "integer", "minimum": 5, "description": "geschaetzte Gesamtdauer (Orientierung, nie Timer)" },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "draft": { "type": "boolean", "default": false, "description": "true = erscheint nicht in der App; darf geplante Komponenten nutzen" },
     "buildResult": { "type": "string", "description": "was man am Ende physisch hat" },
     "challenge": { "type": "string", "description": "reale Aufgabe mit messbarer Anforderung" },
-    "prerequisites": { "type": "array", "items": { "type": "string" }, "description": "Projekt-IDs vorher" },
+    "recommendedAfter": { "type": "array", "items": { "type": "string" }, "description": "Projekt-IDs als Empfehlung (Soft-Lock, nie Sperre)" },
     "conceptsIntroduced": { "type": "array", "items": { "type": "string" } },
     "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/step" } }
   },
   "$defs": {
     "step": {
       "type": "object",
-      "required": ["id", "title", "goal", "blocks"],
+      "required": ["id", "title", "goal", "kind", "blocks"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
         "goal": { "type": "string", "description": "genau EIN Lernziel" },
+        "kind": { "enum": ["lernen", "bauen", "meilenstein"], "description": "Lern-Loop-Rolle (LERNMODELL.md §2.1)" },
+        "canvas": { "type": "integer", "minimum": 0, "description": "Index des Blocks fuer die Canvas-Spalte (Default: erster interactive/build)" },
         "estMinutes": { "type": "integer", "minimum": 1, "maximum": 20 },
         "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/block" } }
       }
@@ -35,7 +42,7 @@
         { "$ref": "#/$defs/interactiveBlock" },
         { "$ref": "#/$defs/calcBlock" },
         { "$ref": "#/$defs/buildBlock" },
-        { "$ref": "#/$defs/checkBlock" }
+        { "$ref": "#/$defs/taskBlock" }
       ]
     },
     "textBlock": {
@@ -44,6 +51,7 @@
       "additionalProperties": false,
       "properties": {
         "type": { "const": "text" },
+        "variant": { "enum": ["hook", "merksatz", "hinweis"], "description": "Lern-Loop-Rolle (LERNMODELL.md §2.2); ohne = normaler Fliesstext" },
         "layers": {
           "type": "object",
           "required": ["intuitive"],
@@ -54,8 +62,8 @@
             "rigorous": { "type": "string" }
           }
         },
-        "introduces": { "type": "array", "items": { "type": "string" }, "description": "Konzept-IDs erstmals erklaert" },
-        "uses": { "type": "array", "items": { "type": "string" }, "description": "Konzept-IDs nur verwendet (Auffrischung)" }
+        "introduces": { "type": "array", "items": { "type": "string" }, "description": "Konzept-IDs erstmals erklaert (projektuebergreifend genau einmal)" },
+        "uses": { "type": "array", "items": { "type": "string" }, "description": "Konzept-IDs nur verwendet (Chip + Popover; Auffrisch-Karte bei Quereinstieg)" }
       }
     },
     "formulaBlock": {
@@ -86,7 +94,7 @@
       "properties": {
         "type": { "const": "calc" },
         "formulaId": { "type": "string" },
-        "inputs": { "type": "object", "description": "var-Name -> Zahl (in Basis-Einheit der Variable)" },
+        "inputs": { "type": "object", "additionalProperties": { "type": "number" }, "description": "var-Name -> Zahl (in Basis-Einheit der Variable)" },
         "expected": {
           "type": "object",
           "required": ["value", "unit"],
@@ -118,24 +126,170 @@
             }
           }
         },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["expr", "label", "proof"],
+            "additionalProperties": false,
+            "properties": {
+              "expr": { "type": "string", "description": "mathjs-Boolescher Ausdruck ueber die Parameternamen" },
+              "label": { "type": "string", "description": "menschlich lesbare Anforderung" },
+              "proof": {
+                "type": "object",
+                "required": ["pass", "fail"],
+                "additionalProperties": false,
+                "properties": {
+                  "pass": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Parametersatz, der den Constraint erfuellt (Verifier rechnet nach)" },
+                  "fail": { "type": "object", "additionalProperties": { "type": "number" }, "description": "Parametersatz, der ihn verfehlt" }
+                }
+              }
+            }
+          }
+        },
         "exports": { "type": "array", "items": { "enum": ["stl", "step"] } },
         "bom": { "type": "array", "items": { "type": "string" } }
       }
     },
-    "checkBlock": {
+    "taskBlock": {
       "type": "object",
-      "required": ["type", "kind", "question"],
+      "required": ["type", "kind", "question", "concepts"],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "check" },
-        "kind": { "enum": ["single", "multi", "numeric"] },
+        "type": { "const": "task" },
+        "kind": { "enum": ["single", "multi", "numeric", "estimate", "target", "error-find", "order", "match", "steps"] },
         "question": { "type": "string" },
-        "options": { "type": "array", "items": { "type": "string" }, "description": "nur single/multi" },
+        "concepts": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "geprueft(e) Konzept-IDs — Mastery-Verdrahtung" },
+        "minDepth": { "enum": ["rigorous"], "description": "Vertiefungsaufgabe: nur auf Ebene 'genau' sichtbar, zaehlt nie fuer den Schritt-Abschluss" },
+        "hint": { "type": "string", "description": "Stufe-2-Hinweis (LERNMODELL.md §7.2)" },
+        "explanation": { "type": "string", "description": "Loesungsweg-Text (Stufe 3); Zahlen rechnet die Engine" },
+
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "additionalProperties": false,
+            "properties": {
+              "text": { "type": "string" },
+              "why": { "type": "string", "description": "Feedback, warum diese (falsche) Option verfuehrt — Pflicht an falschen Optionen (Verifier)" }
+            }
+          },
+          "description": "single/multi"
+        },
         "answer": { "description": "Index (single), Index-Array (multi) oder Zahl (numeric)" },
-        "tolerance": { "type": "number", "description": "nur numeric: erlaubte relative Abweichung" },
-        "unit": { "type": "string" },
-        "explanation": { "type": "string" }
-      }
+        "tolerance": { "type": "number", "description": "numeric/steps: erlaubte relative Abweichung" },
+        "unit": { "type": "string", "description": "numeric: fixe Einheit (wenn keine unitChoices)" },
+        "unitChoices": { "type": "array", "minItems": 2, "items": { "type": "string" }, "description": "numeric: Einheiten-Auswahl als Teil der Antwort; die korrekte Einheit steht in 'unit' und muss enthalten sein" },
+        "source": {
+          "type": "object",
+          "required": ["formulaId", "inputs"],
+          "additionalProperties": false,
+          "properties": {
+            "formulaId": { "type": "string" },
+            "inputs": { "type": "object", "additionalProperties": { "type": "number" } }
+          },
+          "description": "numeric/estimate: Engine rechnet die Antwort nach (Verifier-Pflicht)"
+        },
+        "scale": {
+          "type": "object",
+          "required": ["min", "max", "bands"],
+          "additionalProperties": false,
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" },
+            "log": { "type": "boolean", "default": false },
+            "bands": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "type": "number" }, "description": "Faktor-Baender fuers Feedback, z. B. [2, 5]" }
+          },
+          "description": "estimate: Schaetz-Skala"
+        },
+        "target": {
+          "type": "object",
+          "required": ["formulaId", "vars", "goal", "proof"],
+          "additionalProperties": false,
+          "properties": {
+            "formulaId": { "type": "string" },
+            "vars": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Variablen, die der Lernende stellt (Canvas-Slider)" },
+            "goal": {
+              "type": "object",
+              "required": ["value", "tolerance"],
+              "additionalProperties": false,
+              "properties": { "value": { "type": "number" }, "tolerance": { "type": "number" } }
+            },
+            "proof": {
+              "type": "object",
+              "required": ["pass", "fail"],
+              "additionalProperties": false,
+              "properties": {
+                "pass": { "type": "object", "additionalProperties": { "type": "number" } },
+                "fail": { "type": "object", "additionalProperties": { "type": "number" } }
+              }
+            }
+          },
+          "description": "target: Stellaufgabe, gekoppelt an die Canvas-Komponente"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["label", "formulaId", "inputs", "shown"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string" },
+              "formulaId": { "type": "string" },
+              "inputs": { "type": "object", "additionalProperties": { "type": "number" } },
+              "shown": { "type": "number", "description": "angezeigter Wert; genau EINE Zeile weicht von der Engine ab (Verifier)" }
+            }
+          },
+          "description": "error-find"
+        },
+        "items": { "type": "array", "minItems": 3, "items": { "type": "string" }, "description": "order: Karten in Anzeige-Reihenfolge der JSON (wird gemischt)" },
+        "correctOrder": { "type": "array", "minItems": 3, "items": { "type": "integer", "minimum": 0 }, "description": "order: korrekte Reihenfolge als Indizes in items" },
+        "pairs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["left", "right"],
+            "additionalProperties": false,
+            "properties": { "left": { "type": "string" }, "right": { "type": "string" } }
+          },
+          "description": "match: korrekte Paare (Anzeige mischt die rechte Spalte)"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["prompt", "formulaId", "inputs"],
+            "additionalProperties": false,
+            "properties": {
+              "prompt": { "type": "string" },
+              "formulaId": { "type": "string" },
+              "inputs": {
+                "type": "object",
+                "additionalProperties": { "anyOf": [{ "type": "number" }, { "const": "$prev" }] },
+                "description": "\"$prev\" referenziert das (eingegebene) Ergebnis der Vorstufe"
+              },
+              "tolerance": { "type": "number" }
+            }
+          },
+          "description": "steps: gefuehrter Rechenweg, jede Stufe engine-geprueft"
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "single" } } }, "then": { "required": ["options", "answer", "explanation"] } },
+        { "if": { "properties": { "kind": { "const": "multi" } } }, "then": { "required": ["options", "answer", "explanation"] } },
+        { "if": { "properties": { "kind": { "const": "numeric" } } }, "then": { "required": ["answer", "tolerance", "unit", "source", "explanation"] } },
+        { "if": { "properties": { "kind": { "const": "estimate" } } }, "then": { "required": ["source", "scale"] } },
+        { "if": { "properties": { "kind": { "const": "target" } } }, "then": { "required": ["target"] } },
+        { "if": { "properties": { "kind": { "const": "error-find" } } }, "then": { "required": ["rows", "explanation"] } },
+        { "if": { "properties": { "kind": { "const": "order" } } }, "then": { "required": ["items", "correctOrder", "explanation"] } },
+        { "if": { "properties": { "kind": { "const": "match" } } }, "then": { "required": ["pairs"] } },
+        { "if": { "properties": { "kind": { "const": "steps" } } }, "then": { "required": ["steps"] } }
+      ]
     }
   }
 }

@@ -1,104 +1,119 @@
-# BUILD_PLAN.md — Genauer Bauplan
+# BUILD_PLAN.md — Bauplan (Redesign-Phasen)
 
-Prinzip: **Verifikation zuerst, Inhalt zuletzt.** Wir bauen erst das Sicherheitsnetz
-(Schema + Engine + Golden Tests + verify), dann erst alles andere. Jede Phase endet
-mit einem **Gate**: `pnpm verify` muss grün sein und die "Definition of Done" (DoD)
-erfüllt. Claude Code arbeitet immer nur **eine** Phase.
+Prinzip: **Verifikation zuerst, Inhalt folgt den Docs.** Jede Phase endet mit
+einem **Gate**: `pnpm verify` grün und die "Definition of Done" (DoD) erfüllt.
+Claude Code arbeitet immer nur **eine** Phase.
+
+> Historie: Die ursprünglichen Phasen 0–3 (Fundament, Block-Renderer, Pseudo-3D
+> + Hebel-Slider + Rechner, CAD/STL) sind **abgeschlossen** und bleiben die Basis.
+> Mit dem Konzept-Redesign (Juni 2026) gelten die Phasen R0–R6 unten; die alten
+> Phasen 4–7 sind durch sie abgelöst.
 
 ---
 
-## Phase 0 — Fundament & Sicherheitsnetz
-**Ziel:** Das System kann sich selbst prüfen, bevor es Inhalte gibt.
-- [ ] Monorepo (pnpm workspaces), Vite + React + TS + Tailwind aufsetzen.
-- [ ] `schema/content.schema.json` und `schema/formula.schema.json` schreiben
-      (die 6 Blocktypen + das Formel-/Variablen-Objekt aus dem Konzept).
-- [ ] `packages/engine`: Auswertung von `expr` via mathjs **mit Einheiten**.
-- [ ] CLI `tools/eval.mjs` (dünne Hülle um die Engine) — liefert jede Zahl
-      deterministisch für Generierung **und** verify. Vorlage liegt im Repo.
-- [ ] `tools/verify` + `pnpm verify` (Lint, Typecheck, Schema-Validierung,
-      Golden Tests, Build) — siehe `VERIFICATION.md`.
-- [ ] PostToolUse-Hook + `/verify` Command einrichten (siehe `VERIFICATION.md`).
-**DoD:** `pnpm verify` läuft grün auf einem leeren Repo. Hook feuert nach Edits.
+> Status-Legende: ✅ fertig · ⏳ in Arbeit · ohne Marker = offen.
+> Nichts wird stillschweigend als fertig markiert — DoD zählt.
 
-## Phase 1 — Block-Renderer (statisch)
-**Ziel:** Ein Beispiel-Projekt-JSON wird korrekt dargestellt — ohne Interaktion.
-- [ ] `packages/ui`: je ein Renderer für `text`, `formula`, `calc`, `check`.
-- [ ] `text` rendert die drei Tiefen-Ebenen mit Umschalter (verspielt/praxis/genau).
-- [ ] `formula` rendert LaTeX + macht jede Variable antippbar
-      (Name, Einheit, Erklärung, typischer Bereich aus dem Formel-Objekt).
-- [ ] Antippen-erklärt: Begriffe + Variablen → Popover aus `concepts.json`
-      (Kurz-Erklärung + Voraussetzung + Link „tiefer eintauchen"). Siehe `SCREENS.md`.
-- [ ] Eine handgeschriebene Beispiel-JSON in `content/_demo.json`.
-**DoD:** `_demo.json` rendert; Variablen-Erklärung erscheint beim Antippen;
-schema-validiert; `pnpm verify` grün.
+## Phase R0 — Konzept & Verträge ✅
+**Ziel:** Die neuen Docs sind die Wahrheit; Schema und Verifier setzen sie durch.
+- [x] Alle Konzept-Docs neu: `LERNMODELL.md` (neu), `SCREENS.md`, `DESIGN.md`,
+      `PROJECTS.md`, `PROJECT_SPECS.md`, `ENGINE_SPEC.md`, `DATENMODELL.md` (neu),
+      `VERIFICATION.md`, `VOICE.md`, `CLAUDE.md`.
+- [x] `schema/content.schema.json` v2: Projekt-Metadaten (icon, durationMin,
+      difficulty, recommendedAfter, draft, version), `step.kind` + `step.canvas`,
+      `text.variant`, `build.constraints`, `check` → `task` mit 9 Arten.
+- [x] `schema/concept.schema.json`: + `group`.
+- [x] `components.registry.json`: `status`-Feld, `cad-preview` raus, `truss-load` rein.
+**DoD:** Schemas valide, Docs konsistent, `pnpm verify` grün.
 
-## Phase 2 — Pseudo-3D Visual-Layer
-**Ziel:** Isometrische Darstellung + erste Interaktivität.
-- [ ] `packages/iso`: isometrische Projektion, Schattierung, Explosionsansicht.
-- [ ] `interactive`-Renderer + Komponenten-Registry (KI wählt nur aus dieser).
-- [ ] Erste geprüfte Komponente: **Kraft/Hebel-Slider** (2.5D-Vektoren, live).
-- [ ] **Ausziehbarer Universal-Rechner** (Drawer rechts, andockbar/schwebend):
-      wissenschaftlich, Einheiten, formelbewusst (zieht aktuelle Projektformeln/
-      -werte), Verlauf — auf Basis von mathjs. Siehe `SCREENS.md` §7.
-**DoD:** Slider verändert sichtbar Kräfte; Werte kommen aus `packages/engine`;
+## Phase R1 — Content-Migration ✅
+**Ziel:** Der Gold-Standard-Content nutzt das neue Schema vollständig.
+- [x] `content/stirnradgetriebe.json`: 8 Schritte nach `PROJECT_SPECS.md` §4,
+      jede neue Aufgabenart mindestens einmal, `meilenstein`-Schritt.
+- [x] `content/concepts.json`: `group` je Konzept + neue Konzepte.
+- [x] `content/training/maschinenelemente.json`: erster Trainings-Pool.
+- [x] `content/skillmap.layout.json`: statisches Karten-Layout.
+- [x] `packages/engine/golden/cases.json` erweitert (pulley_force u. a.).
+- [x] `_demo.json` und `_example.getriebe.json` entfernt (Getriebe ist der
+      neue Gold-Standard).
+**DoD:** `pnpm verify` grün; jedes Konzept des Getriebes von ≥ 1 Task geprüft.
+
+## Phase R2 — Verifier-Ausbau ✅
+**Ziel:** Jede neue Aufgabenart ist maschinell geprüft — und der Verifier selbst auch.
+- [x] Prüfungen 6–17 aus `VERIFICATION.md` §2 in `tools/verify/index.mjs`.
+- [x] `content/_index.json`-Generierung (Konzept → Projekte/Schritte).
+- [x] `tools/verify/fixtures/` + `verify.test.mjs` (Selbsttest je Prüfregel).
+**DoD:** absichtlich kaputter Wert im Content macht `pnpm verify` rot
+(Stichprobe); Fixtures-Tests grün.
+
+## Phase R3 — App-Shell & Persistenz ✅
+**Ziel:** Aus der Ein-Seiten-Demo wird eine navigierbare App mit Gedächtnis.
+- [x] `react-router-dom` (HashRouter) + `idb` einbauen.
+- [x] `src/router.tsx`, `src/shell/AppShell.tsx` (Rail/Topbar/Rechner-Lasche,
+      mobile Bottom-Bar).
+- [x] `src/db/{db,repo,migrations,backup}.ts` nach `DATENMODELL.md`.
+- [x] Onboarding (3 Schritte) + Einstellungen (Tiefe, Motion, Backup, Löschen).
+**DoD:** Onboarding → Dashboard-Flow läuft; Reload erhält Zustand;
+Backup-Roundtrip funktioniert; `pnpm verify` grün.
+
+## Phase R4 — Workspace-Redesign ⏳ (in Arbeit)
+**Ziel:** Der Kern-Screen setzt das Lernmodell um.
+- [ ] `packages/ui/src/workspace/`: StepView (ein Schritt sichtbar),
+      sanftes Gating, Canvas-Split (sticky), Feedback-Momente, Meilenstein.
+- [ ] `packages/ui/src/task/`: Renderer für alle 9 Aufgabenarten inkl.
+      dreistufigem Feedback (`LERNMODELL.md` §7).
+- [ ] `packages/ui/src/iso-scene/`: `IsoStage`, `isoBox`, `AmpelArrow`,
+      `useEngineValue` (aus LeverSlider extrahiert).
+- [ ] `value-slider` und `gear-pair` implementieren (Registry → `implementiert`).
+- [ ] Auffrisch-Karten (Quereinstieg), Tiefen-Präferenz global + lokal.
+- [ ] Route `/projekt/:id/schritt/:n` von ProjectView-Übergang auf
+      WorkspaceStep + Persistenz umstellen (`src/screens/Workspace.tsx`).
+**DoD:** Getriebe Schritt 1–8 komplett durchspielbar; target-Task koppelt an
+gear-pair; STL-Download hinter Constraints; `pnpm verify` grün.
+
+## Phase R5 — Übrige Screens ⏳ (in Arbeit)
+**Ziel:** Die volle Informationsarchitektur aus `SCREENS.md`.
+- [x] Dashboard (Fortsetzen / Auffrischen / Als Nächstes).
+- [x] Projektliste + Projekt-Detail (Soft-Lock-Kasten).
+- [x] Konzept-Seite (3 Ebenen, Formeln, „kommt vor in"); Inline-Übung +
+      Overlay-Variante folgen mit den Task-Renderern aus R4.
+- [x] Werkstatt (Parameter-Karten, STL-Rekompilierung, Laufzettel).
+- [ ] Training (Karten-Stapel mit Inline-Aufgaben; aktuell Fälligkeitsliste —
+      Vollausbau folgt mit den Task-Renderern aus R4).
+- [x] Skill-Map V1 (statisches SVG aus `skillmap.layout.json`,
+      mobile Gruppen-Listen).
+**DoD:** alle Routen erreichbar, Leerzustände nach `SCREENS.md`;
 `pnpm verify` grün.
 
-## Phase 3 — CAD-Vorschau & STL-Export
-**Ziel:** Ein parametrisches Bauteil als Vorschau + Download.
-- [ ] OpenSCAD-WASM einbinden; `cad/`: ein parametrisches Modell (.scad).
-- [ ] Parameter als Slider → Modell regeneriert → isometrische Vorschau.
-- [ ] STL-Export-Button ("herunterladen & weiterbauen").
-**DoD:** Parameteränderung aktualisiert Vorschau; Export erzeugt valides STL;
-`pnpm verify` grün.
+## Phase R6 — Politur & Gate
+**Ziel:** A11y und Motion verbindlich, Gesamtdurchlauf.
+- [ ] Fokus-Ringe überall, aria-labels + Range-Inputs auf allen Sims,
+      `aria-live` auf Ergebniszeilen, Tap-Targets ≥ 44 px.
+- [ ] Motion-Vokabular (`einzeichnen`/`quittung`/`wechsel`/`zaehlen`)
+      + reduzierte Bewegung (System ODER Einstellung).
+- [ ] Rechner-Verlauf persistent (`calcHistory`) + „in Aufgabe einsetzen".
+- [ ] Manueller Gesamtdurchlauf nach `VERIFICATION.md`-DoD.
+**DoD:** `pnpm verify` grün; Durchlauf Onboarding → Meilenstein ohne Bruch.
 
-## Phase 4 — Autoren-Pipeline (Content-Generierung über das Abo)
-**Ziel:** Claude Code erzeugt schema-konformen Content über dein Abo, der die
-Prüfung besteht — ohne API-Key, ohne Token-Abrechnung.
-- [ ] Sicherstellen, dass `ANTHROPIC_API_KEY` **nicht** gesetzt ist (sonst läuft
-      die Generierung an deinem Abo vorbei über die kostenpflichtige API).
-- [ ] Generierungs-Skill anlegen: `.claude/skills/generate-project/SKILL.md`
-      (Seed → Skelett → Inhalt → Formel-/Komponentenauswahl), aufrufbar als
-      `/generate-project "<thema>"`. Läuft **in der Claude-Code-Session**.
-- [ ] Der Skill liest die verbindliche Spezifikation des Projekts aus
-      `PROJECT_SPECS.md` (Schritte, Konzepte, Formeln, Golden Tests) als Bauplan.
-- [ ] Output wird **erst gespeichert, wenn `pnpm verify` darauf grün ist**.
-- [ ] Selbstkritik: ein zweiter Durchlauf in derselben Session prüft den ersten
-      gegen das Lernziel und korrigiert.
-- [ ] Generierung in Häppchen takten (Abo hat ein 5-Stunden-Fenster) — pro Lauf
-      ein bis wenige Projektschritte, nicht der ganze Katalog auf einmal.
-**DoD:** `/generate-project "<thema>"` erzeugt ein Projekt-JSON, das schema-valide
-ist und alle Math-Checks besteht — ohne manuelle Korrektur, ohne API-Kosten.
+## Phase R7 — Content-Ausbau (laufend, nach dem Redesign)
+**Ziel:** Curriculum füllen — ein Projekt nach dem anderen.
+- [ ] `hebel-flaschenzug` (Tür Azubi) — braucht nur vorhandene Komponenten
+      (`lever-slider`, `value-slider`) + neue Formeln `pulley_force`,
+      `torque_balance` (+ Golden Tests).
+- [ ] `fachwerkbruecke` (Tür Studium) — braucht `vector-drag`, `force-balance`,
+      `truss-load` (Engine-Löser zuerst, siehe `ENGINE_SPEC.md` §7);
+      bis dahin `draft: true`.
+- [ ] `modellrakete` — braucht `rocket-stability`, `flight-sim` (RK4 in Engine).
+- [ ] danach 3, 5–10, 12 gemäß `PROJECT_SPECS.md`.
+- [ ] Trainings-Pools je Skill-Map-Gruppe füllen.
+**Regel:** Projekt erst aus `draft`, wenn alle Kern-Interactives
+`status: "implementiert"` haben.
 
-## Phase 5 — Erste benutzbare Version: Stirnradgetriebe end-to-end
-**Ziel:** Ein vollständiges, baubares Projekt + dauerhafte Speicherung = die erste
-Version, die ein Nutzer wirklich von Anfang bis Download durchlaufen kann.
-- [ ] Projekt **Stirnradgetriebe** in kleine Schritte (Vorbild:
-      `content/_example.getriebe.json`).
-- [ ] Alle 6 Blocktypen kommen vor; STL herunterladbar; Übersetzung/Achsabstand
-      prüfungsgenau aus der Engine.
-- [ ] **Dauerhafte lokale Speicherung** (IndexedDB, `navigator.storage.persist()`):
-      Fortschritt überlebt Neuladen und Schließen.
-- [ ] **Backup-Export/Import** als Datei, damit der Stand nie verloren geht.
-**DoD:** Nutzer durchläuft das Getriebe von Anfang bis STL-Download; Fortschritt
-bleibt nach Neustart erhalten; jeder Rechenschritt durch Golden Test gedeckt;
-`pnpm verify` grün.
-
-> Die **Rakete** (Projekt 13) bleibt das spätere Schaustück mit voller
-> Flug-Simulation — nach der ersten benutzbaren Version, nicht davor.
-
-## Phase 6 — Lern-UX & Fortschritt
-**Ziel:** Aus Schritten wird ein motivierender Lernpfad.
-- [ ] Skill-Map, Projekt-Fortschritt, Quiz-Auswertung, Portfolio.
-- [ ] Concept-Graph + `seen`-Status: Voraussetzungen in der Skill-Map sichtbar;
-      bereits erklärte Konzepte erscheinen nur noch als Auffrischung + Link
-      (nicht doppelt erklären). Siehe `concepts.json` / `SCREENS.md`.
-- [ ] Spaced-Repetition-Karten zwischen Projekten.
-**DoD:** Fortschritt bleibt erhalten; Skill-Map spiegelt abgeschlossene Schritte;
-`pnpm verify` grün.
-
-## Phase 7 — Optional/später
+## Phase R8 — Optional/später
+- Skill-Map V2 (pan/zoom, isometrische Landschaft). Blueprint-Dark-Mode.
 - STEP-Export (serverseitig, OpenCASCADE). Onshape/Fusion-Brücke. Live-Tutor.
-**Erst beginnen, wenn Phasen 0–6 stabil sind.**
+- Sandbox-Projekt (erst ab ≥ 8 Live-Projekten).
+**Erst beginnen, wenn R0–R7 stabil sind.**
 
 ---
 
@@ -107,3 +122,4 @@ bleibt nach Neustart erhalten; jeder Rechenschritt durch Golden Test gedeckt;
 - Beißt sich eine Aufgabe mit einer Eisernen Regel aus `CLAUDE.md` → stoppen,
   nachfragen, nicht umgehen.
 - Pro Phase ein Commit mit grünem `pnpm verify`.
+- Offen gebliebene Stubs werden hier markiert, nie stillschweigend gelassen.

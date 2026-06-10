@@ -1,61 +1,72 @@
 {
-  "_doc": "Geprüfte Pseudo-3D-Interaktiv-Komponenten. interactive-Bloecke duerfen NUR diese componentId verwenden. params muss zum jeweiligen Schema passen. Werte kommen, wo angegeben, aus packages/engine.",
+  "_doc": "Geprüfte Pseudo-3D-Interaktiv-Komponenten. interactive-Bloecke duerfen NUR diese componentId verwenden. status: 'implementiert' = in packages/ui gebaut; 'geplant' = spezifiziert, ruhiger Platzhalter — nur in draft-Projekten erlaubt (Verifier erzwingt das). Werte kommen, wo angegeben, aus packages/engine.",
   "components": [
     {
       "id": "value-slider",
-      "purpose": "Generischer Slider, der eine Formel-Variable treibt und das Ergebnis live zeigt.",
-      "params": { "formulaId": "string", "var": "string", "min": "number", "max": "number", "step": "number" },
+      "status": "implementiert",
+      "purpose": "Generischer Slider, der eine Formel-Variable treibt und das Ergebnis live zeigt; weitere Variablen als feste Inputs.",
+      "params": { "formulaId": "string", "var": "string", "min": "number", "max": "number", "step": "number", "fixed": "object" },
       "computedBy": "engine"
     },
     {
       "id": "lever-slider",
-      "purpose": "Hebel mit verschiebbarer Kraft und Hebelarm; live 2.5D-Kraftvektor; zeigt das resultierende Drehmoment aus der Engine.",
+      "status": "implementiert",
+      "purpose": "Hebel mit verschiebbarer Kraft und Hebelarm; live 2.5D-Kraftvektor; zeigt das resultierende Drehmoment aus der Engine. Referenz der Pseudo-3D-Sprache.",
       "params": { "formulaId": "string", "forceVar": "string", "armVar": "string", "force": "number", "arm": "number", "forceRange": "array", "armRange": "array" },
       "computedBy": "engine"
     },
     {
+      "id": "gear-pair",
+      "status": "implementiert",
+      "purpose": "Zwei kämmende Zahnräder, isometrisch, drehen im echten Drehzahlverhältnis; Slider für z1, z2, Modul; zeigt i, d1/d2 und Achsabstand live.",
+      "params": { "z1": "number", "z2": "number", "m": "number", "z1Range": "array", "z2Range": "array", "mRange": "array", "vars": "object" },
+      "computedBy": "engine"
+    },
+    {
       "id": "vector-drag",
-      "purpose": "Ziehbarer 2.5D-Kraftvektor; zeigt Betrag und Richtung.",
+      "status": "geplant",
+      "purpose": "Ziehbarer 2.5D-Kraftvektor; zeigt Betrag und Richtung in Mono.",
       "params": { "maxN": "number" }
     },
     {
       "id": "force-balance",
-      "purpose": "Mehrere Kräfte addieren, bis Gleichgewicht (ΣF=0) erreicht ist.",
+      "status": "geplant",
+      "purpose": "Mehrere Kräfte addieren, bis Gleichgewicht (ΣF=0) erreicht ist; Ruhe-Zustand wird sichtbar quittiert.",
       "params": { "forces": "array", "tolerance": "number" },
       "computedBy": "engine"
     },
     {
-      "id": "gear-pair",
-      "purpose": "Zwei kämmende Zahnräder, isometrisch; Slider für z1, z2, Modul; zeigt i und Achsabstand.",
-      "params": { "z1": "number", "z2": "number", "m": "number", "z1Range": "array", "z2Range": "array", "mRange": "array" },
+      "id": "truss-load",
+      "status": "geplant",
+      "purpose": "Fachwerk mit Knoten/Staeben unter Last; Stabkraefte aus dem Gleichungssystem (lusolve), Zug blau / Druck rot codiert; Versagens-Stab hervorgehoben.",
+      "params": { "nodes": "array", "bars": "array", "supports": "array", "load": "number" },
       "computedBy": "engine"
     },
     {
       "id": "stress-bar",
-      "purpose": "Stab/Balken unter Last mit farbcodierter Spannung (grün→rot).",
+      "status": "geplant",
+      "purpose": "Stab/Balken unter Last mit farbcodierter Spannung (viz-low→viz-high) und sichtbarer Durchbiegung; Bruch-Moment oberhalb der Grenze.",
       "params": { "profile": "string", "load": "number" },
       "computedBy": "engine"
     },
     {
       "id": "linkage-anim",
+      "status": "geplant",
       "purpose": "Animiertes ebenes Gelenkgetriebe (z. B. Viergelenk); zeigt Bewegung und Totlagen.",
       "params": { "links": "array" },
       "computedBy": "engine"
     },
     {
-      "id": "cad-preview",
-      "purpose": "Isometrische Pseudo-3D-Vorschau eines parametrischen Modells aus /cad; Slider treiben Parameter; STL-Export.",
-      "params": { "cadModel": "string", "parameters": "object" }
-    },
-    {
       "id": "rocket-stability",
-      "purpose": "Raketen-Seitenriss mit Schwerpunkt (CG), Druckpunkt (CP) und Stabilitätsmaß; Finnen-Slider.",
+      "status": "geplant",
+      "purpose": "Raketen-Seitenriss mit Schwerpunkt (CG), Druckpunkt (CP) und Stabilitätsmaß; Massen-/Finnen-Slider.",
       "params": { "finRoot": "number", "finTip": "number", "finCount": "number" },
       "computedBy": "engine"
     },
     {
       "id": "flight-sim",
-      "purpose": "Flugbahn-Diagramm (Höhe über Zeit) mit Apogäum und v_max aus der Flug-ODE.",
+      "status": "geplant",
+      "purpose": "Flugbahn-Diagramm (Höhe über Zeit) mit Apogäum und v_max aus der Flug-ODE (RK4).",
       "params": { "motorClass": "string" },
       "computedBy": "engine"
     }

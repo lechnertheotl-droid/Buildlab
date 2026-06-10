@@ -38,6 +38,9 @@ export interface EvalResult {
 /** Wertet eine Formel numerisch aus (Eingaben in Basis-Einheit der Variable). */
 export function evaluateFormula(formula: Formula, inputs: Record<string, number>): number;
 
+/** Wertet einen freien mathjs-Ausdruck (Zahl oder Boolean) über einem Zahlen-Scope aus. */
+export function evaluateExpr(expr: string, scope: Record<string, number>): number | boolean;
+
 /** Sucht eine Formel per id und liefert { id, value, unit }. */
 export function evaluateById(
   formulas: Formula[],

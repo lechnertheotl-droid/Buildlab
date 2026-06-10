@@ -33,6 +33,23 @@ export function evaluateFormula(formula, inputs) {
 }
 
 /**
+ * Wertet einen freien mathjs-Ausdruck über einem reinen Zahlen-Scope aus
+ * (z. B. build-Constraints wie "abs(z2/z1 - 3)/3 <= 0.05").
+ * Liefert eine Zahl oder einen Boolean — alles andere ist ein Fehler.
+ */
+export function evaluateExpr(expr, scope) {
+  for (const [k, v] of Object.entries(scope)) {
+    if (typeof v !== 'number' || !Number.isFinite(v)) {
+      throw new Error(`Ausdruck '${expr}': Scope-Wert '${k}' ist keine endliche Zahl.`);
+    }
+  }
+  const value = math.evaluate(expr, { ...scope });
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  throw new Error(`Ausdruck '${expr}': Ergebnis ist weder Zahl noch Boolean.`);
+}
+
+/**
  * Sucht eine Formel per id und wertet sie aus.
  * Liefert { id, value, unit } — das Format, das tools/eval.mjs ausgibt.
  */
