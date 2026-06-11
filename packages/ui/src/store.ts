@@ -33,6 +33,13 @@ interface WorkspaceState {
   /** Zuletzt fokussiertes numerisches Antwortfeld (Rechner: „in Aufgabe einsetzen"). */
   answerSink: ((value: number) => void) | null;
   setAnswerSink: (sink: ((value: number) => void) | null) => void;
+  /**
+   * Constraint-Stand des build-Blocks im aktuellen Schritt (CadBuild publiziert).
+   * `null` = kein build-Block gemountet. Das Schritt-Gating liest hieraus:
+   * ein Bau-Schritt gilt erst als erledigt, wenn alle Anforderungen grün sind.
+   */
+  buildOk: boolean | null;
+  setBuildOk: (ok: boolean | null) => void;
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
@@ -46,4 +53,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   clearCanvasInputs: () => set({ canvasInputs: null }),
   answerSink: null,
   setAnswerSink: (sink) => set({ answerSink: sink }),
+  buildOk: null,
+  setBuildOk: (ok) => set({ buildOk: ok }),
 }));

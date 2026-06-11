@@ -448,10 +448,23 @@ function TargetBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<
   const hit = value !== null && isWithin(value, target.goal.value, target.goal.tolerance);
 
   useEffect(() => {
-    if (hit && !doneRef.current) {
-      doneRef.current = true;
-      succeed(`${fmt(target.goal.value)}${unitLabel(formula?.result.unit)} getroffen ✓ · ${praise()}`);
+    if (!hit || doneRef.current) return;
+    // Beim Schrittwechsel rendert die Aufgabe einmal mit den Canvas-Werten des
+    // VORHERIGEN Schritts (Clear + Neu-Publizieren passieren erst in der
+    // Effect-Phase). Deshalb hier gegen den Live-Store nachprüfen — sonst
+    // „löst" ein Treffer des Vorschritts die neue Aufgabe.
+    const live = useWorkspaceStore.getState().canvasInputs;
+    if (!formula || !live) return;
+    if (!formula.variables.every((v) => typeof live[v.var] === 'number')) return;
+    let liveValue: number;
+    try {
+      liveValue = evaluateById([...formulas.values()], target.formulaId, live).value;
+    } catch {
+      return;
     }
+    if (!isWithin(liveValue, target.goal.value, target.goal.tolerance)) return;
+    doneRef.current = true;
+    succeed(`${fmt(target.goal.value)}${unitLabel(formula?.result.unit)} getroffen ✓ · ${praise()}`);
     // succeed ist stabil genug für diesen Zweck (setState-Wrapper).
   }, [hit]);
 

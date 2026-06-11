@@ -31,6 +31,7 @@ zeigen daher Fallback-Schriften. Das ist zugleich Befund B-26.
 ## 🔴 Fehler (funktional, sollte vor R7 behoben werden)
 
 ### B-01 · Projektabschluss geht durch Schreib-Race verloren — das Projekt wird nie „fertig“
+**Status: ✅ behoben (11.06.2026)** — Writes in `src/db/repo.ts` laufen jetzt seriell über eine Promise-Kette.
 **Screen:** Workspace Schritt 8 (Meilenstein) · **Persona:** Sarah (kompletter Durchlauf)
 Beim Betreten des Meilensteins feuern `enterStep` (aus `Workspace.tsx`-Effect) und
 `completeStep` (aus dem `stepDone`-Effect in `WorkspaceStep.tsx`, da der
@@ -47,6 +48,7 @@ Abschluss (Laufzettel), die Challenge fühlt sich nie gewonnen an.
 nie anfassen (nur `currentStep`/`maxStepReached` mergen statt ganzen Record ersetzen).
 
 ### B-02 · Ein einziger Deep-Link-Versuch hebelt das Schritt-Gating dauerhaft aus
+**Status: ✅ behoben (11.06.2026)** — `enterStep` feuert erst nach geladenem Fortschritt und nur ohne anstehenden Redirect; `getProgress` unterscheidet jetzt „lädt" von „existiert nicht".
 **Screen:** Workspace · **Repro:** Frisches Profil, URL `#/projekt/stirnradgetriebe/schritt/8` aufrufen.
 Der `enterStep`-Effect in `src/screens/Workspace.tsx` läuft **vor** der
 „Kein Vorspulen per URL“-Prüfung und schreibt `maxStepReached = 7` in die DB.
@@ -57,6 +59,7 @@ Meilenstein, und die Schritt-Punkte in der Fußleiste sind alle freigeschaltet.
 geclampten `stepIndex` verwenden.
 
 ### B-03 · Der Rechner versteht keine Komma-Eingaben — in einer deutschen Lern-App
+**Status: ✅ behoben (11.06.2026)** — Eingaben werden vor dem Parsen normalisiert (Komma→Punkt), die Komma-Taste schreibt „,", Einheiten-Ergebnisse werden deutsch formatiert.
 **Screen:** Rechner (global) · **Persona:** Jonas
 - Getippt `120*0,3/0,18` → „Das kann ich so nicht rechnen.“
 - Die **Komma-Taste des eigenen Keypads** fügt einen Punkt ein (Anzeige „1.5“).
@@ -68,6 +71,7 @@ deutsch normalisieren (Komma→Punkt, außer in Funktionsargumenten) und Ausgabe
 über die vorhandene deutsche Formatierung rendern.
 
 ### B-04 · Target- und Bau-Aufgaben sind mit den Default-Werten bereits erfüllt
+**Status: ✅ behoben (11.06.2026)** — Schritt 4 startet bei m = 3, der Bau-Schritt bei z₂ = 40; die Bühne remountet je Schritt, sodass „aktuell:" sofort den Live-Wert zeigt (mit Live-Store-Nachprüfung gegen veraltete Treffer des Vorschritts). Bau-Schritte gelten außerdem erst als erledigt, wenn alle Build-Anforderungen grün sind (CadBuild publiziert den Constraint-Stand ins Schritt-Gating).
 **Screens:** Schritt 4 und Schritt 7 (stirnradgetriebe) · **Personas:** Sarah, Jonas
 - Schritt 4: Ziel a = 80 mm — der m-Slider steht **schon auf m = 2 → a = 80 mm**.
   Die Aufgabe sagt „Stell den Modul so ein …“, zeigt aber „aktuell: — stell die

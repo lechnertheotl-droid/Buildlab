@@ -88,6 +88,7 @@ function GearBuild({ block, onExport }: CadBuildProps) {
   const setActive = useWorkspaceStore((s) => s.setActive);
   const clearActive = useWorkspaceStore((s) => s.clearActive);
   const setCanvasInputs = useWorkspaceStore((s) => s.setCanvasInputs);
+  const setBuildOk = useWorkspaceStore((s) => s.setBuildOk);
 
   const paramKeys = useMemo(() => Object.keys(block.parameters), [block.parameters]);
   const isPair = paramKeys.includes('z1') && paramKeys.includes('z2');
@@ -188,6 +189,13 @@ function GearBuild({ block, onExport }: CadBuildProps) {
     return () => clearActive('pitch_d');
     // valuesKey repräsentiert values inhaltlich.
   }, [setActive, clearActive, setCanvasInputs, valuesKey, activeZ]);
+
+  // Constraint-Stand fürs Schritt-Gating publizieren: ein Bau-Schritt ist erst
+  // erledigt, wenn alle Anforderungen grün sind (vorher zählte er sofort als ✓).
+  useEffect(() => {
+    setBuildOk(allConstraintsOk);
+    return () => setBuildOk(null);
+  }, [setBuildOk, allConstraintsOk]);
 
   const exportable = stl !== null && validateStl(stl).ok && allConstraintsOk;
 

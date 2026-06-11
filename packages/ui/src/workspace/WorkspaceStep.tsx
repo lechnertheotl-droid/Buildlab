@@ -253,7 +253,13 @@ export function WorkspaceStep({
         .map(({ i }) => i),
     [step],
   );
-  const stepDone = requiredTasks.every((i) => taskStates[i]?.solved);
+  // Bau-Schritte: zusätzlich müssen alle Build-Anforderungen grün sein
+  // (CadBuild publiziert den Constraint-Stand in den Store). Solange der
+  // build-Block noch nicht gemountet ist (buildOk === null), gilt er als offen.
+  const buildOk = useWorkspaceStore((s) => s.buildOk);
+  const hasBuildBlock = step.blocks.some((b) => b.type === 'build');
+  const stepDone =
+    requiredTasks.every((i) => taskStates[i]?.solved) && (!hasBuildBlock || buildOk === true);
 
   // Schritt-Abschluss genau einmal melden.
   const completedRef = useRef(false);
@@ -354,7 +360,12 @@ export function WorkspaceStep({
               }`}
             >
               <div className="min-h-0 overflow-hidden">
-                <div className="max-h-[45vh] overflow-auto md:max-h-none">
+                {/* key={stepIndex}: Interactives je Schritt neu mounten, damit sie
+                    ihre Canvas-Werte nach clearCanvasInputs() neu publizieren —
+                    sonst zeigt eine target-Aufgabe „aktuell: —", bis jemand
+                    einen Regler bewegt (gleiche Komponente + gleiche Defaults
+                    überleben den Schrittwechsel ohne neuen Effect-Lauf). */}
+                <div key={stepIndex} className="max-h-[45vh] overflow-auto md:max-h-none">
                   {canvasBlock ? (
                     canvasBlock.type === 'build' ? (
                       <CadBuild block={canvasBlock} onExport={onExport} />
@@ -463,7 +474,13 @@ export function WorkspaceStep({
               type="button"
               onClick={() => onNavigate(stepIndex + 1)}
               disabled={!stepDone || stepIndex >= project.steps.length - 1}
-              title={stepDone ? undefined : 'Noch eine Aufgabe offen — sie ist direkt über mir.'}
+              title={
+                stepDone
+                  ? undefined
+                  : hasBuildBlock && buildOk !== true
+                    ? 'Erst alle Anforderungen in der Bau-Ansicht erfüllen.'
+                    : 'Noch eine Aufgabe offen — sie ist direkt über mir.'
+              }
               className={`${buttonClass()} whitespace-nowrap !px-2.5 md:!px-4`}
             >
               Weiter ›

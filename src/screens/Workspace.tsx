@@ -27,19 +27,27 @@ export default function Workspace() {
   const requested = Math.max(1, Number.parseInt(n ?? '1', 10) || 1);
   const stepIndex = Math.min(requested, project?.steps.length ?? 1) - 1;
 
+  // Kein Vorspulen per URL: höchstens bis zum höchsten erreichten Schritt + 1.
+  const allowed = (progress?.maxStepReached ?? 0) + 1;
+  const redirecting =
+    !!project && (requested > project.steps.length || requested > allowed + 1);
+
+  // Schritt-Besuch erst aufzeichnen, wenn der Fortschritt geladen ist und kein
+  // Redirect ansteht — sonst schreibt ein bloßer Deep-Link-Versuch
+  // maxStepReached hoch und hebelt das Gating dauerhaft aus.
+  const progressLoading = progress === undefined;
   useEffect(() => {
-    if (project) void enterStep(project.id, stepIndex);
-  }, [project, stepIndex]);
+    if (!project || progressLoading || redirecting) return;
+    void enterStep(project.id, stepIndex);
+  }, [project, progressLoading, redirecting, stepIndex]);
 
   if (!project) return <NotFound />;
   if (!taskStates || !conceptStates || !settings || progress === undefined) {
     return <ScreenSkeleton layout="workspace" />;
   }
 
-  // Kein Vorspulen per URL: höchstens bis zum höchsten erreichten Schritt + 1.
   const maxStepReached = Math.max(progress?.maxStepReached ?? 0, stepIndex);
-  const allowed = (progress?.maxStepReached ?? 0) + 1;
-  if (requested > project.steps.length || requested > allowed + 1) {
+  if (redirecting) {
     return (
       <Navigate
         to={`/projekt/${project.id}/schritt/${Math.min(allowed, project.steps.length)}`}
