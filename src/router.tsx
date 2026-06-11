@@ -1,13 +1,12 @@
 // src/router.tsx — HashRouter-Routen (SCREENS.md §1).
 
-import { createHashRouter } from 'react-router-dom';
+import { createHashRouter, Navigate } from 'react-router-dom';
 import AppShell from './shell/AppShell';
 import { RouteError } from './shell/RouteError';
 import Onboarding from './screens/Onboarding';
-import Dashboard from './screens/Dashboard';
 import SkillMap from './screens/SkillMap';
 import ProjectList from './screens/ProjectList';
-import ProjectDetail from './screens/ProjectDetail';
+import ProjectTree from './screens/ProjectTree';
 import Workspace from './screens/Workspace';
 import ConceptPage from './screens/ConceptPage';
 import Werkstatt from './screens/Werkstatt';
@@ -23,13 +22,13 @@ export const router = createHashRouter([
     element: <AppShell />,
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <Dashboard />, handle: { crumb: 'Start' } },
+      { index: true, element: <ProjectTree />, handle: { crumb: 'Projektkarte' } },
       { path: 'karte', element: <SkillMap />, handle: { crumb: 'Skill-Map' } },
       { path: 'projekte', element: <ProjectList />, handle: { crumb: 'Projekte' } },
       {
+        // Alte Projektdetail-Route: die Projektkarte ist jetzt der Hub.
         path: 'projekt/:id',
-        element: <ProjectDetail />,
-        handle: { crumb: 'Projekte' },
+        element: <Navigate to="/" replace />,
       },
       {
         path: 'projekt/:id/schritt/:n',
