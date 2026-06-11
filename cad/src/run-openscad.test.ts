@@ -6,7 +6,7 @@
 // (ehrliches End-to-End statt Fixture).
 
 import { describe, it, expect } from 'vitest';
-import { renderGearStl } from './run-openscad';
+import { renderGearStl, renderPulleyStl } from './run-openscad';
 import { validateStl, parseStl } from './stl';
 import { meshToIso } from './mesh-iso';
 
@@ -41,6 +41,37 @@ describe('OpenSCAD-WASM (echtes STL, DoD Phase 3)', () => {
       expect(ra.ok).toBe(true);
       expect(rb.ok).toBe(true);
       expect(rb.triangles ?? 0).toBeGreaterThan(ra.triangles ?? 0);
+    },
+    60_000,
+  );
+});
+
+describe('OpenSCAD-WASM Umlenkrolle (rolle.scad, Testbefund B-20)', () => {
+  it(
+    'rendert rolle.scad zu validem STL und lässt es isometrisch darstellen',
+    async () => {
+      const stl = await renderPulleyStl({ d: 40, groove: 2.5, bore: 8, thickness: 12, fn: 24 });
+      const res = validateStl(stl);
+      expect(res.ok).toBe(true);
+      expect(res.triangles ?? 0).toBeGreaterThan(0);
+
+      const tris = parseStl(stl);
+      expect(tris.length).toBe(res.triangles);
+
+      const iso = meshToIso(tris, { width: 320, height: 220 });
+      expect(iso.polygons.length).toBeGreaterThan(0);
+    },
+    60_000,
+  );
+
+  it(
+    'ist wirklich parametrisch: größere Bohrung ändert die Geometrie',
+    async () => {
+      const a = await renderPulleyStl({ d: 40, groove: 2.5, bore: 6, thickness: 12, fn: 16 });
+      const b = await renderPulleyStl({ d: 40, groove: 2.5, bore: 10, thickness: 12, fn: 16 });
+      expect(validateStl(a).ok).toBe(true);
+      expect(validateStl(b).ok).toBe(true);
+      expect(a).not.toBe(b);
     },
     60_000,
   );

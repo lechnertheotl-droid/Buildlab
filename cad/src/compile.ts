@@ -5,7 +5,7 @@
 // bei Bedarf geladen) und SSR berührt es nicht. Ergebnisse werden nach Parameter-Hash
 // gecacht: gleiche Parameter → identisches STL (Determinismus, Vorschau == Export).
 
-import type { GearParams } from './run-openscad';
+import type { GearParams, PulleyParams } from './run-openscad';
 
 interface ResponseMsg {
   id: number;
@@ -19,9 +19,14 @@ let nextId = 1;
 const pending = new Map<number, { resolve: (stl: string) => void; reject: (e: Error) => void }>();
 const cache = new Map<string, string>();
 
+const round3 = (n: number) => Math.round(n * 1000) / 1000; // Slider-Jitter vor dem Hash glätten
+
 function paramKey(p: GearParams): string {
-  const r = (n: number) => Math.round(n * 1000) / 1000; // Slider-Jitter vor dem Hash glätten
-  return `${r(p.m)}|${r(p.z)}|${r(p.thickness)}|${r(p.bore)}|${r(p.fn ?? 24)}`;
+  return `gear|${round3(p.m)}|${round3(p.z)}|${round3(p.thickness)}|${round3(p.bore)}|${round3(p.fn ?? 24)}`;
+}
+
+function pulleyKey(p: PulleyParams): string {
+  return `rolle|${round3(p.d)}|${round3(p.groove)}|${round3(p.bore)}|${round3(p.thickness)}|${round3(p.fn ?? 48)}`;
 }
 
 function getWorker(): Worker {
@@ -54,6 +59,25 @@ export function compileGear(params: GearParams): Promise<string> {
       },
       reject,
     });
-    getWorker().postMessage({ id, params });
+    getWorker().postMessage({ id, model: 'gear', params });
+  });
+}
+
+/** Kompiliert die Umlenkrolle zu ASCII-STL (gecacht). Wirft bei Render-Fehlern. */
+export function compilePulley(params: PulleyParams): Promise<string> {
+  const key = pulleyKey(params);
+  const hit = cache.get(key);
+  if (hit !== undefined) return Promise.resolve(hit);
+
+  const id = nextId++;
+  return new Promise<string>((resolve, reject) => {
+    pending.set(id, {
+      resolve: (stl) => {
+        cache.set(key, stl);
+        resolve(stl);
+      },
+      reject,
+    });
+    getWorker().postMessage({ id, model: 'rolle', params });
   });
 }

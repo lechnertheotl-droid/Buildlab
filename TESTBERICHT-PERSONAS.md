@@ -204,13 +204,13 @@ nie Sperren“ — die abgeblendete Karte + Schloss kommuniziert das Gegenteil.
 - Werte-Vorschau „F = 100 · r = 0.5“ mit Dezimal**punkt**.
 
 ### B-19 · Versprochene Aufgabenarten existieren nicht im Content
-**Status: 📋 bewusst offen** — Content-Aufgabe: multi/order/fill brauchen neue, didaktisch geprüfte Aufgaben (R7, /generate-project). In BUILD_PLAN.md als R7-Punkt vermerkt.
+**Status: ✅ behoben (11.06.2026)** — `multi`-Aufgabe in „Die Übersetzung" (i = 4-Aussagen) und `order`-Aufgabe im neuen Bau-Schritt des Flaschenzugs (Aufbau-Reihenfolge); damit kommen alle 9 Aufgabenarten im Content vor. Korrektur am Befund: `fill` existiert als Aufgabenart nicht (Berichtsfehler) — die neunte Art ist `order`.
 CLAUDE.md/BUILD_PLAN: 9 Aufgabenarten, Gold-Standard deckt alle ab. Tatsächlich
 nutzen beide Projekte zusammen nur 7 — `multi`, `order`/`fill` kommen in keinem
 Content vor (Renderer existieren). Doku und Realität auseinander.
 
 ### B-20 · „Hebel & Flaschenzug“ baut nichts
-**Status: 📋 bewusst offen** — ein echter Bau-Schritt für den Flaschenzug ist Content-Arbeit (R7). In BUILD_PLAN.md als R7-Punkt vermerkt.
+**Status: ✅ behoben (11.06.2026)** — neuer Schritt „Deine Umlenkrolle drucken": parametrische Rolle (cad/rolle.scad, OpenSCAD-WASM, eigene Pipeline `compilePulley`), Engine-Formel `groove_min` mit Golden Test, drei Constraints mit Beweis-Paaren (Rille startet bewusst zu eng), STL-Export, Werkstatt-Eintrag + Re-Export. Der Meilenstein-Satz „Dein Bauteil wartet in der Werkstatt" stimmt jetzt auch hier.
 Das Projekt hat keinen `bauen`-Schritt und keinen build-Block — die App
 verspricht „Lernende bauen echte Projekte“, der Meilenstein heißt
 „Challenge-Check“ und verweist auf die Werkstatt (siehe B-05). Die Bauanleitung
@@ -289,7 +289,7 @@ informativer.
   „Stufe n:“).
 
 ### B-31 · Skill-Map-Detailpflege
-**Status: 🔶 größtenteils behoben (11.06.2026)** — Labels sind klickbar (Teil der Klickfläche), lange Namen brechen zweizeilig bzw. werden kleiner statt abgeschnitten. Kanten-Routing bleibt für Skill-Map V2 (R8).
+**Status: ✅ behoben (11.06.2026)** — Labels klickbar, lange Namen zweizeilig/kleiner; Kanten laufen jetzt als sanfte Bögen (keine Kante mehr durch fremde Knoten, zahnrad→modul nicht mehr kollinear durch zaehnezahl), gruppenfremde Kanten abgeblendet, die zwei 835/849-px-Diagonalen durch Umpositionierung der Brücken-Konzepte (Feste & lose Rolle, Kraftübersetzung) halbiert. Skill-Map V2 (Pan/Zoom) bleibt R8.
 - Lange Labels werden hart abgeschnitten („Teilkreisdurchmes…“, „Übersetzungsverhä…“).
 - Klick aufs **Label** tut nichts — nur der Kreis (r = 22) ist Klickfläche.
 - Lange Kanten (Kraft→Kraftübersetzung, →Stabilitätsmaß) queren quer durchs Bild

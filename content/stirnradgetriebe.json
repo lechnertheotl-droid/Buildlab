@@ -188,6 +188,27 @@
           },
           "hint": "Abtrieb durch Antrieb: z₂ kommt in den Zähler.",
           "explanation": "i = z₂/z₁ = 45/15 = 3. Gleiches Spiel, andere Zahlen – die Übersetzung hängt nur vom Verhältnis ab, nicht von den absoluten Zähnezahlen."
+        },
+        {
+          "type": "task",
+          "kind": "multi",
+          "question": "Ein Getriebe hat i = 4. Welche Aussagen stimmen? (mehrere richtig)",
+          "concepts": ["uebersetzung", "drehmoment"],
+          "options": [
+            { "text": "Das Abtriebsrad dreht viermal langsamer als das Antriebsrad." },
+            { "text": "Das Drehmoment am Abtrieb ist (fast) viermal so groß." },
+            {
+              "text": "Das Abtriebsrad dreht viermal schneller.",
+              "why": "Andersrum: i = n₁/n₂ = 4 heißt, der Abtrieb dreht LANGSAMER — Tempo wird gegen Kraft getauscht."
+            },
+            {
+              "text": "Die Leistung vervierfacht sich.",
+              "why": "Leistung kommt nicht dazu — P = M·ω bleibt (bis auf Reibungsverluste) gleich. Das Getriebe tauscht nur Drehzahl gegen Drehmoment."
+            }
+          ],
+          "answer": [0, 1],
+          "hint": "i tauscht Tempo gegen Kraft — was wird kleiner, was größer, und was bleibt gleich?",
+          "explanation": "i = 4 senkt die Drehzahl auf ein Viertel und hebt das Drehmoment (mal Wirkungsgrad) fast auf das Vierfache. Die Leistung bleibt dabei gleich — sie ist das Produkt aus beidem."
         }
       ]
     },

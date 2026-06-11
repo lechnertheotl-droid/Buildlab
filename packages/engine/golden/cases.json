@@ -1,15 +1,190 @@
 [
-  { "id": "ratio_20_60", "formulaId": "ratio", "inputs": { "z2": 60, "z1": 20 }, "expected": { "value": 3, "unit": "-" }, "tol": 1e-9 },
-  { "id": "pitch_m2_z20", "formulaId": "pitch_d", "inputs": { "m": 2, "z": 20 }, "expected": { "value": 40, "unit": "mm" }, "tol": 1e-9 },
-  { "id": "axis_2_20_60", "formulaId": "axis_dist", "inputs": { "m": 2, "z1": 20, "z2": 60 }, "expected": { "value": 80, "unit": "mm" }, "tol": 1e-9 },
-  { "id": "speed_3000_i3", "formulaId": "speed_out", "inputs": { "n1": 3000, "i": 3 }, "expected": { "value": 1000, "unit": "1/min" }, "tol": 1e-9 },
-  { "id": "torque_10_i3_e097", "formulaId": "torque_out", "inputs": { "M1": 10, "i": 3, "eta": 0.97 }, "expected": { "value": 29.1, "unit": "N*m" }, "tol": 1e-6 },
-  { "id": "reaction_50", "formulaId": "beam_reaction", "inputs": { "F": 50 }, "expected": { "value": 25, "unit": "N" }, "tol": 1e-9 },
-  { "id": "torque_100_05", "formulaId": "torque_lever", "inputs": { "F": 100, "r": 0.5 }, "expected": { "value": 50, "unit": "N*m" }, "tol": 1e-9 },
-  { "id": "pulley_1962_n4", "formulaId": "pulley_force", "inputs": { "G": 19.62, "n": 4 }, "expected": { "value": 4.905, "unit": "N" }, "tol": 1e-9 },
-  { "id": "pulley_1962_n2", "formulaId": "pulley_force", "inputs": { "G": 19.62, "n": 2 }, "expected": { "value": 9.81, "unit": "N" }, "tol": 1e-9 },
-  { "id": "balance_20_03_02", "formulaId": "torque_balance", "inputs": { "F1": 20, "r1": 0.3, "r2": 0.2 }, "expected": { "value": 30, "unit": "N" }, "tol": 1e-9 },
-  { "id": "balance_300_12_18", "formulaId": "torque_balance", "inputs": { "F1": 300, "r1": 1.2, "r2": 1.8 }, "expected": { "value": 200, "unit": "N" }, "tol": 1e-9 },
-  { "id": "drag_example", "formulaId": "drag", "inputs": { "rho": 1.225, "v": 50, "cw": 0.5, "A": 0.002 }, "expected": { "value": 1.53125, "unit": "N" }, "tol": 1e-6 },
-  { "id": "stability_example", "formulaId": "stability", "inputs": { "xcp": 520, "xcg": 480, "d": 24 }, "expected": { "value": 1.6667, "unit": "Kaliber" }, "tol": 1e-3 }
+ {
+  "id": "ratio_20_60",
+  "formulaId": "ratio",
+  "inputs": {
+   "z2": 60,
+   "z1": 20
+  },
+  "expected": {
+   "value": 3,
+   "unit": "-"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "pitch_m2_z20",
+  "formulaId": "pitch_d",
+  "inputs": {
+   "m": 2,
+   "z": 20
+  },
+  "expected": {
+   "value": 40,
+   "unit": "mm"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "axis_2_20_60",
+  "formulaId": "axis_dist",
+  "inputs": {
+   "m": 2,
+   "z1": 20,
+   "z2": 60
+  },
+  "expected": {
+   "value": 80,
+   "unit": "mm"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "speed_3000_i3",
+  "formulaId": "speed_out",
+  "inputs": {
+   "n1": 3000,
+   "i": 3
+  },
+  "expected": {
+   "value": 1000,
+   "unit": "1/min"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "torque_10_i3_e097",
+  "formulaId": "torque_out",
+  "inputs": {
+   "M1": 10,
+   "i": 3,
+   "eta": 0.97
+  },
+  "expected": {
+   "value": 29.1,
+   "unit": "N*m"
+  },
+  "tol": 1e-06
+ },
+ {
+  "id": "reaction_50",
+  "formulaId": "beam_reaction",
+  "inputs": {
+   "F": 50
+  },
+  "expected": {
+   "value": 25,
+   "unit": "N"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "torque_100_05",
+  "formulaId": "torque_lever",
+  "inputs": {
+   "F": 100,
+   "r": 0.5
+  },
+  "expected": {
+   "value": 50,
+   "unit": "N*m"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "pulley_1962_n4",
+  "formulaId": "pulley_force",
+  "inputs": {
+   "G": 19.62,
+   "n": 4
+  },
+  "expected": {
+   "value": 4.905,
+   "unit": "N"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "pulley_1962_n2",
+  "formulaId": "pulley_force",
+  "inputs": {
+   "G": 19.62,
+   "n": 2
+  },
+  "expected": {
+   "value": 9.81,
+   "unit": "N"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "balance_20_03_02",
+  "formulaId": "torque_balance",
+  "inputs": {
+   "F1": 20,
+   "r1": 0.3,
+   "r2": 0.2
+  },
+  "expected": {
+   "value": 30,
+   "unit": "N"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "balance_300_12_18",
+  "formulaId": "torque_balance",
+  "inputs": {
+   "F1": 300,
+   "r1": 1.2,
+   "r2": 1.8
+  },
+  "expected": {
+   "value": 200,
+   "unit": "N"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "drag_example",
+  "formulaId": "drag",
+  "inputs": {
+   "rho": 1.225,
+   "v": 50,
+   "cw": 0.5,
+   "A": 0.002
+  },
+  "expected": {
+   "value": 1.53125,
+   "unit": "N"
+  },
+  "tol": 1e-06
+ },
+ {
+  "id": "stability_example",
+  "formulaId": "stability",
+  "inputs": {
+   "xcp": 520,
+   "xcg": 480,
+   "d": 24
+  },
+  "expected": {
+   "value": 1.6667,
+   "unit": "Kaliber"
+  },
+  "tol": 0.001
+ },
+ {
+  "id": "groove_min_seil4",
+  "formulaId": "groove_min",
+  "inputs": {
+   "d_seil": 4,
+   "spiel": 0.3
+  },
+  "expected": {
+   "value": 2.3,
+   "unit": "mm"
+  },
+  "tol": 1e-09
+ }
 ]
