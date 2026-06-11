@@ -27,7 +27,7 @@
 | Store | Key | Wert |
 |---|---|---|
 | `settings` | `name` (string) | beliebiger JSON-Wert (siehe 2.1) |
-| `projectProgress` | `projectId` | `{ currentStep, maxStepReached, stepsDone: string[], startedAt, completedAt? }` |
+| `projectProgress` | `projectId` | `{ currentStep, maxStepReached, stepsDone: string[], startedAt, completedAt? }` — `stepsDone` ist die Wahrheit fürs DAG-Gating; `currentStep` nur Resume-Hinweis; `maxStepReached` **deprecated** (lineares Gating vor R9): wird weiter geschrieben, nie gelesen — Backups bleiben formgleich, kein Versionssprung |
 | `taskState` | `"<projectId>/<stepId>/<blockIndex>"` | `{ solved: boolean, attempts: number, usedHelp: boolean, solvedAt? }` |
 | `conceptState` | `conceptId` | `{ status: "neu"\|"gesehen"\|"angewendet"\|"sicher", box: 1–5, due: ISO-Datum \| null, lastSeenIn?: projectId, refreshShown: projectId[] }` |
 | `calcHistory` | auto-increment | `{ expr: string, display: string, at: ISO }` — formatiertes Ergebnis inkl. Einheit; Ring, max. 50 (ältester fliegt) |
@@ -37,32 +37,39 @@
 
 | name | Typ | Default | Bedeutung |
 |---|---|---|---|
-| `onboardingDone` | boolean | false | Root-Redirect-Schalter |
-| `persona` | `"studium"\|"azubi"\|"maker"` | — | nur für Empfehlungs-Microcopy |
 | `depth` | `"playful"\|"practical"\|"rigorous"` | `"practical"` | globale Tiefen-Ebene |
 | `reducedMotion` | boolean | false | ODER-verknüpft mit `prefers-reduced-motion` |
+| `activeProject` | string | — | Projekt, dessen Baum die Projektkarte zeigt |
 | `schemaVersion` | number | 1 | für Backup-Migration |
+| `onboardingDone` | boolean | false | **deprecated** (Onboarding entfällt seit R9) — wird toleriert, nie mehr geschrieben |
+| `persona` | `"studium"\|"azubi"\|"maker"` | — | **deprecated** (entfällt mit dem Onboarding) |
 
 ### 2.2 Ableitungsregeln (nicht gespeichert, immer berechnet)
 
-- **Projekt-Status** (`empfohlen/offen/begonnen/fertig/Voraussetzung offen`)
-  wird aus `projectProgress` + `recommendedAfter` der Projekt-JSONs berechnet.
-- **Fälligkeit** eines Konzepts: `due <= heute`. Die Trainings-Auswahl sortiert
-  nach Überfälligkeit; nichts davon wird zusätzlich gespeichert.
+- **Freigeschaltet** ist ein Schritt, wenn alle seine `requires` in
+  `stepsDone` liegen (`src/dag.ts › unlockedStepIds`; ohne `requires` gilt die
+  lineare Reihenfolge). Erledigte Schritte bleiben frei wieder öffenbar.
+  Lineare Alt-Fortschritte (Prefix-Mengen) sind automatisch gültige
+  Done-Mengen — keine Migration nötig.
+- **Projekt-Status der Wechsler-Chips** (`fertig/begonnen/offen`) wird aus
+  `projectProgress` berechnet; der Soft-Lock-Hinweis aus `recommendedAfter`.
 - **Mastery-Gesamtwert** (Topbar-Ring): Anteil Konzepte ≥ `angewendet`.
+- `conceptState.box/due` (Leitner) sind seit R9 **ruhende Felder**: sie werden
+  beim Lösen von Aufgaben weiter gepflegt, aber kein Screen wertet sie mehr
+  aus (der Trainings-Screen ist entfallen; Auffrisch-Karten leben im
+  Workspace). Nichts wird gelöscht — Regel 4.
 
 ### 2.3 Schreib-Zeitpunkte (wer schreibt wann)
 
 | Ereignis | Schreibt |
 |---|---|
-| Onboarding abgeschlossen | `settings` (persona, depth, onboardingDone) |
-| Schritt betreten | `projectProgress.currentStep` (+ `startedAt` beim ersten) |
+| Schritt betreten | `projectProgress.currentStep` (+ `startedAt` beim ersten); `settings.activeProject` |
+| Projekt im Wechsler gewählt | `settings.activeProject` |
 | Aufgabe gelöst/versucht | `taskState`; ggf. `conceptState` (Status/Box gem. `LERNMODELL.md` §3, §7.4) |
-| Schritt abgeschlossen | `projectProgress.stepsDone`, `maxStepReached`; `conceptState.status` → `gesehen` für `introduces` |
+| Schritt abgeschlossen | `projectProgress.stepsDone` (+ `maxStepReached`, deprecated mitgeschrieben); `conceptState.status` → `gesehen` für `introduces` |
 | Auffrisch-Karte gezeigt | `conceptState.refreshShown` (pro Projekt einmal) |
-| Meilenstein erreicht | `projectProgress.completedAt`; `builds`-Eintrag |
+| Meilenstein erledigt (`kind: meilenstein`) | `projectProgress.completedAt`; `builds`-Eintrag über den STL-Export |
 | Rechner „=" | `calcHistory` (Ring) |
-| Trainings-Aufgabe | `conceptState.box/due/status` |
 
 ---
 
@@ -133,4 +140,5 @@ Regeln:
 - Quota-Fehler beim Schreiben → Warnkarte mit Link auf die Einstellungen
   (Export empfehlen). Die App bleibt benutzbar; nur Persistenz pausiert.
 - „Alles löschen" (Einstellungen): zweistufig (Bestätigung + Tipp-Wort
-  „LÖSCHEN"), löscht alle Stores und setzt auf Onboarding zurück.
+  „LÖSCHEN"), löscht alle Stores und führt zurück auf die Projektkarte
+  (frischer Stand, nur die Wurzel-Schritte frei).

@@ -134,12 +134,13 @@ export async function enterStep(projectId: string, stepIndex: number) {
   });
 }
 
-/** Schritt abgeschlossen: stepsDone + Konzepte des Schritts auf `gesehen`. */
+/** Schritt abgeschlossen: stepsDone + Konzepte des Schritts auf `gesehen`.
+    `isMilestone` = der Meilenstein-Schritt (Senke des Baums) → completedAt. */
 export async function completeStep(
   projectId: string,
   stepId: string,
   introducedConcepts: string[],
-  isLast: boolean,
+  isMilestone: boolean,
 ) {
   await write(async (db) => {
     const prev = (await db.get('projectProgress', projectId)) as ProjectProgress | undefined;
@@ -150,7 +151,7 @@ export async function completeStep(
       startedAt: nowIso(),
     };
     if (!next.stepsDone.includes(stepId)) next.stepsDone.push(stepId);
-    if (isLast) next.completedAt ??= nowIso();
+    if (isMilestone) next.completedAt ??= nowIso();
     await db.put('projectProgress', next, projectId);
 
     for (const conceptId of introducedConcepts) {
@@ -226,19 +227,6 @@ export async function getConceptStates(): Promise<Record<string, ConceptStateEnt
   return out;
 }
 
-/** Trainings-Ausgang: Erfolg Box+1, Fehlversuch/Hilfe Box−1 (LERNMODELL §3.1, §6). */
-export async function applyTrainingOutcome(conceptId: string, success: boolean) {
-  await write(async (db) => {
-    const state = await readConcept(db, conceptId);
-    const box = Math.min(5, Math.max(1, state.box + (success ? 1 : -1))) as ConceptStateEntry['box'];
-    state.box = box;
-    state.due = success ? inDays(BOX_INTERVALS[box]) : inDays(1);
-    if (box >= 4) state.status = 'sicher';
-    else if (state.status === 'sicher') state.status = 'angewendet';
-    await db.put('conceptState', state, conceptId);
-  });
-}
-
 /** Auffrisch-Karte wurde gezeigt (pro Konzept und Projekt nur einmal). */
 export async function markRefreshShown(conceptId: string, projectId: string) {
   await write(async (db) => {
@@ -246,15 +234,6 @@ export async function markRefreshShown(conceptId: string, projectId: string) {
     if (!state.refreshShown.includes(projectId)) state.refreshShown.push(projectId);
     await db.put('conceptState', state, conceptId);
   });
-}
-
-/** Fällige Konzepte: due erreicht und mindestens `angewendet` (DATENMODELL §2.2). */
-export function dueConcepts(states: Record<string, ConceptStateEntry>): string[] {
-  const today = nowIso();
-  return Object.entries(states)
-    .filter(([, s]) => s.due !== null && s.due <= today && s.status !== 'neu' && s.status !== 'gesehen')
-    .sort(([, a], [, b]) => (a.due! < b.due! ? -1 : 1))
-    .map(([id]) => id);
 }
 
 // ── calcHistory (Ring, max. 50) ──────────────────────────────────────────────

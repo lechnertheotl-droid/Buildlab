@@ -1,7 +1,9 @@
 # SCREENS.md — Informationsarchitektur, Screens & Interaktions-Muster
 
-> Leitsatz: **Zeige nur das Nötige.** Jeder Screen hat genau eine Hauptaufgabe;
-> Tiefe liegt hinter Antippen/Aufklappen (progressive disclosure).
+> Leitsatz: **Zeige nur das Nötige.** Die App hat genau einen Hub — die
+> **Projektkarte** (umgekehrter Aufgaben-Baum) — und sie ist der **einzige Weg
+> zu den Schritten**. Jeder Screen hat genau eine Hauptaufgabe; Tiefe liegt
+> hinter Antippen/Aufklappen (progressive disclosure).
 > Farben/Fonts/Motion aus `DESIGN.md` · Didaktik aus `LERNMODELL.md` ·
 > Persistenz aus `DATENMODELL.md`.
 
@@ -14,219 +16,143 @@ Host, auch GitHub Pages, ohne Server-Rewrites).
 
 | Route | Screen | Hauptaufgabe |
 |---|---|---|
-| `/onboarding` | Onboarding | Persona + Tiefe wählen, < 60 s |
-| `/` | Dashboard | „Weitermachen" mit einem Tipp |
-| `/karte` | Skill-Map | Wissensstand sehen, Lücken finden |
-| `/projekte` | Projektliste | Curriculum überblicken, Projekt wählen |
-| `/projekt/:id` | Projekt-Detail | Briefing lesen, starten/fortsetzen |
+| `/` | **Projektkarte** | der Aufgaben-Baum: sehen, wo man steht, Schritt öffnen |
 | `/projekt/:id/schritt/:n` | **Workspace** | lernen & bauen (80 % der Zeit) |
 | `/konzept/:id` | Konzept-Seite | ein Konzept in Ruhe verstehen |
-| `/werkstatt` | Werkstatt | gebaute Teile & Abschlüsse ansehen |
-| `/training` | Training | fällige Konzepte auffrischen |
 | `/einstellungen` | Einstellungen | Tiefe, Motion, Backup, Daten |
 
 **Redirect-Regeln:**
-- Root-Aufruf ohne `settings.onboardingDone` → `/onboarding`.
-- `/projekt/:id/schritt/:n` mit n > höchster erreichter Schritt + 1 → Redirect
-  auf den höchsten erlaubten Schritt (kein Vorspulen per URL).
+- `/projekt/:id` (alte Detail-Route) → `/` — die Projektkarte ist der Hub.
+- `/projekt/:id/schritt/:n` mit einem Schritt, der weder erledigt noch
+  freigeschaltet ist (`requires` ⊄ `stepsDone`, `src/dag.ts`) → Redirect auf
+  `/` — die Karte erklärt die Sperre. Kein Vorspulen per URL.
 - Unbekannte Route → freundliche 404-Karte („Hier ist nichts gezeichnet.") mit
-  Link zum Dashboard.
+  Link zur Projektkarte.
+
+Es gibt **kein Onboarding**: der Erststart landet direkt auf der Projektkarte
+des ersten Projekts — dort sind genau die Wurzel-Schritte frei, das *ist* der
+Einstieg. Erklärtiefe wird in den Einstellungen (und pro Text-Block) gewählt.
 
 ---
 
 ## 2. Globales Gerüst (alle Screens)
 
 ```
-┌────┬──────────────────────────────────────────────────┬──┐
-│    │  ‹ Getriebe · Schritt 4/8 „Achsabstand"   ◔ 50 % │  │ ← Topbar
-│ R  │ ┌──────────────────────────────────────────────┐ │ ▌│
-│ a  │ │                                              │ │ ▌│
-│ i  │ │                Screen-Inhalt                 │ │🧮│ ← Rechner-Lasche
-│ l  │ │                                              │ │ ▌│   (immer da)
-│    │ └──────────────────────────────────────────────┘ │ ▌│
-└────┴──────────────────────────────────────────────────┴──┘
+┌──────────────────────────────────────────────────────┬──┐
+│ Buildlab.  Projektkarte                    ◔ 50 %  ⚙ │  │ ← Topbar
+│ ┌──────────────────────────────────────────────────┐ │ ▌│
+│ │                                                  │ │ ▌│
+│ │                  Screen-Inhalt                   │ │🧮│ ← Rechner-Lasche
+│ │                                                  │ │ ▌│   (immer da)
+│ └──────────────────────────────────────────────────┘ │ ▌│
+└──────────────────────────────────────────────────────┴──┘
 ```
 
-- **Rail (links, schmal):** oben die Wordmark „Buildlab." (Display-Font,
-  Akzent-Punkt — der einzige Marken-Moment der Shell), darunter 5 Icons —
-  Start · Karte · Projekte · Werkstatt · Training. Aktiver Eintrag:
-  Akzent-Strich links + Akzent-Icon + Label in `--ink`. Ganz unten:
-  Zahnrad-Icon → Einstellungen.
-- **Topbar:** links Breadcrumb (max. 2 Ebenen: Bereich · Unterpunkt), rechts ein
-  Fortschrittsring (im Workspace: Projekt-Fortschritt; sonst: Gesamt-Mastery in %
-  aller Konzepte ≥ `angewendet`). Keine weiteren Knöpfe — Ausnahme: die
-  **Speicher-Warnung** (StatusBadge `warn`) erscheint nur bei Quota-Problemen
-  und öffnet einen Dialog mit „Sicherung exportieren"-CTA.
+Keine Rail, keine Bottom-Bar, keine Tab-Navigation — der Baum ist das Menü.
+
+- **Topbar:** links die Wordmark „Buildlab." (Display-Font, Akzent-Punkt — der
+  einzige Marken-Moment, zugleich **Heim-Anker** → `/`), daneben der Breadcrumb
+  (eine Ebene: Projektkarte · Projekt · Konzept · Einstellungen). Rechts der
+  **Mastery-Ring** (Gesamt-Mastery in % aller Konzepte ≥ `angewendet`, nur
+  ≥ 768 px) und das Zahnrad → Einstellungen. Die **Speicher-Warnung**
+  (StatusBadge `warn`) erscheint nur bei Quota-Problemen und öffnet einen
+  Dialog mit „Sicherung exportieren"-CTA.
 - **Rechner-Lasche:** vertikale Lasche am rechten Rand, auf jedem Screen —
   **sofort**, auch während der Verlauf noch lädt (der zeigt dann Skeleton-Zeilen).
-  Antippen/Ziehen = Rechner fährt als Drawer heraus (§12).
+  Antippen/Ziehen = Rechner fährt als Drawer heraus (§7).
 - **Zustands-Ebenen:** Jeder Screen hat Laden (`ScreenSkeleton`, layout-nah),
   Leer (`EmptyState`) und Fehler (Fehler-Karte „Hier hat sich etwas verklemmt"
   mit Neu-laden-Knopf; ErrorBoundary um den Outlet + Router-`errorElement`).
-  Die Shell rendert erst, wenn die Einstellungen geladen sind (kein
-  Dashboard-Blitzen vor der Onboarding-Weiche).
-- **Tastatur global:** `Tab`-Reihenfolge Rail → Topbar → Inhalt → Lasche.
+- **Tastatur global:** `Tab`-Reihenfolge Topbar → Inhalt → Lasche.
   Fokus-Ring nach `DESIGN.md`. `Esc` schließt das oberste Overlay
-  (Popover → Konzept-Panel → Rechner, in dieser Reihenfolge) und gibt den
-  Fokus an den Auslöser zurück.
-- **z-Leiter (mobil):** Bottom-Bar 40 · Rechner-Drawer/-Lasche 40 ·
-  Workspace-Schritt-Leiste 30 · Dialog-Overlay 50. Feste Leisten respektieren
-  `env(safe-area-inset-bottom)`.
+  (Popover → Gesperrt-Karte → Rechner) und gibt den Fokus an den Auslöser
+  zurück.
+- **z-Leiter (mobil):** Rechner-Drawer/-Lasche 40 · Workspace-Schritt-Leiste 30
+  · Dialog-Overlay 50. Feste Leisten respektieren `env(safe-area-inset-bottom)`.
 
-**Mobile (< 768 px):**
-- Rail → **Bottom-Bar** mit denselben 5 Icons (Tap-Targets ≥ 48 px), Einstellungen
-  wandern in die Topbar (Zahnrad rechts). Aktives Icon: Akzent-Tick an der
-  Oberkante.
-- **Topbar mobil = Breadcrumb + Zahnrad.** Der Fortschrittsring erscheint nur
-  ≥ 768 px — globaler Fortschritt ist mobil nicht aufgaben-relevant, die
-  Skill-Map zeigt ihn vollständig.
-- Rechner-Lasche → schwebende Lasche unten rechts, **über** der Bottom-Bar
-  **und** der fixen Schritt-Leiste des Workspace (≥ 12 px Abstand), damit
-  alle drei bedienbar bleiben.
+**Mobile (< 768 px):** identische Topbar (ohne Mastery-Ring). Die
+Rechner-Lasche schwebt unten rechts **über** der fixen Schritt-Leiste des
+Workspace (≥ 12 px Abstand).
 
 ---
 
-## 3. Onboarding `/onboarding`
+## 3. Projektkarte `/` — der umgekehrte Aufgaben-Baum
 
-Drei Schritte, gesamt unter 60 Sekunden, jederzeit überspringbar
-(„Erstmal umsehen →" = Dashboard mit Default `praxis`). Keine Registrierung,
-keine Einstufungstests — Einstufung passiert implizit über das Mastery-Modell.
+Das Zentrum der App. **Das fertige Produkt steht oben**, die ersten Schritte
+unten; Kanten zeigen, was wofür gebraucht wird. Man klettert von unten nach
+oben, bis das Produkt steht.
 
 ```
-Schritt 1/3 · Worauf hast du Lust?
-┌────────────┐ ┌────────────┐ ┌────────────┐
-│  Studium   │ │  Technik   │ │  Bauen /   │   ← drei Türen, isometrische
-│  verstehen │ │  / Azubi   │ │  Maker     │     Mini-Illustration je Tür
-└────────────┘ └────────────┘ └────────────┘
+  [⚙ Getriebe ✓◔] [⚖ Hebel ○]            ← Projekt-Wechsler (Chips)
+  ⚙ Stirnradgetriebe
+  „Baue ein Getriebe, das …"
+  ▓▓▓▓░░░░ 4/8 · ~20 min                  ← Fortschritt + Restzeit
 
-Schritt 2/3 · Wie soll Buildlab mit dir reden?
-[ verspielt ] [ praxis ] [ genau ]      ← vorbelegt aus Persona
-┌──────────────────────────────────────┐
-│ „Zwei Zahnräder, ein Tauschgeschäft: │  ← Live-Beispieltext wechselt
-│  Tempo gegen Kraft…"                 │    beim Umschalten (Motion `wechsel`)
-└──────────────────────────────────────┘
-
-Schritt 3/3 · Dein erstes Projekt
-┌──────────────────────────────────────┐
-│  ⚙ Stirnradgetriebe                  │  ← Empfehlung aus Persona
-│  Ein echtes Getriebe, am Ende        │    (LERNMODELL.md §9)
-│  3D-druckbar. ~45 min                │
-│            [ Los geht's → ]          │
-│  „lieber selbst aussuchen" → /projekte│
-└──────────────────────────────────────┘
+        ┌─────────────────────┐
+        │ ⚙  DAS ZIEL         │           ← Produkt-Platte (Meilenstein),
+        │    Finale frei!     │             gesperrt: gestrichelt
+        └──────────┬──────────┘             fertig: gefüllt + „Steht. ✓"
+              ┌────┴────┐
+          (Bauen)   (Wirkungsgrad)        ← Knoten: ✓ erledigt (gefüllt)
+              │          │                   ● frei (Akzent-Ring, antippbar)
+        (Achsabstand) (Drehzahl &…)          ┊ gesperrt (gestrichelt, blass)
+              └────┬─────┘
+             (Übersetzung)
+                   │
+            (Warum Zahnräder?)            ← Wurzel = Einstieg, unten
 ```
 
-Abschluss schreibt `settings.persona`, `settings.depth`,
-`settings.onboardingDone = true` und navigiert in den Workspace (Schritt 1) bzw.
-auf die Projektliste.
+- **Layout deterministisch** (`src/dag.ts › layoutTree`): Longest-Path-Layering
+  über `step.requires`, Meilenstein oben, Wurzeln unten; Reihenfolge in der
+  Ebene = Autorenreihenfolge + ein Barycenter-Durchlauf. Kein Force-Layout,
+  keine Physik — Determinismus schlägt Effekt.
+- **Knoten-Zustände** (nie Farbe allein): **erledigt** = gefüllter Akzent-Kreis
+  mit ✓ (antippbar → Schritt wieder ansehen) · **frei** = Ring in Akzent mit
+  Punkt (antippbar → Schritt öffnen) · **gesperrt** = gestrichelt, blasses
+  Label. Frisch freigeschaltete Knoten bekommen beim Rücksprung aus dem
+  Workspace einen Quittungs-Pop (`bl-quittung-pop`, Navigation-State).
+- **Gesperrt ist erklärt, nicht blockiert:** Tap auf einen gesperrten Knoten
+  öffnet eine Karte „Dafür brauchst du erst: …" mit den direkten
+  Voraussetzungen (✓/○ je Stand). Fokus springt auf die Karten-Überschrift,
+  `Esc`/„verstanden" gibt ihn an den Knoten zurück.
+- **Kanten:** erfüllte Voraussetzung = durchgezogene Akzent-Linie; offene =
+  gestrichelt, blass. S-Kurven von der Oberkante des unteren zum unteren Rand
+  des oberen Knotens.
+- **Produkt-Platte** (Meilenstein, ~3× Knotengröße): Projekt-Icon + „Das Ziel".
+  Gesperrt: gestrichelter Rahmen + Projekttitel. Frei: „Finale frei!".
+  Fertig: gefüllt, „Steht. ✓" — und oberhalb des Baums erscheint die
+  **Produkt-Karte**: Bau-Ergebnis, Abschlussdatum und **„STL laden"**
+  (kompiliert aus den gespeicherten Parametern neu, `src/lib/stl.ts`;
+  STL-Blobs werden nie gespeichert).
+- **Projekt-Wechsler:** Chips über dem Kopf (Icon · Titel · ✓ fertig / ◔
+  begonnen / ○ offen, `aria-pressed`). Tap merkt sich `settings.activeProject`.
+  Unerfüllte `recommendedAfter` zeigen beim aktiven Projekt einen Hinweis
+  („Empfohlen vorher: … — du kannst aber jederzeit hier loslegen") —
+  **Soft-Lock, nie Sperre.** Eine eigene Projektliste gibt es nicht.
+- **Scroll-Verhalten:** Der Baum ist hoch, nicht breit — eine Spalte, vertikal
+  scrollend (mobil wie Desktop, `max-w-2xl`). Beim Einstieg springt die
+  Ansicht zum untersten freien Knoten (Sprung, kein Smooth-Scroll —
+  reduced-motion-fest); ist das Projekt fertig, bleibt sie oben beim Produkt.
+- **A11y:** SVG mit `role="img"` + `<desc>` (Zustandsbilanz: „8 Schritte:
+  3 erledigt, 2 frei, 3 gesperrt …"); jeder Knoten `role="button"`,
+  `tabIndex=0`, expliziter Fokus-Kreis, `aria-label` mit Zustand und — bei
+  gesperrten — den Voraussetzungen.
+- **Motion:** Einstieg `einzeichnen` gestaffelt je Ebene (von unten nach
+  oben); Fortschrittsbalken `fuellen`; Gesperrt-Karte `gleiten`; alles
+  degradiert unter `bl-reduced-motion`.
 
 ---
 
-## 4. Dashboard `/`
-
-Dominanz auf **einer** Karte: weitermachen. Maximal drei Module, feste Ordnung.
-
-```
-┌──────────────────────────────────────────────────┐
-│  Weiter bei: Stirnradgetriebe · „Achsabstand"    │ ← Fortsetzen-Karte
-│  ▓▓▓▓▓░░░  Schritt 4 von 8 · noch ~20 min        │   (größtes Element)
-│                                    [ Weiter › ]  │
-└──────────────────────────────────────────────────┘
-  Auffrischen (3 fällig)        Als Nächstes
-  ┌────────────────┐            ┌──────────┐ ┌──────────┐
-  │ Drehmoment ·   │            │ ⚖ Welle  │ │ ⛁ Brücke │
-  │ Modul · Hebel  │            │ empfohlen│ │ ✓ fertig │
-  │ [ Üben → ]     │            └──────────┘ └──────────┘
-  └────────────────┘
-```
-
-- **Fortsetzen-Karte:** zuletzt aktives, nicht abgeschlossenes Projekt.
-  Restdauer = Summe `durationMin` der offenen Schritte (Orientierung, kein Timer).
-- **Auffrischen-Karte:** sichtbar, sobald mindestens 1 Konzept fällig ist (sonst ließe sich eine einzelne fällige Karte nie vom Dashboard aus abbauen)
-  (`LERNMODELL.md` §6); listet bis zu 3 Konzept-Namen.
-- **Als Nächstes:** bis zu 2 Empfehlungen nach der Regel aus `LERNMODELL.md` §9.
-- **Leerzustand** (nie etwas gestartet): Hero-Karte „Dein erstes Projekt" mit
-  Persona-Empfehlung + Link zur Projektliste. Keine leeren Modul-Hüllen.
-
----
-
-## 5. Projektliste `/projekte` & Projekt-Detail `/projekt/:id`
-
-### 5.1 Liste
-
-Vier Niveau-Sektionen (Überschrift + Hairline), darin Projektkarten:
-
-```
-┌─────────────────────────────┐
-│ ⚙  Stirnradgetriebe         │ ← Icon (Projekt-Metadatum)
-│ Niveau 2 · ~45 min · ●●○○○  │ ← Dauer + Schwierigkeit (5 Ticks)
-│ ▓▓▓░░░░░ begonnen           │ ← Statuszeile
-└─────────────────────────────┘
-```
-
-Status (genau einer): `empfohlen` (Akzent-Badge) · `offen` · `begonnen`
-(Mini-Fortschrittsbalken) · `fertig` (✓) · `Voraussetzung offen` (blass +
-Schloss-Symbol, **trotzdem antippbar** — Soft-Lock).
-
-**Mobil (< 768 px):** Schwierigkeits-Ticks (●●○○○) bleiben sichtbar, aber
-kompakt (10 px statt 12 px) — gleiche Informationsdichte wie Desktop, plus
-`aria-label` („Schwierigkeit 2 von 5").
-
-### 5.2 Detail (Briefing vor dem Start)
-
-```
-┌──────────────────────────────────────────────┐
-│ ⚙ Stirnradgetriebe                 Niveau 2  │
-│ [isometrische Illustration des Ergebnisses]  │
-│                                              │
-│ DEINE CHALLENGE                              │
-│ „Ein Getriebe, das die Motordrehzahl auf 1/3 │
-│ senkt — und das Drehmoment hebt."            │
-│                                              │
-│ Du lernst: ·Übersetzung· ·Modul· ·Achsabstand·│ ← Konzept-Chips (antippbar)
-│ Du baust:  2 Zahnräder + 2 Achsen (STL)      │
-│                                              │
-│ SCHRITTE                                     │
-│ ✓ 1 Warum Zahnräder?                         │
-│ ✓ 2 Die Übersetzung                          │
-│ ▸ 3 Modul & Teilkreis        ← aktueller     │
-│   4 Achsabstand …                            │
-│                                              │
-│              [ Fortsetzen → ]                │
-└──────────────────────────────────────────────┘
-```
-
-**Schrittliste = Disclosure:** sichtbar sind erledigte + aktueller + nächster
-Schritt (bei nicht begonnenem Projekt: die ersten drei); der Rest liegt hinter
-„alle n Schritte anzeigen". Nur zeigen, was gerade wichtig ist.
-
-**Soft-Lock-Verhalten** (Voraussetzungen aus `recommendedAfter` unerfüllt):
-Oberhalb des CTA erscheint ein Hinweiskasten:
-
-```
-┌ ⚠ Dir fehlen noch: ·Drehmoment· ·Hebelarm· ──────────┐
-│ 10 Minuten in „Hebel & Flaschenzug" — oder du legst   │
-│ direkt los und holst es unterwegs nach.               │
-│ [ Erst auffrischen ]        [ Trotzdem starten ]      │
-└───────────────────────────────────────────────────────┘
-```
-
-Der Hinweiskasten ist **semantisch warn** (linker `--warn`-Strich +
-StatusBadge „⚠ Voraussetzung offen" auf normaler Karte) — keine eigene
-Sonderfläche. „Erst auffrischen" öffnet die Konzept-Seite(n) bzw. das Training;
-„Trotzdem starten" startet normal — die Auffrisch-Karten (`LERNMODELL.md` §5)
-fangen Quereinsteiger im Workspace auf. **Es gibt keinen Hard-Lock.**
-Der Rest der Schrittliste klappt per `aufklappen` auf (Collapse, kein Sprung).
-
----
-
-## 6. Workspace `/projekt/:id/schritt/:n` — der wichtigste Screen
+## 4. Workspace `/projekt/:id/schritt/:n` — der wichtigste Screen
 
 Zwei Spalten: **lesen/entscheiden** links, **spielen/sehen** rechts.
 Es ist immer nur **der aktuelle Schritt** sichtbar, nie die ganze Lektion.
+Erreichbar **nur** über die Projektkarte; Deep-Links auf gesperrte Schritte
+leiten dorthin zurück.
 
 ```
-┌ Topbar: ‹ Getriebe · Schritt 4/8 „Achsabstand"          ◔ 50 % ┐
+┌ Topbar: Buildlab. · Projekt                              ◔ 50 % ┐
+│ ⚙ Getriebe · Schritt 4/8 „Achsabstand"                          │
 ┌── LEKTION (38 %) ──────────────┐┌── CANVAS (62 %, sticky) ─────┐
 │ ZIEL  Passen beide Räder       ││                              │
 │ zusammen?                      ││   [pseudo-3D: gear-pair]     │
@@ -238,17 +164,14 @@ Es ist immer nur **der aktuelle Schritt** sichtbar, nie die ganze Lektion.
 │ [ verspielt ][ praxis ][genau] ││   ──────────────────────────│
 │ Fließtext mit ·Chips·.         ││   a = 80,0 mm     ✓ baubar   │
 │ ▸ Theorie (zugeklappt)         │└──────────────────────────────┘
-│                                │
-│ a = m·(z₁+z₂)/2   ← Variablen  │
-│   antippbar                    │
 │ ── AUFGABE ──────────────────  │
 │ │ Stell m so ein, dass         │
 │ │ a = 80 mm wird.       ⟲ ✓ │  │ ← target-Task, gekoppelt
-│ ‹ Zurück   ● ● ● ◉ ○ ○ ○ ○   Weiter › │
+│ ‹ Projektkarte   4/8 erledigt   Weiter › │
 └────────────────────────────────┘
 ```
 
-### 6.1 Lektion (links)
+### 4.1 Lektion (links)
 
 Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
 
@@ -257,7 +180,7 @@ Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
   immer oben, ein Satz.
 - **Aufhänger** (`text.variant: hook`): Frage-Karte mit Akzent-Fragezeichen.
 - **Text:** Tiefen-Tabs (global vorbelegt, lokal überschreibbar,
-  `LERNMODELL.md` §4); Konzept-Chips antippbar (§11); volle Theorie zugeklappt
+  `LERNMODELL.md` §4); Konzept-Chips antippbar (§6); volle Theorie zugeklappt
   unter `▸ Theorie`.
 - **Auffrisch-Karte** (automatisch bei Quereinstieg, `LERNMODELL.md` §5):
   erscheint oberhalb des betroffenen Blocks, zuklappbar.
@@ -268,11 +191,16 @@ Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
 - **Aufgaben (`task`):** eingerückte Karte mit Status-Ecke (offen / ✓ / „mit
   Hilfe ✓"). Feedback dreistufig (`LERNMODELL.md` §7). Numerische Eingaben:
   Mono-Feld + ggf. Einheiten-Segmente (`unitChoices`).
-- **Navigation unten:** ‹ Zurück · Fortschrittspunkte (klickbar bis zum höchsten
-  erreichten Schritt; aktueller = ◉) · Weiter ›. „Weiter" deaktiviert, solange
-  Pflicht-Aufgaben offen sind (Tooltip erklärt das, sanftes Gating).
+- **Navigation unten (Hub-Modell):** links **„‹ Projektkarte"** (immer frei),
+  Mitte stilles Mono-Label „x/y erledigt", rechts **„Weiter ›"** — aktiv erst,
+  wenn der Schritt abgeschlossen ist (sanftes Gating, Tap auf den gesperrten
+  Knopf erklärt warum). „Weiter" führt zum **eindeutigen** nächsten freien
+  Schritt; öffnen sich mehrere Äste (oder ist der Meilenstein erledigt), heißt
+  der Knopf „Zur Projektkarte ›" — bei Verzweigungen entscheidet die Karte,
+  nicht der Knopf. Der Rücksprung trägt Navigation-State, damit die Karte
+  frisch freigeschaltete Knoten quittiert.
 
-### 6.2 Canvas (rechts, sticky)
+### 4.2 Canvas (rechts, sticky)
 
 - Zeigt den Block, den `step.canvas` benennt (Index), sonst den ersten
   `interactive`-/`build`-Block des Schritts. Hat ein Schritt keinen solchen
@@ -297,18 +225,18 @@ Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
   Vorschaufläche. **Fehler:** Karte „Das Modell mag diese Werte nicht — stell
   einen Parameter zurück." + Button „Standardwerte".
 
-### 6.3 Feedback-Momente
+### 4.3 Feedback-Momente
 
 - Aufgabe gelöst → `quittung` (180 ms) + Mono-Bestätigung („i = 3 ✓").
-- Schritt abgeschlossen → nächstes Bauteil „zeichnet sich ein" (`einzeichnen`,
-  400 ms, gestaffelt), Mono-Zeile „Schritt 4 ✓ · Achsabstand sitzt".
+- Schritt abgeschlossen → Mono-Zeile „Schritt 4 ✓ · Achsabstand sitzt";
+  zurück auf der Projektkarte quittieren die frisch freigeschalteten Knoten.
 - **Meilenstein-Schritt:** Engine verifiziert die Projekt-Challenge (Soll-Werte
   vs. gewählte Parameter, jede Anforderung als Zeile), dann Explosionsansicht
-  des Bauteils (`packages/iso/explode`, langsame Stagger-Animation), Werkstatt-
-  Eintrag wird geschrieben, Karte „Dein Getriebe steht in der Werkstatt →".
-  Kein Konfetti (Design-Sprache).
+  des Bauteils (`packages/iso/explode`, langsame Stagger-Animation), Karte
+  „Dein Bauteil wartet oben auf deiner Projektkarte." — dort übernimmt die
+  Produkt-Karte (§3) Ergebnis + STL. Kein Konfetti (Design-Sprache).
 
-### 6.4 Mobile-Workspace (< 768 px)
+### 4.4 Mobile-Workspace (< 768 px)
 
 ```
 ┌────────────────────────┐
@@ -319,8 +247,8 @@ Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
 │ [verspielt|praxis|genau]│
 │ Lektionstext …          │
 │ Aufgabe …               │
-│ ‹ Zurück  ●●◉○  Weiter ›│ ← fixe Leiste am unteren Rand,
-└────────────────────────┘   über der Bottom-Bar
+│ ‹ Projektkarte  4/8  Weiter › │ ← fixe Leiste am unteren Rand
+└────────────────────────┘
 ```
 
 - Canvas maximal 45 vh hoch, kollabierbar per Griff-Leiste (Doppel-Strich) auf
@@ -329,26 +257,23 @@ Reihenfolge der Blöcke = Reihenfolge im Content. Render-Regeln:
   per `wechsel` ein. Ab 768 px ist die Canvas immer offen (der Griff existiert
   nur mobil).
 - Subheader zeigt mobil nur „Schritt X/Y ‚Titel'" — Projekt-Icon und -Name
-  sind dort redundant (man kommt aus dem Projekt-Detail).
-- Schritt-Navigation ist eine **fixe Leiste** unten (nie von der Canvas
-  verdeckt, safe-area-bewusst); Swipe-Gesten sind Zusatz, nie einzige Bedienung.
-  Schritt-Punkte: sichtbar 14 px in 44-px-Knöpfen, aktueller Punkt skaliert
-  (1,25×) mit Akzent-Ring, erledigte Schritte tragen einen Lineal-Tick darunter.
+  sind dort redundant (man kommt von der Projektkarte).
+- Schritt-Navigation ist eine **fixe Leiste** am unteren Rand (nie von der
+  Canvas verdeckt, safe-area-bewusst).
 
-### 6.5 Tastatur im Workspace
+### 4.5 Tastatur im Workspace
 
-- `←`/`→`: Schritt zurück/vor (wenn erlaubt) — nur, wenn kein Eingabefeld
-  fokussiert ist.
+- `→`: zum eindeutigen nächsten Schritt (wenn der aktuelle abgeschlossen ist) —
+  nur, wenn kein Eingabefeld fokussiert ist. Zur Projektkarte führt der
+  Knopf links (Tab-erreichbar); lineares `←`-Blättern gibt es nicht mehr.
 - Slider: Pfeiltasten (nativer Range-Input), `Shift` = 10er-Schritte.
 - Popover/Panels: `Enter` öffnet, `Esc` schließt.
 
 ---
 
-## 7. Konzept-Seite `/konzept/:id`
+## 5. Konzept-Seite `/konzept/:id`
 
-Ruhige Lese-Seite, erreichbar aus jedem Popover („tiefer eintauchen →"). Aus dem
-Workspace heraus öffnet sie sich als **Overlay-Panel** (gleitet von rechts über
-die Lektion, `Esc`/‹ zurück), sonst als volle Seite — der Lernfluss reißt nie ab.
+Ruhige Lese-Seite, erreichbar aus jedem Popover („tiefer eintauchen →").
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -358,102 +283,21 @@ die Lektion, `Esc`/‹ zurück), sonst als volle Seite — der Lernfluss reißt 
 │                                              │
 │ FORMELN        i = z₂/z₁ · n₂ = n₁/i         │ ← Formula-Renderer, antippbar
 │ BAUT AUF       ·Zähnezahl· ·Drehmoment·      │ ← Kette nach oben (Links)
-│ KOMMT VOR IN   ⚙ Stirnradgetriebe (S. 2, 5)  │ ← aus content/_index.json
-│                ⛓ Antriebsstrang (S. 1)       │
-│                                              │
-│ ┌ JETZT ÜBEN ────────────────────────────┐   │ ← eine Aufgabe aus dem
-│ │ <task inline, gleiche Renderer>        │   │   Trainings-Pool, inline
-│ └────────────────────────────────────────┘   │
+│ KOMMT VOR IN   ⚙ Stirnradgetriebe            │ ← aus content/_index.json,
+│                ⛓ Antriebsstrang              │   verlinkt direkt den Schritt
 └──────────────────────────────────────────────┘
 ```
 
 „Kommt vor in" löst die Mehrdeutigkeit Konzept↔Projekt deterministisch: Quelle
 ist der vom Verifier generierte Index (`content/_index.json`), Reihenfolge =
-Einführung zuerst, dann Verwendungen.
+Einführung zuerst, dann Verwendungen. Die Einträge verlinken **direkt auf den
+Schritt**; ist er noch gesperrt, leitet der Workspace zur Projektkarte um —
+die erklärt die Sperre. Geübt wird in den Projekten selbst (Auffrisch-Karten,
+`LERNMODELL.md` §5/§6) — es gibt keinen separaten Übungs-Screen.
 
 ---
 
-## 8. Skill-Map `/karte`
-
-Der Concept-Graph als geschichtete Landkarte. **V1: statisches SVG-Layout** —
-Koordinaten handgepflegt in `content/skillmap.layout.json` (kein Force-Layout,
-keine Physik; Determinismus schlägt Effekt).
-
-```
-  STATIK            FESTIGKEIT          MASCHINENELEMENTE
-  (Kraft)───(Gleichgewicht)  (Spannung)   (Zahnrad)──(Modul)
-     │            │              │            │         │
-  (Hebelarm)──(Drehmoment)───────┴────────(Übersetzung)─┘
-                       └──── Kanten = prerequisites ────┘
-```
-
-- **Knoten-Zustände** (aus `conceptState`, Legende in einer zuklappbaren Ecke):
-  blass-gestrichelt (`neu`) · Ring (`gesehen`) · halbgefüllt (`angewendet`) ·
-  gefüllt in Akzent (`sicher`) · kleines „⟳"-Badge (fällig).
-- **Tap auf Knoten** → **Vorschau-Karte**: Name · Symbol · Mastery-Status ·
-  Kurztext (`short`) · Button „Konzept öffnen →". Voraussetzungen und
-  „kommt vor in" stehen vollständig auf der Konzept-Seite (§7) — die Karte
-  bleibt eine Vorschau, keine zweite Konzept-Seite. **Fokus:** beim Öffnen
-  springt der Fokus auf die Karten-Überschrift, `Esc`/„schließen" gibt ihn an
-  den Knoten zurück. Jeder Knoten hat einen expliziten Fokus-Kreis
-  (`:focus-visible`); das SVG trägt ein `<desc>` mit Gruppen + Zustandsbilanz.
-- Nur Knoten + Kanten, keine Texttapete; Beschriftung in Mono, 0.75 rem.
-- **Mobile:** keine 2D-Pan-Zoom-Fläche, sondern vertikal scrollende
-  Gruppen-Ebenen (eine Gruppe = eine Sektion, Kanten innerhalb der Sektion).
-- **Leerzustand** (alles `neu`): Karte „Deine Karte ist noch unbeschriftet —
-  das erste Projekt zeichnet die ersten Knoten ein."
-
----
-
-## 9. Werkstatt `/werkstatt`
-
-Das Portfolio: alles, was gebaut wurde.
-
-```
-GEBAUTE TEILE
-┌────────────┐ ┌────────────┐
-│ [iso-Bild] │ │ [iso-Bild] │   ← Vorschau aus gespeicherten Parametern
-│ Zahnrad z=20│ │ Zahnrad z=60│     (bei Bedarf neu kompiliert; STL-Blobs
-│ m=2 · ⌀40mm │ │ m=2 · ⌀120mm│     werden NICHT gespeichert — Parameter
-│ [STL] [öffnen]│ [STL] [öffnen]│   genügen, Regel „ein Modell = Wahrheit")
-└────────────┘ └────────────┘
-ABSCHLÜSSE
-┌──────────────────────────────────┐
-│ ✓ Stirnradgetriebe · 12.06.2026  │  ← „Laufzettel": Challenge erfüllt,
-│   i = 3,0 · a = 80 mm · 8/8      │     Kennwerte in Mono
-└──────────────────────────────────┘
-```
-
-- „STL" kompiliert aus den gespeicherten Parametern neu (WASM) und lädt herunter;
-  „öffnen" springt in den zugehörigen Bau-Schritt.
-- **Leerzustand:** „Noch nichts gebaut — das erste Zahnrad wartet."
-  + CTA zum empfohlenen Projekt.
-
----
-
-## 10. Training `/training`
-
-Karten-Stapel für fällige Konzepte (`LERNMODELL.md` §6).
-
-```
-Auffrischen · 3 von heute 7 · ·Drehmoment·
-┌──────────────────────────────────────┐
-│ <task inline — gleiche Renderer wie   │
-│  im Workspace, gleiche Feedback-Stufen>│
-└──────────────────────────────────────┘
-            [ überspringen ]
-```
-
-- Eine Aufgabe pro Karte; „überspringen" ohne Strafe (Konzept bleibt fällig).
-- Die Leitner-Box-Nummer ist interner Scheduler-Zustand und erscheint **nicht**
-  im UI.
-- Ende der Session: Abschluss-Karte „Heute gefestigt: …" mit Box-Tick-Leisten.
-- **Leerzustand:** „Nichts fällig. Dein Kopf ist auf Stand — bau lieber was."
-  + Link zum aktuellen Projekt.
-
----
-
-## 11. Antippen-erklärt-Popover (überall)
+## 6. Antippen-erklärt-Popover (überall)
 
 Jeder ·unterstrichene· Begriff und jede Formel-Variable:
 
@@ -465,7 +309,7 @@ Jeder ·unterstrichene· Begriff und jede Formel-Variable:
           │ Wellen-Mitten. Zu klein:     │ ← 1–2 Sätze (short)
           │ klemmt. Zu groß: klappert.   │
           │ ↳ baut auf: ·Teilkreis·      │ ← Voraussetzung (Link)
-          │ [ tiefer eintauchen → ]      │ ← Konzept-Seite (§7)
+          │ [ tiefer eintauchen → ]      │ ← Konzept-Seite (§5)
           └──────────────────────────────┘
 ```
 
@@ -480,7 +324,7 @@ Fokus an den Auslöser zurück (auch beim In-Formel-Antippen).
 
 ---
 
-## 12. Universal-Rechner (Drawer, global)
+## 7. Universal-Rechner (Drawer, global)
 
 Von jedem Screen über die Lasche rechts. Fährt als Drawer herein, **andockbar**
 (schiebt Inhalt) oder **schwebend** (frei beweglich).
@@ -523,7 +367,7 @@ Von jedem Screen über die Lasche rechts. Fährt als Drawer herein, **andockbar*
 
 ---
 
-## 13. Einstellungen `/einstellungen`
+## 8. Einstellungen `/einstellungen`
 
 ```
 ERKLÄRTIEFE        [ verspielt ][ praxis ][ genau ]
@@ -539,7 +383,8 @@ DATEN              [ Alles löschen ] → zweistufige Bestätigung mit Tipp-Wort
 ```
 
 Import validiert Format + Version (`DATENMODELL.md` §4), zeigt den Diff als
-Zusammenfassung und ersetzt transaktional — nie ein halber Import.
+Zusammenfassung und ersetzt transaktional — nie ein halber Import. „Alles
+löschen" führt zurück auf die Projektkarte (frischer Stand, Wurzeln frei).
 
 Import-Bestätigung und Lösch-Fluss laufen über das **Dialog-Primitiv**
 (DESIGN.md §4/§7): Fokus-Falle, `Esc` bricht ab, Fokus kehrt zum Auslöser
@@ -548,17 +393,20 @@ Tipp-Wort stimmt.
 
 ---
 
-## 14. Übergänge & Disclosure-Regeln (Zusammenfassung)
+## 9. Übergänge & Disclosure-Regeln (Zusammenfassung)
 
 - Tiefen-Umschalter wechselt Text **in place** (Cross-Fade `wechsel`, Scroll bleibt).
 - Slider → Canvas reagiert sofort (60 fps); Ergebniszahl zählt kurz hoch (`zaehlen`).
-- „tiefer eintauchen" gleitet als Panel über die Lektion — kein harter Seitenwechsel.
-- Schritt-Wechsel: Bauteil „zeichnet sich ein" (`einzeichnen`) — ein Moment,
-  kein Effekt-Feuerwerk.
-- Höhen-Expansionen (Canvas-Griff, Hinweis/Lösungsweg, Schrittlisten-Rest)
-  laufen über `aufklappen`; Drawer/Dialoge/Trainings-Karten über `gleiten`;
+- „tiefer eintauchen" öffnet die Konzept-Seite — der Weg zurück ist der
+  Browser-Zurück bzw. die Wordmark.
+- Workspace → Projektkarte: frisch freigeschaltete Knoten quittieren
+  (`quittung`-Pop); der Baum zeichnet sich beim Einstieg ebenenweise ein
+  (`einzeichnen`).
+- Höhen-Expansionen (Canvas-Griff, Hinweis/Lösungsweg) laufen über
+  `aufklappen`; Drawer/Dialoge/Gesperrt-Karten über `gleiten`;
   Fortschrittsbalken füllen beim ersten Rendern per `fuellen`; Skeletons
   tragen `schimmer`. Alles degradiert bei reduzierter Bewegung (DESIGN.md §8).
-- Disclosure: 1. Ein Screen, eine Aufgabe. 2. Nur der aktuelle Schritt.
-  3. Theorie zugeklappt. 4. Eine Interaktion pro Canvas. 5. Tiefe hinter
-  Antippen. 6. Werkzeuge auf Abruf. 7. Erklärtes wird verlinkt, nie wiederholt.
+- Disclosure: 1. Ein Hub, ein Weg zu den Aufgaben. 2. Ein Screen, eine
+  Aufgabe. 3. Nur der aktuelle Schritt. 4. Theorie zugeklappt. 5. Eine
+  Interaktion pro Canvas. 6. Tiefe hinter Antippen. 7. Werkzeuge auf Abruf.
+  8. Erklärtes wird verlinkt, nie wiederholt.

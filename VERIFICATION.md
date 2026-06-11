@@ -68,6 +68,21 @@ führt nacheinander aus (bricht beim ersten Fehler ab):
     (Konzept → { introducedIn, usedIn } mit Projekt/Schritt) deterministisch
     aus den `introduces`/`uses`-Feldern. Die Datei wird committet; Drift
     zwischen generiert und committet → Fehler.
+18. **requires-form** — `step.requires` ist alles-oder-nichts: entweder trägt
+    **kein** Schritt des Projekts das Feld (lineare Reihenfolge als Fallback)
+    oder **alle** (Wurzeln mit `[]`) — ein vergessenes Feld ist Fehler statt
+    stiller Wurzel. Unbekannte Schritt-IDs und Selbstbezug → Fehler.
+19. **requires-azyklisch** — der Schritt-Graph ist ein DAG (Kahn-Topo-Sort);
+    ein Zyklus → Fehler mit Nennung der beteiligten Schritte.
+20. **meilenstein-senke** — genau **eine** Senke, und sie ist der
+    `meilenstein`-Schritt; jeder Schritt ist transitiver `requires`-Vorfahre
+    des Meilensteins. Das Produkt oben im Baum ist die Konvergenz von allem —
+    sonst könnte `completedAt` feuern, während Schritte offen sind.
+21. **einführung-vor-verwendung** — DAG-bewusst und projekt-lokal: jedes im
+    Projekt eingeführte Konzept, das ein `text.uses` oder `task.concepts`
+    verwendet, ist im selben Schritt vorher (Blockindex) oder in einem
+    transitiven `requires`-Vorfahren eingeführt. Konzepte aus anderen
+    Projekten sind ausgenommen (Auffrisch-Karten decken den Quereinstieg ab).
 
 ## §3 Golden Tests — das Herz der Prüfungsgenauigkeit
 

@@ -1,35 +1,26 @@
 // src/router.tsx — HashRouter-Routen (SCREENS.md §1).
 
-import { createHashRouter } from 'react-router-dom';
+import { createHashRouter, Navigate } from 'react-router-dom';
 import AppShell from './shell/AppShell';
 import { RouteError } from './shell/RouteError';
-import Onboarding from './screens/Onboarding';
-import Dashboard from './screens/Dashboard';
-import SkillMap from './screens/SkillMap';
-import ProjectList from './screens/ProjectList';
-import ProjectDetail from './screens/ProjectDetail';
+import ProjectTree from './screens/ProjectTree';
 import Workspace from './screens/Workspace';
 import ConceptPage from './screens/ConceptPage';
-import Werkstatt from './screens/Werkstatt';
-import Training from './screens/Training';
 import Settings from './screens/Settings';
 import NotFound from './screens/NotFound';
 import { conceptById, projectById } from './content';
 
 export const router = createHashRouter([
-  { path: '/onboarding', element: <Onboarding /> },
   {
     path: '/',
     element: <AppShell />,
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <Dashboard />, handle: { crumb: 'Start' } },
-      { path: 'karte', element: <SkillMap />, handle: { crumb: 'Skill-Map' } },
-      { path: 'projekte', element: <ProjectList />, handle: { crumb: 'Projekte' } },
+      { index: true, element: <ProjectTree />, handle: { crumb: 'Projektkarte' } },
       {
+        // Alte Projektdetail-Route: die Projektkarte ist jetzt der Hub.
         path: 'projekt/:id',
-        element: <ProjectDetail />,
-        handle: { crumb: 'Projekte' },
+        element: <Navigate to="/" replace />,
       },
       {
         path: 'projekt/:id/schritt/:n',
@@ -48,8 +39,6 @@ export const router = createHashRouter([
         loader: ({ params }) => (params.id && conceptById.get(params.id)?.name) || 'Konzept',
         handle: { crumb: 'Konzept' },
       },
-      { path: 'werkstatt', element: <Werkstatt />, handle: { crumb: 'Werkstatt' } },
-      { path: 'training', element: <Training />, handle: { crumb: 'Training' } },
       { path: 'einstellungen', element: <Settings />, handle: { crumb: 'Einstellungen' } },
       { path: '*', element: <NotFound /> },
     ],

@@ -199,7 +199,7 @@ export default function Settings() {
               title={wipeWord !== 'LÖSCHEN' ? 'Tippe LÖSCHEN ins Feld' : undefined}
               onClick={async () => {
                 await wipeAll();
-                navigate('/onboarding');
+                navigate('/');
               }}
             >
               Endgültig löschen

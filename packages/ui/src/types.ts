@@ -162,6 +162,8 @@ export interface Step {
   title: string;
   goal: string;
   kind: StepKind;
+  /** Schritt-IDs, die vorher erledigt sein müssen (Projekt-Baum); ohne = lineare Reihenfolge. */
+  requires?: string[];
   /** Index des Blocks für die Canvas-Spalte (Default: erster interactive/build). */
   canvas?: number;
   estMinutes?: number;

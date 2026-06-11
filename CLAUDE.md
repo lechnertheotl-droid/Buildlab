@@ -71,7 +71,7 @@ Claude-Abo** (kein API-Key) erzeugt, geprüft und eingefroren — **nie live pro
 /packages/ui       Block-/Task-Renderer, iso-scene, Workspace
 /packages/cad      OpenSCAD-WASM-Pipeline (compile, STL, mesh→iso)
 /content           generierte, geprüfte Projekt-JSONs (eingefroren)
-                   + concepts/formulas/training/skillmap.layout/_index
+                   + concepts/formulas/_index
 /tools/verify      Selbstprüfungs-Harness + Fixtures (siehe VERIFICATION.md)
 /tools/eval.mjs    deterministische Formel-Auswertung (CLI)
 /cad               parametrische Modelle (.scad)
@@ -80,10 +80,15 @@ Claude-Abo** (kein API-Key) erzeugt, geprüft und eingefroren — **nie live pro
 
 ## Das Lernmodell (Kurzfassung — verbindlich in `LERNMODELL.md`)
 
+- **Die Projektkarte ist der einzige Weg zu den Schritten:** ein umgekehrter
+  Aufgaben-Baum pro Projekt (Produkt oben, Wurzel-Schritte unten;
+  `step.requires` = Kanten, `src/dag.ts` = Gating/Layout). Keine Doppelwege,
+  keine Parallel-Navigation.
 - **Lern-Loop je Schritt:** Aufhänger → Begreifen → Anwenden → Prüfen (Bauen).
-  `step.kind: lernen | bauen | meilenstein` — genau ein Meilenstein pro Projekt.
-- **Mastery je Konzept:** neu → gesehen → angewendet → sicher, mit Leitner-Boxen
-  und Trainings-Screen. Keine Punkte, keine Streaks, keine Strafen.
+  `step.kind: lernen | bauen | meilenstein` — genau ein Meilenstein pro
+  Projekt, im Baum die einzige Senke (jeder Schritt mündet in ihn).
+- **Mastery je Konzept:** neu → gesehen → angewendet → sicher (Leitner-Felder
+  ruhen seit R9). Keine Punkte, keine Streaks, keine Strafen.
 - **Antippen erklärt alles.** Jeder Fachbegriff und jede Formel-Variable ist
   antippbar → Popover (1–2 Sätze + Einheit) mit „tiefer eintauchen" zur
   Konzept-Seite. Begriffe leben in `content/concepts.json` (Concept-Graph mit

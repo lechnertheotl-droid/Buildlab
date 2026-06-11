@@ -55,9 +55,11 @@ Jeder Schritt deklariert seine Art im Content-Schema:
 - **`meilenstein`** — genau einer pro Projekt, immer der letzte Schritt. Inhalt:
   Challenge-Verifikation (die Engine prüft die Zielwerte des Projekts gegen die
   tatsächlich gewählten Parameter), Explosionsansicht des fertigen Bauteils,
-  Werkstatt-Eintrag, Zusammenfassung der gelernten Konzepte, ggf. Anleitung für
-  den realen Test („so druckst und testest du es"). Ein Projekt ohne
-  `meilenstein`-Schritt ist ein Verifier-**Fehler**.
+  Produkt-Karte oben auf der Projektkarte (Ergebnis + STL), Zusammenfassung der
+  gelernten Konzepte, ggf. Anleitung für den realen Test („so druckst und
+  testest du es"). Ein Projekt ohne `meilenstein`-Schritt ist ein
+  Verifier-**Fehler**; im Schritt-Graphen ist er die einzige Senke — jeder
+  Schritt mündet in ihn (Verifier-Regel 20).
 
 ### 2.2 Text-Varianten (`text.variant`)
 
@@ -75,11 +77,17 @@ Jeder Schritt deklariert seine Art im Content-Schema:
 - Ein Schritt gilt als **abgeschlossen**, wenn alle Pflicht-`task`-Blöcke gelöst
   sind (auch „gelöst mit Hilfe", siehe §7.4) und — bei `bauen`-Schritten — alle
   `constraints` erfüllt sind.
-- **Sanftes Gating:** „Weiter" ist erst aktiv, wenn der Schritt abgeschlossen ist.
-  Der deaktivierte Button erklärt sich selbst (Tooltip: „Noch eine Aufgabe offen —
-  sie ist direkt über mir."). Zurückblättern ist **immer** frei; Vorblättern bis
-  zum höchsten je erreichten Schritt ebenfalls (kein erneutes Lösen beim
-  Wiederholen).
+- **Freischaltung über den Schritt-Graphen:** Ein Schritt ist offen, sobald
+  alle seine `requires`-Schritte erledigt sind (`src/dag.ts`; ohne `requires`
+  gilt die lineare Reihenfolge). Das ist das Schritt-Gating innerhalb eines
+  Projekts — bewusst verbindlich, im Unterschied zum **Soft-Lock zwischen
+  Projekten** (`recommendedAfter`, nur Empfehlung, nie Sperre).
+- **Sanftes Gating im Schritt:** „Weiter" ist erst aktiv, wenn der Schritt
+  abgeschlossen ist. Der deaktivierte Button erklärt sich selbst (Tooltip:
+  „Noch eine Aufgabe offen — sie ist direkt über mir."). „Weiter" führt zum
+  **eindeutigen** nächsten Schritt; öffnen sich mehrere Äste, entscheidet die
+  Projektkarte. Erledigte Schritte bleiben über die Karte **immer** frei
+  wieder öffenbar (kein erneutes Lösen beim Wiederholen).
 - **Vertiefungsaufgaben** (`task.minDepth: "rigorous"`) zählen nie für den
   Abschluss. Sie erscheinen nur, wenn die Tiefen-Ebene „genau" aktiv ist, sind als
   „Vertiefung" gekennzeichnet und überspringbar.
@@ -97,7 +105,7 @@ Jedes Konzept aus `content/concepts.json` hat pro Lernendem einen Zustand
   angewendet ──(Leitner-Box ≥ 4)──▶ sicher
 ```
 
-| Zustand | Bedeutung | Darstellung (Skill-Map / Chips) |
+| Zustand | Bedeutung | Darstellung (Chips / Konzept-Seite) |
 |---|---|---|
 | `neu` | noch nie eingeführt | blasser Knoten, gestrichelter Rand |
 | `gesehen` | eingeführt, aber noch nicht selbst angewendet | Ring (Outline) |
@@ -115,19 +123,20 @@ Intervall:  1 Tag  3 Tage 7 Tage 16 Tage 35 Tage
 
 - Beim Übergang zu `angewendet` startet das Konzept in **Box 2** (das Projekt
   selbst war die erste Wiederholung).
-- **Erfolgreiche Trainings-Aufgabe** (1. Versuch, ohne Hilfe): Box +1 (max. 5),
-  neue Fälligkeit = heute + Intervall der neuen Box.
-- **Fehlversuch oder gelöst mit Hilfe:** Box −1 (min. 1), Fälligkeit = morgen.
-- `sicher` = Box ≥ 4. Fällt die Box später unter 4, wird der Zustand wieder
-  `angewendet` — das ist die **einzige** Regression, und sie passiert nur durch
-  tatsächliche Fehlversuche, nie durch bloßen Zeitablauf.
+- Hoch-/Runterstufen (Box ±1) gehörte zum entfallenen Trainings-Screen und ist
+  seit R9 **ruhend** (§3.2): die Felder werden gepflegt, ein künftiger
+  Wiederhol-Mechanismus im Baum kann nahtlos aufsetzen.
+- `sicher` = Box ≥ 4. Eine Regression passiert nur durch tatsächliche
+  Fehlversuche, nie durch bloßen Zeitablauf.
 
 ### 3.2 Fälligkeit ist eine Einladung, keine Strafe
 
-Ein überfälliges Konzept **regrediert nicht automatisch**. Es bekommt den Badge
-**„auffrischen"** (Skill-Map, Dashboard, Konzept-Seite) und wandert in den
-Trainings-Pool. Es gibt keine Streaks, keine Punkte, keinen Verfall — Vergessen
-ist normal, die App erinnert freundlich (vgl. `VOICE.md`).
+Ein überfälliges Konzept **regrediert nicht automatisch**. Es gibt keine
+Streaks, keine Punkte, keinen Verfall — Vergessen ist normal (vgl. `VOICE.md`).
+Seit dem Projektkarten-Umbau (R9) sind `box`/`due` **ruhende Felder**: sie
+werden beim Lösen von Aufgaben weiter gebucht (§3.1, §7.4), aber kein Screen
+wertet sie mehr aus — Wiederholung lebt in den Auffrisch-Karten der Projekte
+(§5, §6).
 
 ---
 
@@ -135,10 +144,9 @@ ist normal, die App erinnert freundlich (vgl. `VOICE.md`).
 
 Drei Ebenen, drei Stimmen (Definition in `VOICE.md`). Mechanik:
 
-1. **Globale Präferenz** (`settings.depth`): wird im Onboarding aus der Persona
-   vorbelegt — Maker → `verspielt`, Azubi/Technik → `praxis`, Studium → `praxis`
-   (mit Hinweis auf „genau" für Prüfungsvorbereitung). Jederzeit in den
-   Einstellungen änderbar.
+1. **Globale Präferenz** (`settings.depth`): startet auf `praxis` und ist
+   jederzeit in den Einstellungen änderbar (Beispieltexte je Ebene direkt
+   daneben).
 2. **Lokaler Umschalter** an jedem `text`-Block: überschreibt die globale Ebene
    **nur für diesen Block, nur für diese Session**. Der Umschalter zeigt die
    globale Ebene als ausgefüllten Tab, die lokale Abweichung als Outline-Tab —
@@ -177,24 +185,23 @@ nicht ausgesperrt, sondern unterwegs aufgefangen.
 
 ---
 
-## 6. Wiederholung: der Trainings-Modus
+## 6. Wiederholung: lebt in den Projekten
 
-**Screen `/training`** (Layout in `SCREENS.md` §10). Regeln:
+Einen separaten Trainings-Screen gibt es seit dem Projektkarten-Umbau (R9)
+nicht mehr — er war ein zweiter Weg zu Aufgaben, und der Baum ist der einzige.
+Wiederholung passiert dort, wo sie gebraucht wird:
 
-1. **Auswahl:** maximal 10 fällige Konzepte pro Session, sortiert nach
-   Überfälligkeit (am längsten fällig zuerst). Unter 3 fälligen Konzepten wirbt
-   das Dashboard nicht fürs Training (kein künstlicher Druck).
-2. **Aufgaben-Quellen** pro Konzept, in dieser Reihenfolge:
-   a. dedizierte Trainings-Pools `content/training/<gruppe>.json` (gleiche
-      `task`-Schemata wie im Projekt, ohne Projektkontext),
-   b. `task`-Blöcke aus bereits **abgeschlossenen** Projekten, die das Konzept in
-      `concepts` taggen.
-   Innerhalb einer Quelle wird zufällig gewählt; dieselbe Aufgabe kommt in einer
-   Session nicht zweimal.
-3. **Bewertung:** wie §3.1 (Box hoch/runter). Feedback-Stufen wie §7 — Training
-   ist kein Test, sondern Werkstatt.
-4. **Abschluss-Karte:** „Heute gefestigt: Drehmoment · Modul · Achsabstand" mit
-   den neuen Box-Ständen als Tick-Leiste. Kein Konfetti, keine Punkte.
+1. **Auffrisch-Karten im Workspace** (§5): Wer ein `uses`-Konzept noch nie
+   gesehen hat, bekommt es direkt am Block kurz erklärt — pro Konzept und
+   Projekt genau einmal.
+2. **Schritte wieder öffnen:** Erledigte Knoten der Projektkarte bleiben frei —
+   wer ein Konzept festigen will, baut den Schritt noch einmal durch.
+3. **Konzept-Seite** als ruhige Referenz (alle Tiefen, Formeln, Vorkommen mit
+   Sprung in den Schritt).
+
+Die Leitner-Buchung (§3.1) läuft im Hintergrund weiter; ein künftiger
+Wiederhol-Mechanismus **innerhalb** des Baums kann darauf aufsetzen, ohne dass
+Daten fehlen.
 
 ---
 
@@ -235,10 +242,10 @@ Ergebnis — alles aus `evaluateById`, nie hartkodiert). Microcopy im Ton von
 
 | Ausgang | Schritt-Fortschritt | Mastery |
 |---|---|---|
-| gelöst im 1. Versuch | ✓ | `angewendet` / Box +1 (im Training) |
+| gelöst im 1. Versuch | ✓ | `angewendet` (Box startet bei 2) |
 | gelöst im 2. Versuch | ✓ | `angewendet` (kein Box-Aufstieg) |
-| gelöst mit Hilfe (Stufe 2/3 genutzt oder ≥ 3 Versuche) | ✓ | kein Mastery-Effekt; im Training: Box −1 |
-| abgebrochen | ✗ (Schritt bleibt offen) | Box −1 nur im Training |
+| gelöst mit Hilfe (Stufe 2/3 genutzt oder ≥ 3 Versuche) | ✓ | kein Mastery-Effekt |
+| abgebrochen | ✗ (Schritt bleibt offen) | kein Effekt |
 
 Es gibt **keinen** Zustand „endgültig falsch". Jede Aufgabe ist beliebig oft
 wiederholbar; bei `numeric`-Aufgaben variiert der Renderer dafür nichts — die
@@ -280,31 +287,28 @@ Schritte mindestens 4 verschiedene Arten nutzen — Monotonie ist ein Review-Man
 
 ---
 
-## 9. Personas & Einstieg
+## 9. Einstieg ohne Onboarding
 
-Drei Türen im Onboarding, mit klar begrenzter Wirkung (keine getrennten Lehrpläne):
+Es gibt kein Onboarding und keine Personas mehr (seit R9): Der Erststart landet
+direkt auf der **Projektkarte** des ersten Projekts — dort sind genau die
+Wurzel-Schritte frei, und der Baum zeigt das Ziel oben. Das *ist* der Einstieg:
+ein Tap, und man lernt.
 
-| Persona | Tiefen-Vorbelegung | Empfohlener Start | Begründung |
-|---|---|---|---|
-| **Studium verstehen** | praxis (+ Hinweis auf „genau") | Fachwerkbrücke | Statik ist der Klausur-Klassiker |
-| **Technik / Azubi** | praxis | Hebel & Flaschenzug | Werkstatt-naher Einstieg, schnelle Erfolge |
-| **Bauen / Maker** | verspielt | Stirnradgetriebe | sofort druckbares Ergebnis |
-
-Nach dem ersten Projekt konvergieren alle: Die Empfehlung „Als Nächstes" auf dem
-Dashboard folgt für alle drei dem Abhängigkeitsgraphen aus `PROJECTS.md` (nächstes
-Projekt, dessen `recommendedAfter` erfüllt ist; bei mehreren Kandidaten das mit
-den meisten bereits `sicher`/`angewendet`-Konzepten). Die Persona wird danach nur
-noch für die Stimme der Empfehlungs-Microcopy genutzt.
+- Die **Erklärtiefe** startet auf „praxis" und ist jederzeit in den
+  Einstellungen (global) und am Text-Block (lokal) umstellbar (§4).
+- Zwischen Projekten führt der **Projekt-Wechsler** auf der Karte;
+  `recommendedAfter` aus `PROJECTS.md` erscheint dort als freundlicher
+  Hinweis („Empfohlen vorher: …") — Soft-Lock, nie Sperre.
 
 ---
 
 ## 10. Was dieses Modell bewusst NICHT enthält
 
-- **Keine Punkte, Level, Streaks, Ranglisten.** Das Artefakt und die wachsende
-  Skill-Map sind die Belohnung. (Entscheidung, kein Versäumnis.)
+- **Keine Punkte, Level, Streaks, Ranglisten.** Das Artefakt und der nach oben
+  wachsende Projekt-Baum sind die Belohnung. (Entscheidung, kein Versäumnis.)
 - **Keine adaptiven Aufgaben-Generatoren zur Laufzeit.** Content ist eingefroren
-  und geprüft; Adaptivität entsteht durch Auswahl (Training, Empfehlungen), nie
-  durch Live-Generierung.
+  und geprüft; Adaptivität entsteht durch Auswahl (Auffrisch-Karten,
+  Empfehlungen), nie durch Live-Generierung.
 - **Keine Bestrafung durch Verlust.** Nichts, was der Lernende erreicht hat, wird
   ihm je wieder weggenommen (einzige Ausnahme: Box-Abstieg durch echte
   Fehlversuche, §3.1).

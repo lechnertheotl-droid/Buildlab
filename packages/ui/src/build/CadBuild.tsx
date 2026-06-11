@@ -78,7 +78,7 @@ function mergeConfig(key: string, raw: unknown, defaults: Record<string, ParamCo
 
 export interface CadBuildProps {
   block: BuildBlock;
-  /** Wird beim erfolgreichen STL-Export gerufen (Werkstatt-Eintrag, SCREENS.md §9). */
+  /** Wird beim erfolgreichen STL-Export gerufen (Bau-Eintrag für den Produkt-Knoten der Projektkarte). */
   onExport?: (params: Record<string, number>, label: string) => void;
 }
 

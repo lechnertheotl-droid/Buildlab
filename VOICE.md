@@ -38,12 +38,12 @@ prüfungsgenau); `merksatz` ist auf allen Ebenen gleich (ein Satz, merkfähig);
 | Ort | Ton-Beispiel |
 |---|---|
 | Deaktivierter Weiter-Button | „Noch eine Aufgabe offen — sie ist direkt über mir." |
-| Leere Werkstatt | „Noch nichts gebaut — das erste Zahnrad wartet." |
-| Leeres Training | „Nichts fällig. Dein Kopf ist auf Stand — bau lieber was." |
-| Leere Skill-Map | „Deine Karte ist noch unbeschriftet — das erste Projekt zeichnet die ersten Knoten ein." |
+| Weiter-Button bei Verzweigung/Finale | „Zur Projektkarte ›" — bei mehreren offenen Ästen entscheidet die Karte. |
+| Gesperrter Baum-Knoten (Karte) | „Dafür brauchst du erst: ‚Modul & Teilkreis'." + [verstanden] |
+| Produkt-Platte | gesperrt: Projekttitel · frei: „Finale frei!" · fertig: „Steht. ✓" |
+| Wechsler-Hinweis (Soft-Lock) | „Empfohlen vorher: Hebel & Flaschenzug — du kannst aber jederzeit hier loslegen." |
 | WASM lädt | „Fräse läuft …" |
 | CAD-Fehler | „Das Modell mag diese Werte nicht — stell einen Parameter zurück." |
-| Soft-Lock-Hinweis | „Dir fehlen noch: … — 10 Minuten Auffrischen, oder du legst direkt los und holst es unterwegs nach." |
 | 404 | „Hier ist nichts gezeichnet." |
 | Speicher-Warnung (Badge) | „Konnte nicht speichern" |
 | Speicher-Dialog | „Dein Browser-Speicher scheint voll zu sein. Dein bisheriger Stand bleibt erhalten — exportier zur Sicherheit ein Backup." + [Sicherung exportieren] [später] |
@@ -72,8 +72,7 @@ erklärt freundlich, *warum* die Option verführerisch, aber falsch ist
 Hier ist der Weg:" + engine-gerechnete Rechnung.
 
 **Schritt fertig:** „Schritt 4 ✓ · Achsabstand sitzt."
-**Meilenstein:** „Steht. Dein Getriebe wartet in der Werkstatt."
-**Training-Abschluss:** „Heute gefestigt: Drehmoment · Modul · Achsabstand."
+**Meilenstein:** „Steht." — und: „Dein Bauteil wartet oben auf deiner Projektkarte."
 
 ## 6. Tabu
 

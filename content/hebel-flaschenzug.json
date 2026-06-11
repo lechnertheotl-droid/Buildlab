@@ -12,6 +12,7 @@
   "steps": [
     {
       "id": "was-ist-kraft",
+      "requires": [],
       "title": "Was ist eine Kraft?",
       "goal": "Ein Gefühl dafür bekommen, was eine Kraft ist und warum ihr Angriffspunkt zählt.",
       "kind": "lernen",
@@ -54,6 +55,7 @@
     },
     {
       "id": "hebelarm-drehmoment",
+      "requires": ["was-ist-kraft"],
       "title": "Hebelarm & Drehmoment",
       "goal": "Die Drehwirkung einer Kraft mit M = F·r berechnen und gezielt einstellen.",
       "kind": "lernen",
@@ -109,6 +111,7 @@
     },
     {
       "id": "hebelgesetz",
+      "requires": ["hebelarm-drehmoment"],
       "title": "Das Hebelgesetz",
       "goal": "Mit dem Hebelgesetz F₁·r₁ = F₂·r₂ fehlende Kräfte berechnen.",
       "kind": "lernen",
@@ -151,6 +154,7 @@
     },
     {
       "id": "rollen-fest-lose",
+      "requires": ["hebelgesetz"],
       "title": "Rollen: fest & lose",
       "goal": "Verstehen, wie Rollen die Last auf mehrere Seilstränge verteilen.",
       "kind": "lernen",
@@ -196,6 +200,7 @@
     },
     {
       "id": "wirkungsgrad-in-echt",
+      "requires": ["rollen-fest-lose"],
       "title": "Wirkungsgrad in echt",
       "goal": "Einschätzen, wo im realen Flaschenzug Kraft verloren geht.",
       "kind": "lernen",
@@ -241,6 +246,7 @@
     },
     {
       "id": "auslegung",
+      "requires": ["rollen-fest-lose"],
       "title": "Deine Auslegung",
       "goal": "Die Strangzahl n so wählen, dass die Challenge-Zugkraft erreicht wird.",
       "kind": "lernen",
@@ -296,6 +302,7 @@
     },
     {
       "id": "rolle-bauen",
+      "requires": ["auslegung"],
       "title": "Deine Umlenkrolle drucken",
       "goal": "Eine passende Umlenkrolle parametrisieren, beide Anforderungen erfüllen und als STL exportieren.",
       "kind": "bauen",
@@ -369,6 +376,7 @@
     },
     {
       "id": "meilenstein",
+      "requires": ["rolle-bauen", "wirkungsgrad-in-echt"],
       "title": "Meilenstein: Challenge-Check",
       "goal": "Die Engine bestätigt deine Auslegung — und dein Flaschenzug wandert in die Werkstatt.",
       "kind": "meilenstein",

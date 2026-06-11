@@ -233,11 +233,13 @@ describe('TaskView (9 Aufgabenarten)', () => {
 describe('WorkspaceStep (SCREENS.md §6)', () => {
   const baseProps = {
     project,
-    maxStepReached: 7,
+    doneCount: 0,
+    nextStepIndex: null,
     depth: 'practical' as const,
     seenConcepts: new Set<string>(),
     onTaskResult: () => {},
     onNavigate: () => {},
+    onExit: () => {},
     onStepComplete: () => {},
   };
 
@@ -293,11 +295,13 @@ describe('WorkspaceStep (SCREENS.md §6)', () => {
 describe('Projekt hebel-flaschenzug (R7-Content)', () => {
   const baseProps = {
     project: hebel,
-    maxStepReached: 7,
+    doneCount: 0,
+    nextStepIndex: null,
     depth: 'practical' as const,
     seenConcepts: new Set<string>(),
     onTaskResult: () => {},
     onNavigate: () => {},
+    onExit: () => {},
     onStepComplete: () => {},
   };
 
@@ -434,12 +438,14 @@ describe('Meilenstein (SCREENS.md §6.3)', () => {
       <WorkspaceStep
         project={project}
         stepIndex={msIndex}
-        maxStepReached={project.steps.length - 1}
+        doneCount={project.steps.length - 1}
+        nextStepIndex={null}
         depth="practical"
         seenConcepts={new Set<string>()}
         taskStates={taskStates}
         onTaskResult={() => {}}
         onNavigate={() => {}}
+        onExit={() => {}}
         onStepComplete={() => {}}
       />,
     );
@@ -450,6 +456,6 @@ describe('Meilenstein (SCREENS.md §6.3)', () => {
     }
     expect(project.steps[msIndex].finaleParts?.length).toBeGreaterThan(0);
     // Projekt mit build-Block → Bauteil-Satz; ohne → Abschluss-Satz.
-    expect(html).toContain('Dein Bauteil wartet in der Werkstatt.');
+    expect(html).toContain('Dein Bauteil wartet oben auf deiner Projektkarte.');
   });
 });

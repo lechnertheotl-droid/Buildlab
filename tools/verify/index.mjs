@@ -14,7 +14,7 @@ import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { checkUnits } from '@buildlab/engine';
 import {
-  makeContext, makeReport, checkProject, checkTrainingPool, buildIndex,
+  makeContext, makeReport, checkProject, buildIndex,
 } from './lib.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -37,7 +37,6 @@ const ctx = makeContext({ formulas, concepts, registry });
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 ajv.addSchema(contentSchema);
 const validateProject = ajv.getSchema('content.schema.json');
-const validateTask = ajv.compile({ $ref: 'content.schema.json#/$defs/taskBlock' });
 const validateFormula = ajv.compile(formulaSchema);
 const validateConcept = ajv.compile(conceptSchema);
 
@@ -56,7 +55,7 @@ for (const c of concepts) {
 }
 
 // Nicht-Projekt-Dateien im content-Ordner (eigene Formate, kein Projekt-Schema).
-const NON_PROJECT = new Set(['formulas.json', 'concepts.json', 'skillmap.layout.json', '_index.json']);
+const NON_PROJECT = new Set(['formulas.json', 'concepts.json', '_index.json']);
 
 const projectFiles = readdirSync(p('content'), { withFileTypes: true })
   .filter((e) => e.isFile() && e.name.endsWith('.json') && !NON_PROJECT.has(e.name))
@@ -81,27 +80,6 @@ for (const f of formulas) {
 // ── 3–16) Projekt-Prüfungen (examples · ranges · tasks · constraints · loop) ─
 for (const { file, data } of projects) {
   checkProject(data, ctx, report, file);
-}
-
-// ── Trainings-Pools ──────────────────────────────────────────────────────────
-if (existsSync(p('content/training'))) {
-  for (const file of readdirSync(p('content/training')).filter((n) => n.endsWith('.json'))) {
-    const pool = readJson(path.join('content/training', file));
-    (pool.tasks ?? []).forEach((task, i) => {
-      if (!validateTask(task)) reportAjv(`content/training/${file} › tasks[${i}]`, validateTask);
-    });
-    checkTrainingPool(pool, ctx, report, file);
-  }
-}
-
-// ── Skill-Map-Layout: referenzierte Konzepte müssen existieren ───────────────
-if (existsSync(p('content/skillmap.layout.json'))) {
-  const layout = readJson('content/skillmap.layout.json');
-  for (const node of layout.nodes ?? []) {
-    if (!ctx.conceptIds.has(node.conceptId)) {
-      report.warn('content/skillmap.layout.json', `unbekanntes Konzept '${node.conceptId}'`);
-    }
-  }
 }
 
 // ── 15+17) Einführungs-Eindeutigkeit + Index generieren ──────────────────────

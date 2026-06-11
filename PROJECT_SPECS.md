@@ -17,6 +17,7 @@
 - Neue Konzepte:       hier ERSTMALS voll erklärt (sonst nur Chip + Popover)
 - Formeln:             Formel-Bibliothek-IDs + Kurzform
 - Mikro-Schritte:      je 5–15 min · kind · Ziel · Blöcke · Aufgabenart(en) · Canvas
+- Schritt-Graph:       requires je Schritt (Äste des Projekt-Baums; ohne Angabe linear)
 - Bau-Output:          CAD-Parameter → STL, Stückliste; build.constraints
 - Meilenstein:         was die Engine am Ende verifiziert (Challenge-Check)
 - Golden Tests:        Prüfaufgaben mit bekanntem Ergebnis (Pflicht!)
@@ -34,7 +35,11 @@
    `proof`-Paar, `error-find` genau eine falsche Zeile.
 5. Aufgabenarten nach Lernziel wählen (`LERNMODELL.md` §8); pro Projekt
    ≥ 4 verschiedene Arten, keine zwei gleiche Arten direkt hintereinander.
-6. Genau **ein** `meilenstein`-Schritt, immer zuletzt.
+6. Genau **ein** `meilenstein`-Schritt, immer zuletzt — im Schritt-Graphen die
+   einzige Senke: jeder Schritt mündet transitiv in ihn (Verifier-Regel 20).
+   `requires` ist alles-oder-nichts je Projekt (Wurzeln mit `[]`); ein Konzept
+   wird nur in Schritten verwendet, deren `requires`-Vorfahren es einführen
+   (Regel 21 — gilt auch für `task.concepts`).
 7. Bereits eingeführte Konzepte nur per `uses` referenzieren — nie neu erklären.
 8. Jedes `conceptsIntroduced` wird von ≥ 1 `task.concepts` geprüft.
 
@@ -63,7 +68,10 @@
   6. *Deinen Flaschenzug bauen* — bauen · build (Rollenzahl, Rollen-Ø, Haken) ·
      constraints: `G/n <= 8` (Zielzugkraft) und Baubarkeit der Rollengröße.
   7. *Meilenstein* — meilenstein · Engine prüft F ≤ 8 N bei G = 19,62 N ·
-     Explosionsansicht · Werkstatt-Eintrag · Druck- und Testanleitung.
+     Explosionsansicht · Produkt-Karte (Projektkarte) · Druck- und Testanleitung.
+- **Schritt-Graph** (Content): Kraft → Hebelarm → Hebelgesetz → Rollen, dann
+  zwei Äste {*Wirkungsgrad in echt* ∥ *Auslegung* → *Bauen*}; der Meilenstein
+  vereint beide.
 - **Bau-Output:** n, Rollen-Ø → Rollen/Gestell/Haken (OpenSCAD) → STL; Stückliste
   (2–4 Rollen, Gestell, Haken, Schnur als Zukauf).
 - **Meilenstein:** `F = G/n ≤ 8 N` und gewählte Geometrie baubar.
@@ -94,7 +102,7 @@
   7. *Deine Brücke* — bauen · build (Knotenkoordinaten-Presets, Stabquerschnitt) ·
      constraints: kein Stab über zulässiger Kraft.
   8. *Meilenstein* — meilenstein · Lasttest-Verifikation · Explosionsansicht ·
-     Werkstatt.
+     Produkt-Karte.
 - **Bau-Output:** Geometrie-Preset + Querschnitt → Knoten/Streben (STL) + Stabliste.
 - **Meilenstein:** alle |Stabkräfte| < zulässig bei F = 49,05 N mittig.
 - **Golden Tests:** F_A=F/2 mit F=50 → 25 N (vorhanden) · symmetrisches
@@ -134,7 +142,11 @@
      constraints: `abs(z2/z1 - 3)/3 <= 0.05` (i trifft Ziel ±5 %) und
      `m*(z1+z2)/2 <= 90` (passt in die Kiste) · Stückliste (2 Räder, 2 Achsen).
   8. *Meilenstein* — meilenstein · Engine verifiziert i, a, M₂ gegen die
-     Challenge · Explosionsansicht · Werkstatt-Eintrag · Druck-/Testanleitung.
+     Challenge · Explosionsansicht · Produkt-Karte (Projektkarte) · Druck-/Testanleitung.
+- **Schritt-Graph** (Content): Warum → Übersetzung, dann zwei Stränge
+  {Geometrie: *Modul/Teilkreis* → *Achsabstand* → *Bauen* ∥ Kinetik:
+  *Drehzahl/Drehmoment* → *Wirkungsgrad*, das zusätzlich *Modul/Teilkreis*
+  braucht (Match-Aufgabe prüft den Modul)}; der Meilenstein vereint beide.
 - **Bau-Output:** z₁, z₂, m → parametrisches Zahnradpaar (`cad/gear.scad`) → STL.
 - **Meilenstein:** |i−3|/3 ≤ 5 % · a baubar (≤ 90 mm) · M₂ = M₁·i·η ≥ 29 N·m (η=0,97).
 - **Golden Tests:** z₁=20,z₂=60 → i=3 · m=2,z=20 → d=40 mm · (20,60,m=2) → a=80 mm ·
@@ -169,7 +181,7 @@
   8. *Flug simulieren* — lernen · `flight-sim` (RK4: h(t), v_max, Apogäum) ·
      task `steps` (Impuls → Brennschluss-Geschwindigkeit grob).
   9. *Meilenstein* — meilenstein · Engine prüft Stabilität ∧ Apogäum ≥ 100 m ·
-     Explosionsansicht · Werkstatt · Sicherheits- und Startplatz-Hinweise.
+     Explosionsansicht · Produkt-Karte · Sicherheits- und Startplatz-Hinweise.
 - **Bau-Output:** Parameter → parametrisches Modell (Rohr/Nase/Finnen) → STL;
   Stückliste (+ Motor/Zündung als Zukauf, Sicherheitshinweis).
 - **Meilenstein:** Stabilitätsmaß ∈ [1, 2] Kaliber **und** Apogäum ≥ 100 m.

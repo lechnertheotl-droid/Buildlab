@@ -22,7 +22,10 @@ import type { Block, Layer, Project, Step, TaskResult } from '../types';
 export interface WorkspaceStepProps {
   project: Project;
   stepIndex: number;
-  maxStepReached: number;
+  /** Anzahl erledigter Schritte (Fußleisten-Label „x/y erledigt"). */
+  doneCount: number;
+  /** Eindeutiger nächster Schritt (src/dag.ts) — null: zurück zur Projektkarte. */
+  nextStepIndex: number | null;
   depth: Layer;
   /** Aufgaben-Zustände des Schritts, Key = Block-Index. */
   taskStates: Record<number, TaskResult>;
@@ -32,6 +35,8 @@ export interface WorkspaceStepProps {
   refreshShown?: Set<string>;
   onTaskResult: (blockIndex: number, result: TaskResult) => void;
   onNavigate: (stepIndex: number) => void;
+  /** Zurück zur Projektkarte — dem einzigen Weg zu den Schritten. */
+  onExit: () => void;
   onStepComplete: (stepIndex: number) => void;
   onMilestone?: () => void;
   onOpenConcept?: (conceptId: string) => void;
@@ -165,7 +170,7 @@ function FinaleDisc({ cx, bottomY, r, h, color }: { cx: number; bottomY: number;
 function MilestoneFinale({ project }: { project: Project }) {
   const [factor, setFactor] = useState(0);
   // Labels aus dem Meilenstein-Step; ohne finaleParts bleibt das Finale
-  // unbeschriftet (keine erfundenen Teilenamen). Werkstatt-Satz je nachdem,
+  // unbeschriftet (keine erfundenen Teilenamen). Abschluss-Satz je nachdem,
   // ob das Projekt wirklich etwas baut (build-Block) oder nur abschließt.
   const labels = project.steps.find((s) => s.kind === 'meilenstein')?.finaleParts ?? [];
   const hasBuild = project.steps.some((s) => s.blocks.some((b) => b.type === 'build'));
@@ -231,7 +236,9 @@ function MilestoneFinale({ project }: { project: Project }) {
       <p className="mt-3 font-display text-display-sm text-ink-strong">Steht.</p>
       <p className="mt-1 font-display text-lg text-ink">{project.buildResult}</p>
       <p className="mt-1 font-mono text-sm text-ink-2">
-        {hasBuild ? 'Dein Bauteil wartet in der Werkstatt.' : 'Dein Abschluss steht in der Werkstatt.'}
+        {hasBuild
+          ? 'Dein Bauteil wartet oben auf deiner Projektkarte.'
+          : 'Dein Abschluss leuchtet oben auf deiner Projektkarte.'}
       </p>
     </div>
   );
@@ -240,13 +247,15 @@ function MilestoneFinale({ project }: { project: Project }) {
 export function WorkspaceStep({
   project,
   stepIndex,
-  maxStepReached,
+  doneCount,
+  nextStepIndex,
   depth,
   taskStates,
   seenConcepts,
   refreshShown,
   onTaskResult,
   onNavigate,
+  onExit,
   onStepComplete,
   onMilestone,
   onOpenConcept,
@@ -282,8 +291,9 @@ export function WorkspaceStep({
   const hasBuildBlock = step.blocks.some((b) => b.type === 'build');
   const stepDone =
     requiredTasks.every((i) => taskStates[i]?.solved) && (!hasBuildBlock || buildOk === true);
-  const isLastStep = stepIndex >= project.steps.length - 1;
-  const weiterFrei = stepDone && !isLastStep;
+  // Weiter führt zum eindeutigen nächsten Schritt — sonst zurück zur
+  // Projektkarte (sie ist der Hub; bei parallelen Ästen entscheidet sie).
+  const weiterZurKarte = stepDone && nextStepIndex === null;
   const lockHintText =
     hasBuildBlock && buildOk !== true
       ? 'Erst alle Anforderungen in der Bau-Ansicht erfüllen.'
@@ -315,19 +325,20 @@ export function WorkspaceStep({
   // Canvas-Kontext beim Schrittwechsel räumen (target-Kopplung).
   useEffect(() => () => clearCanvasInputs(), [stepIndex, clearCanvasInputs]);
 
-  // Tastatur ←/→ (SCREENS.md §6.5) — nur ohne fokussiertes Eingabefeld.
+  // Tastatur → (SCREENS.md §6.5) — nur ohne fokussiertes Eingabefeld.
+  // Lineares ←-Blättern entfällt: die Projektkarte ist der einzige Weg
+  // zwischen den Schritten; → folgt nur dem eindeutigen nächsten Schritt.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return;
-      if (e.key === 'ArrowLeft' && stepIndex > 0) onNavigate(stepIndex - 1);
-      if (e.key === 'ArrowRight' && stepDone && stepIndex < project.steps.length - 1) {
-        onNavigate(stepIndex + 1);
+      if (e.key === 'ArrowRight' && stepDone && nextStepIndex !== null) {
+        onNavigate(nextStepIndex);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [stepIndex, stepDone, project.steps.length]);
+  }, [stepDone, nextStepIndex]);
 
   // Auffrisch-Karten je Block vorbereiten (ungesehene uses-Konzepte).
   const refreshFor = (block: Block): string[] => {
@@ -481,72 +492,44 @@ export function WorkspaceStep({
             )}
           </div>
 
-          {/* Navigation: mobil fixe Leiste über der Bottom-Bar (SCREENS.md §6.4),
+          {/* Navigation (Hub-Modell): die Projektkarte ist der einzige Weg zu
+              den Schritten — links zurück zum Baum, rechts der eindeutige
+              nächste Schritt (oder ebenfalls die Karte). Mobil fixe Leiste,
               Desktop inline am Lektion-Ende. */}
           <nav
-            aria-label="Schritte"
-            className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 flex items-center gap-2 border-t border-black/10 bg-paper-2 px-3 py-2 md:static md:mt-8 md:gap-3 md:border-t md:bg-transparent md:px-0 md:pt-4"
+            aria-label="Schritt-Navigation"
+            className="fixed bottom-0 left-0 right-0 z-30 flex items-center gap-2 border-t border-black/10 bg-paper-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:static md:mt-8 md:gap-3 md:border-t md:bg-transparent md:px-0 md:pb-0 md:pt-4"
           >
             <button
               type="button"
-              onClick={() => onNavigate(stepIndex - 1)}
-              disabled={stepIndex === 0}
+              onClick={onExit}
               className={`${buttonClass({ variant: 'secondary' })} whitespace-nowrap !px-2.5 md:!px-4`}
             >
-              ‹ Zurück
+              ‹ Projektkarte
             </button>
-            <div className="flex flex-1 items-center justify-center md:gap-1" role="list">
-              {project.steps.map((s, i) => {
-                const reachable = i <= maxStepReached;
-                const current = i === stepIndex;
-                const done = i < maxStepReached;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    role="listitem"
-                    aria-label={`Schritt ${i + 1}: ${s.title}${current ? ' (aktuell)' : ''}`}
-                    aria-current={current ? 'step' : undefined}
-                    disabled={!reachable}
-                    onClick={() => onNavigate(i)}
-                    className={`group relative flex h-11 w-5 items-center justify-center rounded ${focusRing} disabled:cursor-not-allowed md:w-7`}
-                  >
-                    <span
-                      aria-hidden
-                      className={`block h-3.5 w-3.5 rounded-full transition-[transform,background-color] duration-200 ${
-                        current
-                          ? 'scale-125 bg-accent ring-2 ring-accent/30'
-                          : reachable
-                            ? 'bg-ink-faint/60 group-hover:bg-ink-2'
-                            : 'bg-paper-deep'
-                      }`}
-                    />
-                    {/* Lineal-Tick unter erledigten Schritten (DESIGN.md §3). */}
-                    {done && (
-                      <span aria-hidden className="absolute bottom-1.5 h-1 w-px bg-ink-faint" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <p className="flex-1 text-center font-mono text-xs text-ink-faint">
+              {doneCount}/{project.steps.length} erledigt
+            </p>
             {/* aria-disabled statt disabled: bleibt antippbar/fokussierbar, ein Tap
                 zeigt den Grund sichtbar an (title allein ist auf Touch unsichtbar, B-09). */}
             <button
               type="button"
-              aria-disabled={!weiterFrei}
+              aria-disabled={!stepDone}
               onClick={() => {
-                if (weiterFrei) {
-                  onNavigate(stepIndex + 1);
-                } else if (!isLastStep) {
+                if (!stepDone) {
                   setLockHint(lockHintText);
+                } else if (nextStepIndex !== null) {
+                  onNavigate(nextStepIndex);
+                } else {
+                  onExit();
                 }
               }}
               title={stepDone ? undefined : lockHintText}
               className={`${buttonClass()} whitespace-nowrap !px-2.5 md:!px-4 ${
-                weiterFrei ? '' : 'cursor-not-allowed opacity-40 active:translate-y-0'
+                stepDone ? '' : 'cursor-not-allowed opacity-40 active:translate-y-0'
               }`}
             >
-              Weiter ›
+              {weiterZurKarte ? 'Zur Projektkarte ›' : 'Weiter ›'}
             </button>
             {lockHint && (
               <p

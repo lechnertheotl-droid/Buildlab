@@ -6,16 +6,23 @@ export type Persona = 'studium' | 'azubi' | 'maker';
 export type ConceptStatus = 'neu' | 'gesehen' | 'angewendet' | 'sicher';
 
 export interface SettingsShape {
+  /** @deprecated Onboarding entfällt (R9) — wird toleriert, nie mehr geschrieben. */
   onboardingDone: boolean;
+  /** @deprecated Persona entfällt mit dem Onboarding (R9). */
   persona?: Persona;
   depth: Depth;
   reducedMotion: boolean;
+  /** Projekt, dessen Baum die Projektkarte zeigt (DATENMODELL.md §2.1). */
+  activeProject?: string;
   schemaVersion: number;
 }
 
 export interface ProjectProgress {
+  /** Zuletzt besuchter Schritt — nur Resume-Hinweis, kein Gating (R9). */
   currentStep: number;
+  /** @deprecated Lineares Gating (vor R9). Wird weiter geschrieben, nie gelesen — Backups bleiben formgleich. */
   maxStepReached: number;
+  /** Erledigte Schritt-IDs — die Wahrheit fürs DAG-Gating (src/dag.ts). */
   stepsDone: string[];
   startedAt: string;
   completedAt?: string;

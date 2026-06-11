@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BlockRenderer, SegmentedControl, buttonClass } from '@buildlab/ui';
+import { BlockRenderer, SegmentedControl } from '@buildlab/ui';
 import { conceptById, conceptIndex, projectById } from '../content';
 import { useConceptStates, useSettings } from '../db/repo';
 import type { Depth } from '../db/types';
@@ -39,8 +39,8 @@ export default function ConceptPage() {
     return (
       <div className="mx-auto max-w-2xl px-6 py-16 text-center">
         <p className="font-display text-xl">Hier ist nichts gezeichnet.</p>
-        <Link to="/karte" className="mt-4 inline-block min-h-11 content-center text-sm text-accent-ink underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-accent">
-          zur Skill-Map
+        <Link to="/" className="mt-4 inline-block min-h-11 content-center text-sm text-accent-ink underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-accent">
+          zur Projektkarte
         </Link>
       </div>
     );
@@ -121,10 +121,15 @@ export default function ConceptPage() {
           <ul className="space-y-1">
             {occurrences.map((r) => {
               const project = projectById.get(r.project);
+              // Direkt zum Schritt — ist er noch gesperrt, leitet der
+              // Workspace zur Projektkarte um (sie erklärt die Sperre).
+              const stepIndex = project?.steps.findIndex((s) => s.id === r.step) ?? -1;
+              const to =
+                stepIndex >= 0 ? `/projekt/${r.project}/schritt/${stepIndex + 1}` : '/';
               return (
                 <li key={r.project}>
                   <Link
-                    to={`/projekt/${r.project}`}
+                    to={to}
                     className="flex min-h-11 items-center gap-2 rounded px-2 outline-none hover:bg-paper-2 focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <span aria-hidden className="font-mono">{project?.icon}</span>
@@ -139,16 +144,6 @@ export default function ConceptPage() {
           </ul>
         </details>
       )}
-
-      <section aria-label="Jetzt üben" className="mt-8 rounded border border-black/10 bg-paper-2 p-4 shadow">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-ink-2">Jetzt üben</h2>
-        <p className="mt-2 text-sm text-ink-2">
-          Eine kurze Aufgabe zu „{concept.name}“ wartet im Training.
-        </p>
-        <Link to="/training" className={`mt-3 ${buttonClass({ variant: 'secondary' })}`}>
-          Üben →
-        </Link>
-      </section>
     </div>
   );
 }

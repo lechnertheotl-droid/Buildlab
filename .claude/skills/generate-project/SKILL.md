@@ -66,9 +66,14 @@ selbst**. Jede Zahl kommt aus der Engine.
      `single`/`multi`: jede falsche Option mit `why`; `target`: `proof.pass/fail`;
      `error-find`: genau eine falsche Zeile; `steps`: `$prev` für Folgewerte.
      Immer `concepts` (Mastery), `hint` (Stufe 2) und `explanation` (Stufe 3).
+   - **Schritt-Graph:** `requires` je Schritt nach der Spec autorisieren
+     (alles-oder-nichts: alle Schritte tragen das Feld, Wurzeln mit `[]`).
+     Der Meilenstein ist die einzige Senke; Konzepte nur in Schritten
+     verwenden, deren `requires`-Vorfahren sie einführen — gilt auch für
+     `task.concepts` (Verifier-Regeln 18–21).
 4. **Konzepte pflegen.** Für jedes neue Konzept ein Eintrag in
    `content/concepts.json` (id, name, short, **group**, prerequisites, ggf.
-   explanation/relatedFormulas) + Knoten in `content/skillmap.layout.json`.
+   explanation/relatedFormulas).
    Jedes `conceptsIntroduced` muss von ≥ 1 `task.concepts` geprüft werden.
 5. **Formeln pflegen.** Fehlt eine Formel: Formel-Objekt in
    `content/formulas.json` (latex, expr, result, variables mit

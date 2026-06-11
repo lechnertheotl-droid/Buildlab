@@ -23,6 +23,7 @@
   "steps": [
     {
       "id": "warum-zahnraeder",
+      "requires": [],
       "title": "Warum Zahnräder?",
       "goal": "Ein Gefühl dafür bekommen, wie zwei Räder Tempo gegen Kraft tauschen.",
       "kind": "lernen",
@@ -102,6 +103,7 @@
     },
     {
       "id": "uebersetzung",
+      "requires": ["warum-zahnraeder"],
       "title": "Die Übersetzung",
       "goal": "Die Übersetzung i aus den Zähnezahlen berechnen können.",
       "kind": "lernen",
@@ -214,6 +216,7 @@
     },
     {
       "id": "modul-teilkreis",
+      "requires": ["uebersetzung"],
       "title": "Modul & Teilkreis",
       "goal": "Verstehen, wie der Modul die Zahngröße und d = m·z die Radgröße bestimmt.",
       "kind": "lernen",
@@ -322,6 +325,7 @@
     },
     {
       "id": "achsabstand",
+      "requires": ["modul-teilkreis"],
       "title": "Der Achsabstand",
       "goal": "Prüfen, ob beide Räder zusammen ins Gehäuse passen.",
       "kind": "lernen",
@@ -422,6 +426,7 @@
     },
     {
       "id": "drehzahl-drehmoment",
+      "requires": ["uebersetzung"],
       "title": "Drehzahl & Drehmoment",
       "goal": "Aus i die Abtriebsdrehzahl und das Abtriebsdrehmoment berechnen.",
       "kind": "lernen",
@@ -520,6 +525,7 @@
     },
     {
       "id": "wirkungsgrad",
+      "requires": ["drehzahl-drehmoment", "modul-teilkreis"],
       "title": "Der Wirkungsgrad",
       "goal": "Einschätzen, wo Leistung verloren geht und was η praktisch bedeutet.",
       "kind": "lernen",
@@ -617,6 +623,7 @@
     },
     {
       "id": "getriebe-bauen",
+      "requires": ["achsabstand"],
       "title": "Dein Getriebe bauen",
       "goal": "Beide Räder parametrisieren, die Anforderungen erfüllen und als STL exportieren.",
       "kind": "bauen",
@@ -732,6 +739,7 @@
     },
     {
       "id": "meilenstein",
+      "requires": ["getriebe-bauen", "wirkungsgrad"],
       "title": "Meilenstein: Challenge-Check",
       "goal": "Die Engine bestätigt deine Auslegung – und dein Getriebe wandert in die Werkstatt.",
       "kind": "meilenstein",

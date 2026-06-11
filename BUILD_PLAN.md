@@ -115,7 +115,9 @@ STL-Download hinter Constraints; `pnpm verify` grün.
       bis dahin `draft: true`.
 - [ ] `modellrakete` — braucht `rocket-stability`, `flight-sim` (RK4 in Engine).
 - [ ] danach 3, 5–10, 12 gemäß `PROJECT_SPECS.md`.
-- [ ] Trainings-Pools je Skill-Map-Gruppe füllen.
+- Jedes neue Projekt autorisiert seinen Schritt-Graphen mit (`step.requires`,
+  siehe R9) — Verifier-Regeln 18–21 prüfen Form, Azyklik, Meilenstein-Senke
+  und Einführung-vor-Verwendung entlang der Äste.
 - [x] Aufgabenarten-Abdeckung: alle 9 Arten kommen im Content vor — `multi`
       (stirnradgetriebe „Die Übersetzung") und `order` (hebel-flaschenzug
       Bau-Schritt) ergänzt am 11.06.2026. (`fill` war ein Berichtsfehler —
@@ -127,10 +129,36 @@ STL-Download hinter Constraints; `pnpm verify` grün.
 `status: "implementiert"` haben.
 
 ## Phase R8 — Optional/später
-- Skill-Map V2 (pan/zoom, isometrische Landschaft). Blueprint-Dark-Mode.
+- Projektkarte V2 (pan/zoom bei großen Bäumen, isometrische Inszenierung).
+  Blueprint-Dark-Mode.
+- Wiederhol-Mechanismus im Baum (auf den ruhenden Leitner-Feldern aufsetzend,
+  `LERNMODELL.md` §6).
 - STEP-Export (serverseitig, OpenCASCADE). Onshape/Fusion-Brücke. Live-Tutor.
 - Sandbox-Projekt (erst ab ≥ 8 Live-Projekten).
-**Erst beginnen, wenn R0–R7 stabil sind.**
+**Erst beginnen, wenn R0–R7 + R9 stabil sind.**
+
+## Phase R9 — Projektkarten-Umbau ✅ (Juni 2026)
+**Ziel:** Der umgekehrte Aufgaben-Baum ist die einzige Ansicht, die zu den
+Schritten führt — alle Doppelwege und überflüssigen Screens entfallen.
+Löst die R5-Screens Dashboard, Projektliste, Projekt-Detail, Skill-Map,
+Werkstatt und Training auf (die Werkstatt-Funktion lebt im Produkt-Knoten
+der Projektkarte weiter); auch das Onboarding aus R3 entfällt.
+- [x] Schema: `step.requires` (alles-oder-nichts je Projekt) + Verifier-Regeln
+      18–21 mit Fixtures (`VERIFICATION.md` §2); `requires`-Graphen für
+      stirnradgetriebe (Geometrie- ∥ Kinetik-Ast) und hebel-flaschenzug.
+- [x] `src/dag.ts`: stepRequires/unlockedStepIds/nextStepIndex/layoutTree
+      (deterministisch, kein Force-Layout) + Tests.
+- [x] Workspace: DAG-Gating statt `maxStepReached`, Hub-Fußleiste
+      („‹ Projektkarte · x/y erledigt · Weiter ›"), Redirect gesperrter
+      Deep-Links auf `/`; `cadModel` aus dem build-Block.
+- [x] `src/screens/ProjectTree.tsx`: Baum-SVG (Produkt-Platte oben),
+      Gesperrt-Karte, Projekt-Wechsler-Chips, Produkt-Karte mit STL
+      (`src/lib/stl.ts`), Quittung für frisch freigeschaltete Knoten.
+- [x] Abriss: Routen/Screens/Nav, `content/skillmap.layout.json`,
+      `content/training/`, tote Ableitungen; Shell = Topbar + Rechner.
+- [x] Docs: SCREENS/DATENMODELL/LERNMODELL/CLAUDE/VERIFICATION/VOICE.
+**DoD:** `pnpm verify` grün je Commit; Erststart → Baum; Schritt abschließen
+schaltet Nachfolger frei; Meilenstein → Produkt-Karte mit STL.
 
 ---
 

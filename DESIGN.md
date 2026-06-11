@@ -82,7 +82,7 @@ Drei freie Schriften, bewusst nicht generisch:
 
 | Token | Größe / Zeilenhöhe / Laufweite | Gewicht | Einsatz |
 |---|---|---|---|
-| `display-xl` | 3.25 rem / 1.04 / −0.025 em | 700 | Dashboard-Hero, Meilenstein |
+| `display-xl` | 3.25 rem / 1.04 / −0.025 em | 700 | Projektkarten-Hero, Meilenstein |
 | `display` | 2.75 rem / 1.08 / −0.02 em | 600 | H1 Desktop |
 | `display-sm` | 2 rem / 1.12 / −0.015 em | 600 | H1 Mobil, Karten-Heroes |
 | `title` | 1.375 rem / 1.25 / −0.01 em | 600 | Schritt-Ziel, Sektionstitel |
@@ -267,7 +267,7 @@ Acht benannte Bewegungen — mehr gibt es nicht. Easing: `cubic-bezier(0.2, 0, 0
 | `wechsel` | Tiefen-Umschalter, Tab-/Panelwechsel | 200 ms | Cross-Fade in place, Scroll-Position bleibt |
 | `zaehlen` | Ergebniszahl ändert sich | 300 ms | Zahl zählt per rAF zum neuen Wert (Mono, keine Layout-Verschiebung) |
 | `aufklappen` | jede Höhen-Expansion: Canvas-Collapse, Hinweis/Lösungsweg, Disclosures | 300 ms | `grid-template-rows 1fr ↔ 0fr`-Transition, Kind `min-height: 0` + `overflow: hidden` |
-| `gleiten` | Drawer, Bottom-Sheet, Dialog, Trainings-Kartenwechsel | 240 ms | 24 px Translate + Fade zum Zielort |
+| `gleiten` | Drawer, Bottom-Sheet, Dialog, Gesperrt-Karte | 240 ms | 24 px Translate + Fade zum Zielort |
 | `fuellen` | Fortschrittsbalken/-ring beim ersten Rendern | 500 ms | füllt per `scaleX(0 → 1)` zur Ist-Position |
 | `schimmer` | Skeleton-Glanz | 1,8 s Loop | heller Sweep über `--paper-deep`-Fläche (`background-position`) |
 
