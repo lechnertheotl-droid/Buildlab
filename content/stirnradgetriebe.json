@@ -715,6 +715,12 @@
       "goal": "Die Engine bestätigt deine Auslegung – und dein Getriebe wandert in die Werkstatt.",
       "kind": "meilenstein",
       "estMinutes": 4,
+      "finaleParts": [
+        "Grundplatte",
+        "Rad 1",
+        "Rad 2",
+        "Achse"
+      ],
       "blocks": [
         {
           "type": "text",

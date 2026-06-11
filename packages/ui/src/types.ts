@@ -165,6 +165,8 @@ export interface Step {
   /** Index des Blocks für die Canvas-Spalte (Default: erster interactive/build). */
   canvas?: number;
   estMinutes?: number;
+  /** Nur für meilenstein: Teile-Labels der Explosionsansicht, von unten nach oben. */
+  finaleParts?: string[];
   blocks: Block[];
 }
 

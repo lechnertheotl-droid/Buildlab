@@ -60,6 +60,11 @@ function useFlow(block: TaskBlock, state: TaskResult | undefined, onResult?: (r:
       messageTone: 'fehl',
     }));
 
+  // Für mehrstufige Aufgaben: die ✗-Meldung eines Fehlversuchs räumen, sobald
+  // die Stufe geschafft ist — sonst steht sie als Stale-Feedback unter der
+  // nächsten Stufe.
+  const clearMessage = () => setFlow((f) => (f.message === null ? f : { ...f, message: null }));
+
   const succeed = (confirmation?: string) =>
     setFlow((f) => {
       const attempts = f.attempts + 1;
@@ -86,7 +91,7 @@ function useFlow(block: TaskBlock, state: TaskResult | undefined, onResult?: (r:
     if (hintVisible) setFlow((f) => (f.helpUsed ? f : { ...f, helpUsed: true }));
   }, [hintVisible]);
 
-  return { flow, fail, succeed, hintVisible, showSolution, openSolution, msgId };
+  return { flow, fail, succeed, clearMessage, hintVisible, showSolution, openSolution, msgId };
 }
 
 // ── Gemeinsame Bausteine ─────────────────────────────────────────────────────
@@ -659,7 +664,7 @@ function MatchBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<t
 // ── steps (geführter Rechenweg, $prev = Lernenden-Wert) ──────────────────────
 
 function StepsBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<typeof useFlow> }) {
-  const { flow, fail, succeed, msgId } = flowApi;
+  const { flow, fail, succeed, clearMessage, msgId } = flowApi;
   const { formulas } = useContent();
   const stages = block.steps ?? [];
   const [stageIndex, setStageIndex] = useState(0);
@@ -701,6 +706,7 @@ function StepsBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<t
       if (stageIndex + 1 >= stages.length) {
         succeed(`Rechenweg komplett ✓ · ${praise()}`);
       } else {
+        clearMessage(); // ✗-Meldung des Fehlversuchs gehört zur alten Stufe
         setStageIndex(stageIndex + 1);
       }
     } else {
