@@ -134,12 +134,13 @@ export async function enterStep(projectId: string, stepIndex: number) {
   });
 }
 
-/** Schritt abgeschlossen: stepsDone + Konzepte des Schritts auf `gesehen`. */
+/** Schritt abgeschlossen: stepsDone + Konzepte des Schritts auf `gesehen`.
+    `isMilestone` = der Meilenstein-Schritt (Senke des Baums) → completedAt. */
 export async function completeStep(
   projectId: string,
   stepId: string,
   introducedConcepts: string[],
-  isLast: boolean,
+  isMilestone: boolean,
 ) {
   await write(async (db) => {
     const prev = (await db.get('projectProgress', projectId)) as ProjectProgress | undefined;
@@ -150,7 +151,7 @@ export async function completeStep(
       startedAt: nowIso(),
     };
     if (!next.stepsDone.includes(stepId)) next.stepsDone.push(stepId);
-    if (isLast) next.completedAt ??= nowIso();
+    if (isMilestone) next.completedAt ??= nowIso();
     await db.put('projectProgress', next, projectId);
 
     for (const conceptId of introducedConcepts) {

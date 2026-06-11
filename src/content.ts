@@ -28,6 +28,8 @@ export interface ProjectMeta {
     title: string;
     goal: string;
     kind: 'lernen' | 'bauen' | 'meilenstein';
+    /** Schritt-IDs, die vorher erledigt sein müssen (Projekt-Baum, VERIFICATION.md §2 R18–21). */
+    requires?: string[];
     estMinutes?: number;
     finaleParts?: string[];
     blocks: unknown[];

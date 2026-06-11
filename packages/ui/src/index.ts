@@ -2,7 +2,6 @@
 
 export * from './primitives';
 export { ContentProvider } from './content-context';
-export { ProjectView } from './ProjectView';
 export { WorkspaceStep, type WorkspaceStepProps } from './workspace/WorkspaceStep';
 export { BlockRenderer } from './blocks';
 export { TaskView } from './task/TaskView';
