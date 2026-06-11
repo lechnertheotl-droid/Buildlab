@@ -170,7 +170,7 @@ function FinaleDisc({ cx, bottomY, r, h, color }: { cx: number; bottomY: number;
 function MilestoneFinale({ project }: { project: Project }) {
   const [factor, setFactor] = useState(0);
   // Labels aus dem Meilenstein-Step; ohne finaleParts bleibt das Finale
-  // unbeschriftet (keine erfundenen Teilenamen). Werkstatt-Satz je nachdem,
+  // unbeschriftet (keine erfundenen Teilenamen). Abschluss-Satz je nachdem,
   // ob das Projekt wirklich etwas baut (build-Block) oder nur abschließt.
   const labels = project.steps.find((s) => s.kind === 'meilenstein')?.finaleParts ?? [];
   const hasBuild = project.steps.some((s) => s.blocks.some((b) => b.type === 'build'));
@@ -498,7 +498,7 @@ export function WorkspaceStep({
               Desktop inline am Lektion-Ende. */}
           <nav
             aria-label="Schritt-Navigation"
-            className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 flex items-center gap-2 border-t border-black/10 bg-paper-2 px-3 py-2 md:static md:mt-8 md:gap-3 md:border-t md:bg-transparent md:px-0 md:pt-4"
+            className="fixed bottom-0 left-0 right-0 z-30 flex items-center gap-2 border-t border-black/10 bg-paper-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:static md:mt-8 md:gap-3 md:border-t md:bg-transparent md:px-0 md:pb-0 md:pt-4"
           >
             <button
               type="button"

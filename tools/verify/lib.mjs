@@ -10,11 +10,6 @@ import { evaluateFormula, evaluateExpr } from '@buildlab/engine';
 
 export const REL_TOL = 1e-6; // relative Toleranz für gerechnete Beispiele
 
-export const SKILLMAP_GROUPS = [
-  'statik', 'festigkeit', 'kinematik', 'werkstoffe',
-  'maschinenelemente', 'fertigung', 'stroemung', 'methodik',
-];
-
 export function makeReport() {
   const errors = [];
   const warnings = [];
@@ -499,14 +494,4 @@ export function buildIndex(projects, report) {
   const sorted = {};
   for (const key of Object.keys(index).sort()) sorted[key] = index[key];
   return sorted;
-}
-
-// ── Trainings-Pool (LERNMODELL.md §6) ────────────────────────────────────────
-export function checkTrainingPool(pool, ctx, report, file) {
-  if (!SKILLMAP_GROUPS.includes(pool.group)) {
-    report.err(`content/training/${file}`, `unbekannte Gruppe '${pool.group}'`);
-  }
-  (pool.tasks ?? []).forEach((task, i) => {
-    checkTask(task, ctx, `content/training/${file} › tasks[${i}]`, report);
-  });
 }
