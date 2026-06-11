@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { Latex } from './Latex';
+import { formatUnit } from './units';
 import { useContent } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
 import { CadBuild } from './build/CadBuild';
@@ -29,7 +30,7 @@ function fmt(n: number): string {
 }
 
 function unitLabel(unit: string): string {
-  return unit && unit !== '-' ? ` ${unit}` : '';
+  return unit && unit !== '-' ? ` ${formatUnit(unit)}` : '';
 }
 
 // ── text (mit Varianten + globaler Tiefe, lokal überschreibbar) ──────────────

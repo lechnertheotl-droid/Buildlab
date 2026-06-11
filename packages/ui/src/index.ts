@@ -19,6 +19,7 @@ export { CadBuild } from './build/CadBuild';
 export { IsoStage, isoBox, groundRotationMatrix, useEngineValue } from './iso-scene';
 export { useWorkspaceStore } from './store';
 export { useCountUp } from './useCountUp';
+export { formatUnit } from './units';
 export type { ActiveContext } from './store';
 export type {
   Block,

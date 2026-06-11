@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { Latex } from '../Latex';
+import { formatUnit } from '../units';
 import { Slider } from '../Slider';
 import { useContent } from '../content-context';
 import { useEngineValue } from '../iso-scene';
@@ -70,7 +71,7 @@ export function ValueSlider({ params, caption }: { params: ValueSliderParams; ca
         ) : (
           <span className="text-accent-ink">
             {fmt(engine.value)}
-            {engine.unit && engine.unit !== '-' ? ` ${engine.unit.replace('*', '·')}` : ''}
+            {engine.unit && engine.unit !== '-' ? ` ${formatUnit(engine.unit)}` : ''}
           </span>
         )}
       </p>

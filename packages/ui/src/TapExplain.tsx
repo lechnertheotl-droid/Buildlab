@@ -5,6 +5,7 @@
 // Fokus an den Auslöser zurück.
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { formatUnit } from './units';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
 import { focusRing } from './primitives/focus';
@@ -73,7 +74,7 @@ function PopoverHead({ title, symbol, unit }: { title: string; symbol?: string; 
       <span className="font-display text-base font-semibold text-ink">{title}</span>
       {symbol && <Latex className="text-sm text-accent-ink" src={symbol} />}
       {unit && unit !== '-' && (
-        <span className="font-mono text-xs text-ink-faint">[{unit}]</span>
+        <span className="font-mono text-xs text-ink-faint">[{formatUnit(unit)}]</span>
       )}
     </span>
   );

@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, EmptyState, ScreenSkeleton, buttonClass } from '@buildlab/ui';
+import { formatUnit, Button, EmptyState, ScreenSkeleton, buttonClass } from '@buildlab/ui';
 import { conceptById, concepts, skillmapLayout } from '../content';
 import { useConceptStates } from '../db/repo';
 import type { ConceptStateEntry } from '../db/types';
@@ -218,7 +218,7 @@ export default function SkillMap() {
               {sel.name}
             </h2>
             {sel.symbol && <span className="font-mono text-sm text-ink-2">{sel.symbol}</span>}
-            {sel.unit && sel.unit !== '-' && <span className="font-mono text-xs text-ink-faint">[{sel.unit}]</span>}
+            {sel.unit && sel.unit !== '-' && <span className="font-mono text-xs text-ink-faint">[{formatUnit(sel.unit)}]</span>}
             <span className="ml-auto font-mono text-xs text-ink-2">{STATUS_LABEL[selState!.status]}{selState!.due ? ' · auffrischen' : ''}</span>
           </div>
           <p className="mt-2 text-sm text-ink-2">{sel.short}</p>

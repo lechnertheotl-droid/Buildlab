@@ -12,6 +12,7 @@ import { buttonClass } from '../primitives/Button';
 import { Collapse } from '../primitives/Collapse';
 import { SegmentedControl } from '../primitives/SegmentedControl';
 import { useWorkspaceStore } from '../store';
+import { formatUnit } from '../units';
 import {
   HEURISTIC_TEXT, classifyMiss, isWithin, parseGermanNumber, praise,
 } from './feedback';
@@ -19,7 +20,10 @@ import type { Layer, TaskBlock, TaskResult, TaskStage } from '../types';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('de-DE', { maximumFractionDigits: 4 }).format(n);
-const unitLabel = (unit?: string) => (unit && unit !== '-' ? ` ${unit}` : '');
+// Für Bauchgefühl-Werte (estimate): eine Nachkommastelle reicht — „≈ 4,5" statt „≈ 4,4721".
+const fmtCoarse = (n: number) =>
+  new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }).format(n);
+const unitLabel = (unit?: string) => (unit && unit !== '-' ? ` ${formatUnit(unit)}` : '');
 
 export interface TaskViewProps {
   block: TaskBlock;
@@ -314,10 +318,10 @@ function NumericBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType
         fail(HEURISTIC_TEXT[classifyMiss(value, answer, tol)]);
         return;
       }
-      succeed(`${fmt(answer)}${unitLabel(block.unit)} ✓ · ${praise()}`);
+      succeed(`${fmt(answer)}${unitLabel(block.unit)} · ${praise()}`);
       return;
     }
-    if (valueOk) succeed(`${fmt(answer)}${unitLabel(block.unit)} ✓ · ${praise()}`);
+    if (valueOk) succeed(`${fmt(answer)}${unitLabel(block.unit)} · ${praise()}`);
     else fail(HEURISTIC_TEXT[classifyMiss(value, answer, tol)]);
   };
 
@@ -347,7 +351,7 @@ function NumericBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType
           />
         ) : (
           block.unit && block.unit !== '-' && (
-            <span className="font-mono text-sm text-ink-faint">{block.unit.replace('*', '·')}</span>
+            <span className="font-mono text-sm text-ink-faint">{formatUnit(block.unit)}</span>
           )
         )}
         {!flow.solved && (
@@ -387,11 +391,11 @@ function EstimateBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnTyp
     const factor = Math.max(value / reference, reference / value);
     const [good, okBand] = [scale.bands[0], scale.bands[1] ?? scale.bands[0] * 2.5];
     if (factor <= good) {
-      succeed(`Gutes Gefühl! Tatsächlich: ${fmt(reference)} — du lagst um Faktor ${fmt(factor)} daneben.`);
+      succeed(`Gutes Gefühl! Tatsächlich: ${fmt(reference)} — du lagst um Faktor ${fmtCoarse(factor)} daneben.`);
     } else if (factor <= okBand) {
-      succeed(`Richtung stimmt (Faktor ${fmt(factor)} daneben). Tatsächlich: ${fmt(reference)}.`);
+      succeed(`Richtung stimmt (Faktor ${fmtCoarse(factor)} daneben). Tatsächlich: ${fmt(reference)}.`);
     } else {
-      fail(`Um Faktor ${fmt(factor)} daneben — trau dich näher ran. In welcher Größenordnung spielt das?`);
+      fail(`Um Faktor ${fmtCoarse(factor)} daneben — trau dich näher ran. In welcher Größenordnung spielt das?`);
     }
   };
 
@@ -418,7 +422,7 @@ function EstimateBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnTyp
         <span className="font-mono text-xs text-ink-faint">{fmt(scale.max)}</span>
       </div>
       <p className="mt-1 text-center font-mono text-lg text-accent-ink" aria-live="polite">
-        ≈ {fmt(value)}
+        ≈ {fmtCoarse(value)}
       </p>
       {!flow.solved && (
         <button type="button" onClick={submit} className={`mt-2 ${checkButtonClass}`}>
@@ -469,7 +473,7 @@ function TargetBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<
     }
     if (!isWithin(liveValue, target.goal.value, target.goal.tolerance)) return;
     doneRef.current = true;
-    succeed(`${fmt(target.goal.value)}${unitLabel(formula?.result.unit)} getroffen ✓ · ${praise()}`);
+    succeed(`${fmt(target.goal.value)}${unitLabel(formula?.result.unit)} getroffen · ${praise()}`);
     // succeed ist stabil genug für diesen Zweck (setState-Wrapper).
   }, [hit]);
 
@@ -704,7 +708,7 @@ function StepsBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<t
       setRaw('');
       setStageMsg(null);
       if (stageIndex + 1 >= stages.length) {
-        succeed(`Rechenweg komplett ✓ · ${praise()}`);
+        succeed(`Rechenweg komplett · ${praise()}`);
       } else {
         clearMessage(); // ✗-Meldung des Fehlversuchs gehört zur alten Stufe
         setStageIndex(stageIndex + 1);
@@ -747,7 +751,7 @@ function StepsBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<t
                   aria-invalid={!!stageMsg}
                 />
                 <span className="font-mono text-sm text-ink-faint">
-                  {formula?.result.unit && formula.result.unit !== '-' ? formula.result.unit.replace('*', '·') : ''}
+                  {formula?.result.unit && formula.result.unit !== '-' ? formatUnit(formula.result.unit) : ''}
                 </span>
                 <button type="button" onClick={submit} className={checkButtonClass}>
                   Prüfen

@@ -118,6 +118,7 @@ dass das eigentliche Statik-Projekt noch fehlt.
 ## 🟡 UX & Inhalt (stört den Lernfluss)
 
 ### B-08 · „Antippen erklärt“ führt nirgendwo hin — genau im Workspace fehlt „tiefer eintauchen“
+**Status: ✅ behoben (11.06.2026)** — Der Workspace-`ContentProvider` reicht `onOpenConcept` durch; „tiefer eintauchen →" navigiert zur Konzeptseite.
 Der Popover hat laut Spec (LERNMODELL) einen Link zur Konzeptseite. Der existiert
 in `TapExplain.tsx` auch — wird aber nur gerendert, wenn `onOpenConcept` im
 Context steckt. `src/screens/Workspace.tsx` erzeugt einen **eigenen**
@@ -157,12 +158,14 @@ die Skill-Map zeigt aber weiter „auffrischen“. Mindestens ein Hinweis
 („2 weitere fällige Konzepte haben noch keine Übungen“) wäre ehrlich.
 
 ### B-13 · Zahlenformatierung: vierstellige Nachkommastellen im verspielten Kontext
+**Status: ✅ behoben (11.06.2026)** — Schätzwert und Faktor-Feedback runden auf eine Nachkommastelle („≈ 4,5", „Faktor 1,5").
 - Schätz-Slider zeigt „≈ 4,4721“ bzw. „≈ 282,8427“ (geometrische Mitte) — für
   ein „Bauchgefühl“ absurd präzise.
 - Feedback: „Richtung stimmt (Faktor **2,8255** daneben)“, „du lagst um Faktor
   **1,1314** daneben“. Eine Dezimale reicht („~2,8×“).
 
 ### B-14 · Einheiten-Hinweis bei einheitenloser Größe
+**Status: ✅ behoben (11.06.2026)** — Heuristik-Text ohne Einheiten-Irreführung: „… da ist eine Zehnerpotenz verrutscht. Prüf den Faktor 10."
 Numeric-Heuristik bei i = 3, Antwort 30: „Die Ziffern stimmen — **prüf die
 Einheiten**, da ist eine Zehnerpotenz verrutscht.“ Die Übersetzung i hat keine
 Einheit — der erste Halbsatz führt in die Irre (Zehnerpotenz-Teil ist gut).
@@ -212,6 +215,7 @@ Desktop.
 ## 🔵 Visuell / Politur
 
 ### B-22 · RECHNER-Lasche überlappt Inhalte auf Mobile (mehrfach)
+**Status: ✅ behoben (11.06.2026)** — Mobil ist die Lasche jetzt ein kompakter runder Knopf in der Ecke (48 px) statt einer hohen Leiste; Desktop unverändert.
 Auf 375 px schwebt die Lasche über dem Content und verdeckt:
 die Ziel-Überschrift in Schritt 1 („…Tempo gegen Kraft **tau‌schen**“ ist
 angeschnitten), das Slider-Maximum „20“ der Schätzaufgabe, in der Skill-Map-Liste
@@ -225,6 +229,7 @@ mobil an die Bottom-Bar koppeln.
 abgeschnitten. Kollisionserkennung/Flip fehlt.
 
 ### B-24 · `N*m`, `m/s^2`, `deg` — rohe mathjs-Notation sickert in die UI
+**Status: ✅ behoben (11.06.2026)** — zentrale `formatUnit()`-Hilfe (`N*m`→`N·m`, `^2`→`²`, `deg`→`°`) an allen Render-Stellen (Canvas, Aufgaben, Meilenstein, Skill-Map, Rechner-Tab & -Ergebnis, Popover).
 Überall, wo Werte „aus der Engine“ kommen: Canvas („M = 50 **N*m**“),
 Meilenstein-Checks („M₂ = 29,1 **N*m**“ direkt über dem korrekt gesetzten
 „29,1 N·m“ im Fließtext), Skill-Map-Vorschau („[N*m]“), Einheiten-Tab des
@@ -232,6 +237,7 @@ Rechners („N*m“, „m/s^2“, englisches „deg“). Eine zentrale Unit-Form
 (`·`, hochgestellte Exponenten, „°“) würde alle Stellen heilen.
 
 ### B-25 · PulleySystem-Beschriftungen
+**Status: 🔶 teilweise behoben (11.06.2026)** — Einheiten-Formatierung der Engine-Zeile gefixt; die Label-Kollision F/„2 kg" bei n = 1 steht noch aus.
 - „F = 19,62 N**aus der Engine**“ — fehlendes Leerzeichen zwischen Einheit und
   Hinweistext (nur bei dieser Komponente).
 - Bei n = 1 überlappt das rote „F = 19,62 N“-Label den „2 kg“-Schriftzug auf der
@@ -260,6 +266,7 @@ aber nur der **letzte** Wert (a), ohne Label-Kontext. „i = 3 · a = 80 mm“ w
 informativer.
 
 ### B-30 · Doppeltes Häkchen und Doppel-Label
+**Status: ✅ behoben (11.06.2026)** — Doppeltes ✓ entfernt (Message-Komponente setzt das Symbol); „Stufe 1 · Stufe 1:"-Doppellabel aus den Content-Prompts gestrichen.
 - Erfolgsmeldung numerisch: „**✓** 3 **✓** · Sitzt.“ — zwei Häkchen.
 - Stufen-Aufgabe: „Stufe 1 · **Stufe 1:** Die Räder haben …“ — das UI-Label
   doppelt den Prompt-Text aus dem Content (`steps[].prompt` beginnt selbst mit
@@ -280,6 +287,7 @@ Die Settings melden den Zustand, bieten aber keinen Knopf, `navigator.storage.pe
 anzufragen — der Nutzer kann nichts tun außer Backups ziehen.
 
 ### B-34 · Kleinigkeiten
+**Status: 🔶 teilweise behoben (11.06.2026)** — Rechner-Lasche nutzt jetzt ein Linien-SVG statt 🧮-Emoji.
 - Settings-Icon (Zahnrad) liest sich in der Topbar leicht als „Sonne/Helligkeit“.
 - Rechner-Lasche nutzt das Abakus-**Emoji** 🧮 statt der Linien-Ikonografie der App.
 - SegmentedControl: Tastatur-Fokus ist optisch nicht vom Aktiv-Zustand

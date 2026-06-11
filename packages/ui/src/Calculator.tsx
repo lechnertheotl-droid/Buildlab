@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { create, all } from 'mathjs';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
+import { formatUnit } from './units';
 import { Skeleton } from './primitives/Skeleton';
 import { useWorkspaceStore } from './store';
 import type { Formula } from './types';
@@ -48,7 +49,7 @@ function formatResult(value: unknown): string {
     // Zahlteil deutsch formatieren statt mathjs-toString (engl. Dezimalpunkt).
     try {
       const u = value as { toNumeric: () => number; formatUnits: () => string };
-      return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 }).format(u.toNumeric())} ${u.formatUnits()}`;
+      return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 }).format(u.toNumeric())} ${formatUnit(u.formatUnits())}`;
     } catch {
       return (value as { toString: () => string }).toString();
     }
@@ -281,8 +282,9 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
                   type="button"
                   onClick={() => append(` ${u}`)}
                   className="rounded border border-black/10 bg-paper-sink/60 px-2 py-1 font-mono text-sm text-ink transition-colors hover:border-accent hover:text-accent-ink"
+                  title={u !== formatUnit(u) ? `fügt ${u} ein` : undefined}
                 >
-                  {u}
+                  {formatUnit(u)}
                 </button>
               ))}
               <button

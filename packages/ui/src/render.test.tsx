@@ -40,14 +40,15 @@ function wrap(node: React.ReactNode): string {
 }
 
 describe('InteractiveRenderer (Registry-Gate)', () => {
-  it('LeverSlider zeigt das Drehmoment aus der Engine (F=100, r=0.5 → 50 N*m)', () => {
+  it('LeverSlider zeigt das Drehmoment aus der Engine (F=100, r=0.5 → 50 N·m)', () => {
     const block: InteractiveBlock = {
       type: 'interactive',
       componentId: 'lever-slider',
       params: { formulaId: 'torque_lever', force: 100, arm: 0.5 },
     };
     const html = wrap(<InteractiveRenderer block={block} />);
-    expect(html).toContain('50 N*m');
+    // Anzeige typografisch (formatUnit): N·m statt mathjs-Rohformat N*m.
+    expect(html).toContain('50 N·m');
     expect(html).toContain('aus der Engine');
     expect(html).toContain('<svg');
     expect(html).toContain('<polygon');

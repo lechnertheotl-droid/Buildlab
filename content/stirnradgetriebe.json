@@ -449,7 +449,7 @@
           "tolerance": 0.01,
           "steps": [
             {
-              "prompt": "Stufe 1: Die Räder haben z₁ = 20 und z₂ = 60. Berechne i.",
+              "prompt": "Die Räder haben z₁ = 20 und z₂ = 60. Berechne i.",
               "formulaId": "ratio",
               "inputs": {
                 "z1": 20,
@@ -457,7 +457,7 @@
               }
             },
             {
-              "prompt": "Stufe 2: Der Motor dreht mit n₁ = 3000 1/min. Berechne n₂ mit deinem i.",
+              "prompt": "Der Motor dreht mit n₁ = 3000 1/min. Berechne n₂ mit deinem i.",
               "formulaId": "speed_out",
               "inputs": {
                 "n1": 3000,
