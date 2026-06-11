@@ -192,6 +192,120 @@
       }
     },
     {
+      "name": "requires-unbekannte-id",
+      "expectError": "unbekannten Schritt",
+      "project": {
+        "id": "fx-req-id", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "requires": ["nix"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "requires": ["s1"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "requires-mischform",
+      "expectError": "requires-Mischform",
+      "project": {
+        "id": "fx-req-misch", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "requires": ["s1"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "requires-zyklus",
+      "expectError": "enthält einen Zyklus",
+      "project": {
+        "id": "fx-req-zyklus", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "requires": ["s2"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "s2", "title": "S", "goal": "G", "kind": "lernen", "requires": ["s1"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "requires": ["s2"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "requires-fremde-senke",
+      "expectError": "genau eine Senke",
+      "project": {
+        "id": "fx-req-senke", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "requires": [], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "s2", "title": "S", "goal": "G", "kind": "lernen", "requires": ["s1"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "requires": ["s1"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "requires-meilenstein-erreicht-nicht-alle",
+      "expectError": "erreicht nicht alle Schritte",
+      "project": {
+        "id": "fx-req-pfad", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "requires": [], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "s2", "title": "S", "goal": "G", "kind": "lernen", "requires": ["s1"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "s3", "title": "S", "goal": "G", "kind": "lernen", "requires": ["s2"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "requires": ["s1"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "konzept-vor-einfuehrung",
+      "expectError": "vor seiner Einführung",
+      "project": {
+        "id": "fx-req-intro", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "requires": [], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "s-intro", "title": "S", "goal": "G", "kind": "lernen", "requires": ["s1"], "blocks": [
+            { "type": "text", "introduces": ["zahnrad"], "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "s-use", "title": "S", "goal": "G", "kind": "lernen", "requires": ["s1"], "blocks": [
+            { "type": "text", "uses": ["zahnrad"], "layers": { "intuitive": "-" } }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "requires": ["s-intro", "s-use"], "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
       "name": "beispiel-falsch-gerechnet",
       "expectError": "Beispiel weicht ab",
       "project": {

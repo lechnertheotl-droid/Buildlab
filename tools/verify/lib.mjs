@@ -205,10 +205,119 @@ export function checkBuild(block, ctx, where, report) {
   }
 }
 
-// ── Projekt-Prüfung (Regeln 13–16 + Bestand §1) ──────────────────────────────
+// ── Schritt-Graph (Regeln 18–21): requires bildet den Projekt-Baum ──────────
+// Quelle der Wahrheit für „welcher Schritt braucht welchen" — die App spiegelt
+// dieselbe Semantik in src/dag.ts (Gating + Baum-Layout).
+export function normalizeRequires(project) {
+  const steps = project.steps;
+  const explicit = steps.some((s) => s.requires !== undefined);
+  const map = new Map();
+  steps.forEach((step, i) => {
+    map.set(step.id, explicit ? (step.requires ?? []) : i > 0 ? [steps[i - 1].id] : []);
+  });
+  return map;
+}
+
+// Prüft Form (Regel 18), Zyklenfreiheit (19) und die Meilenstein-Senke (20).
+// Liefert je Schritt die transitive Vorfahren-Menge für Regel 21 — oder null,
+// wenn der Graph dafür zu kaputt ist (Folgefehler vermeiden).
+function checkStepGraph(project, report, file) {
+  const where = `content/${file}`;
+  const steps = project.steps;
+  const ids = new Set(steps.map((s) => s.id));
+
+  // Regel 18 — Form: alles-oder-nichts, bekannte IDs, kein Selbstbezug.
+  let formOk = true;
+  const without = steps.filter((s) => s.requires === undefined);
+  if (without.length > 0 && without.length < steps.length) {
+    report.err(
+      where,
+      `requires-Mischform: entweder tragen ALLE Schritte 'requires' (Wurzeln mit []) oder keiner (ohne: ${without.map((s) => s.id).join(', ')})`,
+    );
+    formOk = false;
+  }
+  for (const step of steps) {
+    for (const r of step.requires ?? []) {
+      if (r === step.id) {
+        report.err(`${where} › ${step.id}`, `requires verweist auf sich selbst`);
+        formOk = false;
+      } else if (!ids.has(r)) {
+        report.err(`${where} › ${step.id}`, `requires verweist auf unbekannten Schritt '${r}'`);
+        formOk = false;
+      }
+    }
+  }
+  if (!formOk) return null;
+
+  const requires = normalizeRequires(project);
+
+  // Regel 19 — azyklisch: Kahn-Topo-Sort über die Kanten require → Schritt.
+  const indegree = new Map(steps.map((s) => [s.id, requires.get(s.id).length]));
+  const dependents = new Map(steps.map((s) => [s.id, []]));
+  for (const step of steps) {
+    for (const r of requires.get(step.id)) dependents.get(r).push(step.id);
+  }
+  const queue = steps.map((s) => s.id).filter((id) => indegree.get(id) === 0);
+  const topo = [];
+  while (queue.length) {
+    const id = queue.shift();
+    topo.push(id);
+    for (const d of dependents.get(id)) {
+      indegree.set(d, indegree.get(d) - 1);
+      if (indegree.get(d) === 0) queue.push(d);
+    }
+  }
+  if (topo.length < steps.length) {
+    const cycle = steps.map((s) => s.id).filter((id) => !topo.includes(id));
+    report.err(where, `requires enthält einen Zyklus (beteiligt: ${cycle.join(', ')})`);
+    return null;
+  }
+
+  // Transitive Vorfahren je Schritt (topologische Reihenfolge garantiert,
+  // dass die Vorfahren der requires schon berechnet sind).
+  const ancestors = new Map();
+  for (const id of topo) {
+    const set = new Set();
+    for (const r of requires.get(id)) {
+      set.add(r);
+      for (const a of ancestors.get(r)) set.add(a);
+    }
+    ancestors.set(id, set);
+  }
+
+  // Regel 20 — Meilenstein-Senke: genau eine Senke, sie ist der meilenstein,
+  // und jeder Schritt mündet transitiv in ihn — das Produkt oben im Baum ist
+  // die Konvergenz von allem (sonst könnte completedAt mit offenen Schritten
+  // feuern).
+  const requiredIds = new Set();
+  for (const reqs of requires.values()) for (const r of reqs) requiredIds.add(r);
+  const sinks = steps.filter((s) => !requiredIds.has(s.id));
+  const milestone = steps.find((s) => s.kind === 'meilenstein');
+  if (milestone && (sinks.length !== 1 || sinks[0].id !== milestone.id)) {
+    report.err(
+      where,
+      `der Schritt-Graph braucht genau eine Senke, und sie muss der meilenstein sein (Senken: ${sinks.map((s) => s.id).join(', ')})`,
+    );
+  }
+  if (milestone && ancestors.has(milestone.id)) {
+    const reached = ancestors.get(milestone.id);
+    const missed = steps.filter((s) => s.id !== milestone.id && !reached.has(s.id));
+    if (missed.length) {
+      report.err(
+        where,
+        `meilenstein erreicht nicht alle Schritte — außerhalb des Pfads: ${missed.map((s) => s.id).join(', ')}`,
+      );
+    }
+  }
+  return ancestors;
+}
+
+// ── Projekt-Prüfung (Regeln 13–16, 18–21 + Bestand §1) ───────────────────────
 export function checkProject(project, ctx, report, file = project.id) {
   const taskedConcepts = new Set();
   let meilensteine = 0;
+
+  const ancestors = checkStepGraph(project, report, file);
 
   for (const concept of project.conceptsIntroduced ?? []) {
     if (!ctx.conceptIds.has(concept)) {
@@ -315,6 +424,42 @@ export function checkProject(project, ctx, report, file = project.id) {
   for (const c of project.conceptsIntroduced ?? []) {
     if (!taskedConcepts.has(c)) {
       report.warn(`content/${file}`, `Konzept '${c}' wird von keiner Aufgabe geprüft (Konzept ohne Prüfung)`);
+    }
+  }
+
+  // Regel 21 — Einführung vor Verwendung (DAG-bewusst, projekt-lokal): jedes
+  // im Projekt eingeführte Konzept, das ein text.uses oder task.concepts
+  // verwendet, muss im selben Schritt vorher (Blockindex) oder in einem
+  // transitiven requires-Vorfahren eingeführt sein. Konzepte aus anderen
+  // Projekten sind ausgenommen (Auffrisch-Karten decken den Quereinstieg ab).
+  if (ancestors) {
+    const introducedIn = new Map();
+    for (const step of project.steps) {
+      step.blocks.forEach((block, i) => {
+        if (block.type !== 'text') return;
+        for (const c of block.introduces ?? []) {
+          if (!introducedIn.has(c)) introducedIn.set(c, { stepId: step.id, blockIndex: i });
+        }
+      });
+    }
+    for (const step of project.steps) {
+      step.blocks.forEach((block, i) => {
+        const used =
+          block.type === 'text' ? (block.uses ?? [])
+          : block.type === 'task' ? (block.concepts ?? [])
+          : [];
+        for (const c of used) {
+          const intro = introducedIn.get(c);
+          if (!intro) continue;
+          const okSameStep = intro.stepId === step.id && intro.blockIndex <= i;
+          if (!okSameStep && !ancestors.get(step.id).has(intro.stepId)) {
+            report.err(
+              `content/${file} › ${step.id} › block[${i}] (${block.type})`,
+              `Konzept '${c}' wird vor seiner Einführung verwendet (eingeführt in '${intro.stepId}' — kein requires-Vorfahre)`,
+            );
+          }
+        }
+      });
     }
   }
 }

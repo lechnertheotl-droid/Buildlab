@@ -30,6 +30,12 @@
         "title": { "type": "string" },
         "goal": { "type": "string", "description": "genau EIN Lernziel" },
         "kind": { "enum": ["lernen", "bauen", "meilenstein"], "description": "Lern-Loop-Rolle (LERNMODELL.md §2.1)" },
+        "requires": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true,
+          "description": "Schritt-IDs desselben Projekts, die vor diesem Schritt erledigt sein muessen (Kanten des Projekt-Baums). Entweder traegt KEIN Schritt des Projekts requires (lineare Reihenfolge) oder ALLE (Wurzeln mit []) — Verifier-Regel 18."
+        },
         "canvas": { "type": "integer", "minimum": 0, "description": "Index des Blocks fuer die Canvas-Spalte (Default: erster interactive/build)" },
         "estMinutes": { "type": "integer", "minimum": 1, "maximum": 20 },
         "finaleParts": {
