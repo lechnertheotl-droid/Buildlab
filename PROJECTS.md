@@ -9,10 +9,10 @@ gekürzt. Gestrichen: *Passungs-Trainer* (schwache Interaktivität als Einstieg)
 *Stirling-Motor* (eigener Thermo-Engine-Ast für ein einziges Projekt),
 *Robotergreifer* und *Tischkran* (redundant zu Antriebsstrang/Kragträger),
 *Sandbox* (erst sinnvoll, wenn ≥ 8 Projekte live sind — dann als eigene Phase).
-Der Skill-Map-Knoten „Thermo/Strömung" reduziert sich auf die Strömungs-Konzepte
+Die Konzept-Gruppe „Thermo/Strömung" reduziert sich auf die Strömungs-Konzepte
 der Rakete; „Zeichnen & Toleranzen" fließt in die Bau-Schritte aller Projekte ein.
 
-**Skill-Map-Gruppen** (`concept.group`, Layout in `content/skillmap.layout.json`):
+**Konzept-Gruppen** (`concept.group`):
 `statik` · `festigkeit` · `kinematik` · `werkstoffe` · `maschinenelemente` ·
 `fertigung` · `stroemung` · `methodik`.
 
