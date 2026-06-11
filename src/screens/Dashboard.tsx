@@ -1,6 +1,7 @@
 // src/screens/Dashboard.tsx — „Weitermachen“ mit einem Tipp (SCREENS.md §4):
-// Fortsetzen-Karte dominant, Auffrischen nur bei ≥ 3 fälligen Konzepten,
-// maximal zwei „Als Nächstes“-Empfehlungen.
+// Fortsetzen-Karte dominant, Auffrischen sobald etwas fällig ist (sonst kann
+// eine einzelne fällige Karte nie abgebaut werden), maximal zwei
+// „Als Nächstes“-Empfehlungen.
 
 import { Link } from 'react-router-dom';
 import { ProgressBar, ScreenSkeleton, StatusBadge, buttonClass } from '@buildlab/ui';
@@ -31,6 +32,11 @@ export default function Dashboard() {
   const next = recommendNext(allProgress, mastered);
   const done = projects.filter((p) => allProgress[p.id]?.completedAt);
   const neverStarted = Object.keys(allProgress).length === 0;
+  // Hero und „Als Nächstes“ sollen nicht dasselbe Projekt doppelt empfehlen.
+  const heroShown = neverStarted || !current;
+  const heroId = personaStartProject(settings?.persona).id;
+  const nextShown = next && !(heroShown && next.id === heroId) ? next : null;
+  const nextSectionEmpty = !nextShown && done.length === 0;
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
@@ -71,7 +77,7 @@ export default function Dashboard() {
       )}
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
-        {due.length >= 3 && (
+        {due.length >= 1 && (
           <section aria-label="Auffrischen" className="bl-einzeichnen bl-einzeichnen-d1 rounded border border-black/10 bg-paper-2 p-4 shadow">
             <h2 className="font-display">Auffrischen <span className="font-mono text-xs text-ink-2">({due.length} fällig)</span></h2>
             <p className="mt-1 text-sm text-ink-2">
@@ -83,14 +89,15 @@ export default function Dashboard() {
           </section>
         )}
 
+        {!nextSectionEmpty || !heroShown ? (
         <section aria-label="Als Nächstes" className="bl-einzeichnen bl-einzeichnen-d2 rounded border border-black/10 bg-paper-2 p-4 shadow">
           <h2 className="font-display">Als Nächstes</h2>
           <ul className="mt-2 space-y-2">
-            {next && (
+            {nextShown && (
               <li>
-                <Link to={`/projekt/${next.id}`} className="group flex min-h-11 items-center gap-3 rounded px-1 outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                  <span aria-hidden className="font-mono">{next.icon}</span>
-                  <span className="group-hover:underline">{next.title}</span>
+                <Link to={`/projekt/${nextShown.id}`} className="group flex min-h-11 items-center gap-3 rounded px-1 outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                  <span aria-hidden className="font-mono">{nextShown.icon}</span>
+                  <span className="group-hover:underline">{nextShown.title}</span>
                   <StatusBadge tone="accent" className="ml-auto uppercase tracking-wider">
                     empfohlen
                   </StatusBadge>
@@ -106,11 +113,16 @@ export default function Dashboard() {
                 </Link>
               </li>
             ))}
-            {!next && done.length === 0 && (
-              <li className="text-sm text-ink-faint">Noch keine Empfehlung — starte ein Projekt.</li>
+            {!nextShown && done.length === 0 && (
+              <li className="text-sm text-ink-faint">
+                {current
+                  ? `Mach erst „${current.title}“ fertig — danach gibt's hier Nachschub.`
+                  : 'Noch keine Empfehlung — starte ein Projekt.'}
+              </li>
             )}
           </ul>
         </section>
+        ) : null}
       </div>
     </div>
   );

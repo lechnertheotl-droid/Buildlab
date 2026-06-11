@@ -118,6 +118,7 @@ dass das eigentliche Statik-Projekt noch fehlt.
 ## 🟡 UX & Inhalt (stört den Lernfluss)
 
 ### B-08 · „Antippen erklärt“ führt nirgendwo hin — genau im Workspace fehlt „tiefer eintauchen“
+**Status: ✅ behoben (11.06.2026)** — Der Workspace-`ContentProvider` reicht `onOpenConcept` durch; „tiefer eintauchen →" navigiert zur Konzeptseite.
 Der Popover hat laut Spec (LERNMODELL) einen Link zur Konzeptseite. Der existiert
 in `TapExplain.tsx` auch — wird aber nur gerendert, wenn `onOpenConcept` im
 Context steckt. `src/screens/Workspace.tsx` erzeugt einen **eigenen**
@@ -126,6 +127,7 @@ der Zeit stattfindet, enden alle Begriffs-Popovers blind; Konzeptseiten sind
 praktisch nur über die Skill-Map erreichbar.
 
 ### B-09 · Deaktivierter „Weiter“-Button erklärt sich nur per Hover-title
+**Status: ✅ behoben (11.06.2026)** — "Weiter" nutzt aria-disabled: ein Tap auf den gesperrten Knopf zeigt den Grund sichtbar an (mobil als kleine Karte über der Leiste).
 Der Grund („Noch eine Aufgabe offen — sie ist direkt über mir.“) steckt
 ausschließlich im `title`-Attribut — auf Touch-Geräten (Mia!) gibt es kein
 Hover, sie sieht nur einen blassen Button (opacity-40) ohne Erklärung.
@@ -133,12 +135,14 @@ Hover, sie sieht nur einen blassen Button (opacity-40) ohne Erklärung.
 Disabled-Zustand kontrastreicher gestalten.
 
 ### B-10 · STL-Export liefert kommentarlos nur das aktive Rad
+**Status: ✅ behoben (11.06.2026)** — Mikrotext unter dem Download-Button: "Fürs Getriebe brauchst du beide Räder — wechsle oben auf Rad 2 und lade nochmal."
 Der Button „⤓ STL herunterladen“ exportiert nur das im Rad-1/Rad-2-Umschalter
 aktive Rad (`stirnrad_rad1_z20_m2.stl`). Dass man für das Getriebe **zwei**
 Dateien braucht (Rad 2 erst umschalten, nochmal laden), sagt einem nichts.
 **Fix-Idee:** „Beide Räder laden (2 Dateien)“ oder Hinweistext unter dem Button.
 
 ### B-11 · Dashboard: Fälliges Training fehlt, Empfehlung widerspricht sich
+**Status: ✅ behoben (11.06.2026)** — Auffrisch-Karte ab 1 fälligem Konzept (SCREENS.md angepasst); Empfehlungs-Fallback bei laufendem Projekt ("Mach erst … fertig"); leeres Dashboard empfiehlt nicht mehr doppelt; Werkstatt-CTA sagt "weitermachen", wenn begonnen.
 - Ein fälliges Konzept (Leitner-due) erzeugt **keine** Auffrisch-Karte auf dem
   Dashboard (laut SCREENS.md vorgesehen) — man entdeckt das Training nur zufällig.
 - Während `hebel-flaschenzug` läuft, zeigt „Als Nächstes“: „Noch keine
@@ -150,6 +154,7 @@ Dateien braucht (Rad 2 erst umschalten, nochmal laden), sagt einem nichts.
   Projekt längst begonnen ist.
 
 ### B-12 · Training ignoriert fällige Konzepte ohne Aufgaben-Pool stillschweigend
+**Status: ✅ behoben (11.06.2026)** — Training zeigt ehrlich, welche fälligen Konzepte noch keine Übungen haben, statt sie zu verschlucken.
 3 Konzepte fällig (kraft, hebelarm, drehmoment) → Training zeigt „1 von 1“
 (nur Drehmoment, weil nur `training/maschinenelemente.json` existiert). Die
 Statik-Konzepte bleiben unsichtbar fällig — der Nutzer kann sie nie abbauen,
@@ -157,32 +162,38 @@ die Skill-Map zeigt aber weiter „auffrischen“. Mindestens ein Hinweis
 („2 weitere fällige Konzepte haben noch keine Übungen“) wäre ehrlich.
 
 ### B-13 · Zahlenformatierung: vierstellige Nachkommastellen im verspielten Kontext
+**Status: ✅ behoben (11.06.2026)** — Schätzwert und Faktor-Feedback runden auf eine Nachkommastelle („≈ 4,5", „Faktor 1,5").
 - Schätz-Slider zeigt „≈ 4,4721“ bzw. „≈ 282,8427“ (geometrische Mitte) — für
   ein „Bauchgefühl“ absurd präzise.
 - Feedback: „Richtung stimmt (Faktor **2,8255** daneben)“, „du lagst um Faktor
   **1,1314** daneben“. Eine Dezimale reicht („~2,8×“).
 
 ### B-14 · Einheiten-Hinweis bei einheitenloser Größe
+**Status: ✅ behoben (11.06.2026)** — Heuristik-Text ohne Einheiten-Irreführung: „… da ist eine Zehnerpotenz verrutscht. Prüf den Faktor 10."
 Numeric-Heuristik bei i = 3, Antwort 30: „Die Ziffern stimmen — **prüf die
 Einheiten**, da ist eine Zehnerpotenz verrutscht.“ Die Übersetzung i hat keine
 Einheit — der erste Halbsatz führt in die Irre (Zehnerpotenz-Teil ist gut).
 
 ### B-15 · Auslegungs-Ziel verwirrend formuliert
+**Status: ✅ behoben (11.06.2026)** — Toleranzen > 5 % werden als Korridor angezeigt ("Ziel: F zwischen 2,5 und 7,4 N").
 Flaschenzug Schritt 6: Aufgabe sagt „höchstens 8 N“, die Zielzeile zeigt aber
 „Ziel: F = 4,905 N (±50 %)“ — ein exakter Wert mit Riesentoleranz statt der
 eigentlichen Bedingung „F ≤ 8 N“. Sarah rechnet nach und wundert sich.
 
 ### B-16 · Onboarding hat keinen Weg zurück
+**Status: ✅ behoben (11.06.2026)** — "‹ Zurück" in Onboarding-Schritt 2 und 3.
 Wer in Schritt 1 die falsche Tür erwischt, kann nur „Erstmal umsehen“ (= raus)
 oder weiter. Ein „‹ Zurück“ zwischen den drei Schritten fehlt.
 
 ### B-17 · Soft-Lock sieht aus wie Hard-Lock
+**Status: ✅ behoben (11.06.2026)** — Karte nicht mehr ausgegraut, Hinweis-Dreieck statt Schloss (Soft-Lock liest sich wieder als Empfehlung).
 In der Projektliste ist die Stirnradgetriebe-Karte ausgegraut mit
 **Schloss-Symbol** „🔒 Voraussetzung offen“. Die Philosophie ist „Soft-Lock,
 nie Sperren“ — die abgeblendete Karte + Schloss kommuniziert das Gegenteil.
 (Im Projektdetail ist es mit „Trotzdem starten“ gut gelöst.)
 
 ### B-18 · Rechner-Details
+**Status: ✅ behoben (11.06.2026)** — Autofokus aufs Ausdrucksfeld (ab md); Keypad mobil kompakter + Safe-Area ("=" sichtbar); "Formelsammlung" mit Formelnamen; Aktiv-Label = Formelname statt Bühnen-Caption; Werte-Vorschau deutsch formatiert.
 - Nach dem Öffnen hat das Eingabefeld **keinen Fokus** — Lostippen verpufft.
 - Mobil (375×812) ragt der „=“-Button unten **aus dem Viewport**.
 - Tab „Σ FORMELN“ ist mit „PROJEKTFORMELN“ überschrieben, listet aber **alle**
@@ -193,17 +204,20 @@ nie Sperren“ — die abgeblendete Karte + Schloss kommuniziert das Gegenteil.
 - Werte-Vorschau „F = 100 · r = 0.5“ mit Dezimal**punkt**.
 
 ### B-19 · Versprochene Aufgabenarten existieren nicht im Content
+**Status: 📋 bewusst offen** — Content-Aufgabe: multi/order/fill brauchen neue, didaktisch geprüfte Aufgaben (R7, /generate-project). In BUILD_PLAN.md als R7-Punkt vermerkt.
 CLAUDE.md/BUILD_PLAN: 9 Aufgabenarten, Gold-Standard deckt alle ab. Tatsächlich
 nutzen beide Projekte zusammen nur 7 — `multi`, `order`/`fill` kommen in keinem
 Content vor (Renderer existieren). Doku und Realität auseinander.
 
 ### B-20 · „Hebel & Flaschenzug“ baut nichts
+**Status: 📋 bewusst offen** — ein echter Bau-Schritt für den Flaschenzug ist Content-Arbeit (R7). In BUILD_PLAN.md als R7-Punkt vermerkt.
 Das Projekt hat keinen `bauen`-Schritt und keinen build-Block — die App
 verspricht „Lernende bauen echte Projekte“, der Meilenstein heißt
 „Challenge-Check“ und verweist auf die Werkstatt (siehe B-05). Die Bauanleitung
 (Schnur/Karabiner) ist gut, aber als HINWEIS-Block im Meilenstein versteckt.
 
 ### B-21 · Aufgabe „aktuell: — stell die Regler in der Ansicht **rechts**“
+**Status: ✅ behoben (11.06.2026)** — ortsneutral: "beweg die Regler in der Ansicht".
 Auf Mobile ist die Ansicht **oben**, nicht rechts. Ortsangabe stimmt nur auf
 Desktop.
 
@@ -212,6 +226,7 @@ Desktop.
 ## 🔵 Visuell / Politur
 
 ### B-22 · RECHNER-Lasche überlappt Inhalte auf Mobile (mehrfach)
+**Status: ✅ behoben (11.06.2026)** — Mobil ist die Lasche jetzt ein kompakter runder Knopf in der Ecke (48 px) statt einer hohen Leiste; Desktop unverändert.
 Auf 375 px schwebt die Lasche über dem Content und verdeckt:
 die Ziel-Überschrift in Schritt 1 („…Tempo gegen Kraft **tau‌schen**“ ist
 angeschnitten), das Slider-Maximum „20“ der Schätzaufgabe, in der Skill-Map-Liste
@@ -221,10 +236,12 @@ Dashboard hängt sie zudem verloren im Leerraum.
 mobil an die Bottom-Bar koppeln.
 
 ### B-23 · Begriffs-Popover läuft mobil aus dem Viewport
+**Status: ✅ behoben (11.06.2026)** — Popover klappt am rechten Rand nach links auf und ist auf Viewport-Breite begrenzt.
 „Zahnrad“-Popover in Schritt 1 (375 px): Text wird am rechten Bildschirmrand
 abgeschnitten. Kollisionserkennung/Flip fehlt.
 
 ### B-24 · `N*m`, `m/s^2`, `deg` — rohe mathjs-Notation sickert in die UI
+**Status: ✅ behoben (11.06.2026)** — zentrale `formatUnit()`-Hilfe (`N*m`→`N·m`, `^2`→`²`, `deg`→`°`) an allen Render-Stellen (Canvas, Aufgaben, Meilenstein, Skill-Map, Rechner-Tab & -Ergebnis, Popover).
 Überall, wo Werte „aus der Engine“ kommen: Canvas („M = 50 **N*m**“),
 Meilenstein-Checks („M₂ = 29,1 **N*m**“ direkt über dem korrekt gesetzten
 „29,1 N·m“ im Fließtext), Skill-Map-Vorschau („[N*m]“), Einheiten-Tab des
@@ -232,54 +249,64 @@ Rechners („N*m“, „m/s^2“, englisches „deg“). Eine zentrale Unit-Form
 (`·`, hochgestellte Exponenten, „°“) würde alle Stellen heilen.
 
 ### B-25 · PulleySystem-Beschriftungen
+**Status: ✅ behoben (11.06.2026)** — Einheiten formatiert; das F-Label sitzt bei n = 1 jetzt über der Last und neben dem Seil (keine Kollision mehr).
 - „F = 19,62 N**aus der Engine**“ — fehlendes Leerzeichen zwischen Einheit und
   Hinweistext (nur bei dieser Komponente).
 - Bei n = 1 überlappt das rote „F = 19,62 N“-Label den „2 kg“-Schriftzug auf der
   Kiste; bei n = 6 berührt es die Kistenkante.
 
 ### B-26 · Schriften kommen zur Laufzeit von Google
+**Status: ✅ behoben (11.06.2026)** — Schriften werden lokal gebündelt (@fontsource, variable Fonts); index.html lädt nichts mehr von Google. Verifiziert: 0 externe Font-Requests, Konsole komplett sauber.
 `index.html` lädt Bricolage Grotesque/Hanken Grotesk/IBM Plex Mono vom
 Google-CDN. Für eine bewusst lokale, kontofreie App: offline (erster Besuch)
 bricht die komplette Typo auf Fallbacks zusammen, plus DSGVO-Thema
 (IP-Übertragung an Google). **Fix-Idee:** Fonts selbst hosten (`@fontsource/*`).
 
 ### B-27 · Verwaistes „η“ unter der Formel
+**Status: ✅ behoben (11.06.2026)** — Variablen-Reihe trägt die Caption "antippbar"; Trigger haben sprechende Accessible Names ("Wirkungsgrad — erklären").
 Unter „M₂ = M₁·i·η“ hängt ein einzelnes, unscheinbares „η“ — der antippbare
 Variablen-Button ohne jede Chip-Optik (i und M₂ haben Konzept-Chips, η nicht).
 Accessible Name ist obendrein „η\etaη“ (KaTeX-Annotation landet im Namen) —
 für Screenreader Kauderwelsch.
 
 ### B-28 · Leere Bühne in Schritt 5/6 wirkt unfertig
+**Status: ✅ behoben (11.06.2026)** — Platzhalter-Bühne zeigt zusätzlich die Formeln des Schritts ("In diesem Schritt").
 Schritte ohne Interactive zeigen rechts nur eine große, fast leere Karte mit
 „⚙ Stirnradgetriebe“. Platz für die Formel-Karte, das aktuelle Getriebe aus
 Schritt 4 oder eine Mini-Illustration.
 
 ### B-29 · Eingeklappte Ansicht zeigt verwaistes „a = 80 mm“
+**Status: ✅ behoben (11.06.2026)** — Eingeklappte Ansicht zeigt Klarname + Symbol + Wert ("Achsabstand · a = 80 mm"), Einheit formatiert.
 Mobil klappt die Bühne auf eine einzelne Kennwert-Zeile zusammen — es erscheint
 aber nur der **letzte** Wert (a), ohne Label-Kontext. „i = 3 · a = 80 mm“ wäre
 informativer.
 
 ### B-30 · Doppeltes Häkchen und Doppel-Label
+**Status: ✅ behoben (11.06.2026)** — Doppeltes ✓ entfernt (Message-Komponente setzt das Symbol); „Stufe 1 · Stufe 1:"-Doppellabel aus den Content-Prompts gestrichen.
 - Erfolgsmeldung numerisch: „**✓** 3 **✓** · Sitzt.“ — zwei Häkchen.
 - Stufen-Aufgabe: „Stufe 1 · **Stufe 1:** Die Räder haben …“ — das UI-Label
   doppelt den Prompt-Text aus dem Content (`steps[].prompt` beginnt selbst mit
   „Stufe n:“).
 
 ### B-31 · Skill-Map-Detailpflege
+**Status: 🔶 größtenteils behoben (11.06.2026)** — Labels sind klickbar (Teil der Klickfläche), lange Namen brechen zweizeilig bzw. werden kleiner statt abgeschnitten. Kanten-Routing bleibt für Skill-Map V2 (R8).
 - Lange Labels werden hart abgeschnitten („Teilkreisdurchmes…“, „Übersetzungsverhä…“).
 - Klick aufs **Label** tut nichts — nur der Kreis (r = 22) ist Klickfläche.
 - Lange Kanten (Kraft→Kraftübersetzung, →Stabilitätsmaß) queren quer durchs Bild
   und unter fremden Gruppen durch.
 
 ### B-32 · Werkstatt-Karte zeigt rohe Parameter-Keys
+**Status: ✅ behoben (11.06.2026)** — Parameter heißen jetzt "Breite"/"Bohrung"/"z₁" statt thickness/bore.
 „m = 2 · z1 = 20 · z2 = 60 · **thickness** = 8 · **bore** = 5“ — englische
 Interna in der deutschen UI (in den Slidern heißt es korrekt „Breite“/„Bohrung“).
 
 ### B-33 · „Dauerhafter Speicher: nicht gewährt“ ohne Handlungsangebot
+**Status: ✅ behoben (11.06.2026)** — Button "erneut anfragen" + Erklärung, warum Browser das anfangs ablehnen.
 Die Settings melden den Zustand, bieten aber keinen Knopf, `navigator.storage.persist()`
 anzufragen — der Nutzer kann nichts tun außer Backups ziehen.
 
 ### B-34 · Kleinigkeiten
+**Status: ✅ behoben (11.06.2026)** — Rechner-Icon als Linien-SVG; Settings-Icon ist jetzt ein klares Zahnrad; SegmentedControl-Fokusring wird nicht mehr verdeckt; "Ansicht drehen" zeigt Grad; Match-Selects einheitlich breit.
 - Settings-Icon (Zahnrad) liest sich in der Topbar leicht als „Sonne/Helligkeit“.
 - Rechner-Lasche nutzt das Abakus-**Emoji** 🧮 statt der Linien-Ikonografie der App.
 - SegmentedControl: Tastatur-Fokus ist optisch nicht vom Aktiv-Zustand

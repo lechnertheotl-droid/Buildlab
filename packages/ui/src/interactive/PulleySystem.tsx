@@ -206,7 +206,16 @@ export function PulleySystem({ params, caption }: { params: PulleySystemParams; 
         <g transform={`translate(0 ${r2(hand.y + tipY)}) scale(1 -1)`}>
           <AmpelArrow tip={{ x: hand.x, y: tipY }} length={aLen} frac={frac} shaftHalf={2} headHalf={7} headLen={11} />
         </g>
-        <text x={r2(hand.x)} y={r2(hand.y) - 8} textAnchor="middle" fontSize="11" className="fill-[color:var(--accent-ink)] font-mono">
+        {/* Bei n = 1 endet das Seil direkt an der Last — Label höher und neben
+          das Seil setzen, sonst kollidiert es mit Massen-Label und Seillinie
+          (Befund B-25). */}
+      <text
+        x={r2(hand.x) + (n === 1 ? 8 : 0)}
+        y={r2(hand.y) - (n === 1 ? 30 : 8)}
+        textAnchor={n === 1 ? 'start' : 'middle'}
+        fontSize="11"
+        className="fill-[color:var(--accent-ink)] font-mono"
+      >
           F = {f.value === null ? '—' : fmt(f.value)} N
         </text>
       </IsoStage>

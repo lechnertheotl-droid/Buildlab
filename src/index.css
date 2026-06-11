@@ -47,8 +47,8 @@
   --shadow: var(--shadow-1);
 
   /* Typografie */
-  --font-display: 'Bricolage Grotesque', sans-serif;
-  --font-body: 'Hanken Grotesk', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', sans-serif;
+  --font-body: 'Hanken Grotesk Variable', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 }
 

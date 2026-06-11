@@ -6,7 +6,7 @@ export type Heuristic = 'zehnerpotenz' | 'vorzeichen' | 'kehrwert' | 'knapp' | '
 
 export const HEURISTIC_TEXT: Record<Heuristic, string> = {
   zehnerpotenz:
-    'Die Ziffern stimmen — prüf die Einheiten, da ist eine Zehnerpotenz verrutscht.',
+    'Die Ziffern stimmen — da ist eine Zehnerpotenz verrutscht. Prüf den Faktor 10.',
   vorzeichen: 'Betrag richtig, Richtung falsch. Was zieht, was drückt?',
   kehrwert: 'Du hast den Kehrwert erwischt — welcher Wert gehört in den Zähler?',
   knapp: 'Fast! Prüf deine Rundung — rechne mit mehr Nachkommastellen weiter.',

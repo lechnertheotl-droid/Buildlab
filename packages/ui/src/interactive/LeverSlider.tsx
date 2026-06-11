@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { project, rotateY, toPolygonPoints, shade, type Vec2, type Vec3 } from '@buildlab/iso';
 import { Latex } from '../Latex';
+import { formatUnit } from '../units';
 import { useContent } from '../content-context';
 import { Slider } from '../Slider';
 import { AmpelArrow, ampelColor, useEngineValue } from '../iso-scene';
@@ -224,7 +225,7 @@ export function LeverSlider({
 
   // Aktuellen Kontext für Universal-Rechner UND target-Aufgaben publizieren
   // (canvasInputs-Kopplung, ENGINE_SPEC.md §3 target).
-  useEngineValue(formulaId, { [forceVar]: force, [armVar]: arm }, caption ?? formula?.result.name ?? formulaId);
+  useEngineValue(formulaId, { [forceVar]: force, [armVar]: arm }, formula?.result.name ?? caption ?? formulaId);
 
   if (!formula) {
     return (
@@ -523,7 +524,7 @@ export function LeverSlider({
           <span className="text-viz-high">—</span>
         ) : (
           <span className="text-lg text-accent-ink">
-            {fmt(torque)} {formula.result.unit}
+            {fmt(torque)} {formatUnit(formula.result.unit)}
           </span>
         )}
         <span className="ml-1 text-xs text-ink-faint">aus der Engine</span>

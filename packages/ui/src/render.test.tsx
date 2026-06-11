@@ -40,14 +40,15 @@ function wrap(node: React.ReactNode): string {
 }
 
 describe('InteractiveRenderer (Registry-Gate)', () => {
-  it('LeverSlider zeigt das Drehmoment aus der Engine (F=100, r=0.5 → 50 N*m)', () => {
+  it('LeverSlider zeigt das Drehmoment aus der Engine (F=100, r=0.5 → 50 N·m)', () => {
     const block: InteractiveBlock = {
       type: 'interactive',
       componentId: 'lever-slider',
       params: { formulaId: 'torque_lever', force: 100, arm: 0.5 },
     };
     const html = wrap(<InteractiveRenderer block={block} />);
-    expect(html).toContain('50 N*m');
+    // Anzeige typografisch (formatUnit): N·m statt mathjs-Rohformat N*m.
+    expect(html).toContain('50 N·m');
     expect(html).toContain('aus der Engine');
     expect(html).toContain('<svg');
     expect(html).toContain('<polygon');
@@ -168,7 +169,7 @@ describe('TaskView (9 Aufgabenarten)', () => {
     expect(html).toContain('Ziel:');
     expect(html).toContain('80');
     expect(html).toContain('±');
-    expect(html).toContain('stell die Regler');
+    expect(html).toContain('beweg die Regler');
     // Store-Logik direkt: setCanvasInputs/clearCanvasInputs arbeiten korrekt.
     useWorkspaceStore.getState().setCanvasInputs({ m: 2, z1: 20, z2: 60 });
     expect(useWorkspaceStore.getState().canvasInputs).toEqual({ m: 2, z1: 20, z2: 60 });
@@ -281,7 +282,9 @@ describe('Projekt hebel-flaschenzug (R7-Content)', () => {
     expect(targetTask.kind).toBe('target');
     const html = wrap(<TaskView block={targetTask} />);
     expect(html).toContain('Ziel:');
-    expect(html).toContain('4,905');
+    // Große Toleranz (±50 %) wird als Korridor angezeigt (Befund B-15).
+    expect(html).toContain('zwischen');
+    expect(html).toContain('7,4');
   });
 });
 

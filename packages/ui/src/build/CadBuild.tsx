@@ -279,11 +279,12 @@ function GearBuild({ block, onExport }: CadBuildProps) {
         ))}
         <Slider
           label="Ansicht drehen"
-          value={rotation}
+          value={Math.round((rotation * 180) / Math.PI)}
           min={0}
-          max={Math.PI * 2}
-          step={Math.PI / 36}
-          onChange={setRotation}
+          max={360}
+          step={5}
+          unit="°"
+          onChange={(v) => setRotation((v * Math.PI) / 180)}
         />
       </div>
 
@@ -324,6 +325,12 @@ function GearBuild({ block, onExport }: CadBuildProps) {
         >
           ⤓ STL herunterladen
         </button>
+        {isPair && (
+          <p className="mt-1.5 text-xs text-ink-faint">
+            Fürs Getriebe brauchst du beide Räder — wechsle oben auf Rad {wheel === 1 ? 2 : 1} und
+            lade nochmal.
+          </p>
+        )}
       </div>
     </figure>
   );

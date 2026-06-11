@@ -78,6 +78,7 @@ export default function Workspace() {
       formulas={formulas as unknown as Formula[]}
       concepts={concepts as unknown as Concept[]}
       componentIds={componentIds}
+      onOpenConcept={(conceptId) => navigate(`/konzept/${conceptId}`)}
     >
       <div className="border-b border-black/10 px-4 py-2 md:px-6">
         <p className="mx-auto max-w-6xl font-mono text-xs uppercase tracking-widest text-ink-faint">

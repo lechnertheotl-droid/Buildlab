@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { create, all } from 'mathjs';
 import { Latex } from './Latex';
 import { useContent } from './content-context';
+import { formatUnit } from './units';
 import { Skeleton } from './primitives/Skeleton';
 import { useWorkspaceStore } from './store';
 import type { Formula } from './types';
@@ -48,7 +49,7 @@ function formatResult(value: unknown): string {
     // Zahlteil deutsch formatieren statt mathjs-toString (engl. Dezimalpunkt).
     try {
       const u = value as { toNumeric: () => number; formatUnits: () => string };
-      return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 }).format(u.toNumeric())} ${u.formatUnits()}`;
+      return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 }).format(u.toNumeric())} ${formatUnit(u.formatUnits())}`;
     } catch {
       return (value as { toString: () => string }).toString();
     }
@@ -106,6 +107,13 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
   const [ans, setAns] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>(() => initialHistory ?? []);
+  const exprRef = useRef<HTMLInputElement>(null);
+
+  // Autofokus nur auf großen Screens — mobil soll nicht ungefragt die
+  // Bildschirmtastatur aufspringen (Befund B-18).
+  useEffect(() => {
+    if (window.matchMedia('(min-width: 768px)').matches) exprRef.current?.focus();
+  }, []);
 
   // Verlauf kann nach dem Mount eintreffen (Drawer ist sofort da, IndexedDB
   // lädt noch) — einmalig einsäen, lokale Einträge bleiben vorn.
@@ -207,6 +215,7 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
       {/* Anzeige */}
       <div className="bg-paper-2 px-3 py-2">
         <input
+          ref={exprRef}
           value={expr}
           onChange={(e) => {
             setExpr(e.target.value);
@@ -253,7 +262,7 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
                 key={k.label}
                 type="button"
                 onClick={() => onKey(k)}
-                className="min-h-11 rounded border border-black/10 bg-paper-sink/60 py-2 font-mono text-sm text-ink transition-colors hover:border-accent hover:text-accent-ink"
+                className="min-h-10 rounded border border-black/10 bg-paper-sink/60 py-1.5 font-mono text-sm text-ink transition-colors hover:border-accent hover:text-accent-ink md:min-h-11 md:py-2"
               >
                 {k.label}
               </button>
@@ -262,7 +271,7 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
               type="button"
               onClick={evaluate}
               aria-label="ist gleich — ausrechnen"
-              className="col-span-4 min-h-11 rounded border border-black/10 bg-accent py-2 font-mono text-xl leading-none text-paper transition-opacity hover:opacity-90"
+              className="col-span-4 min-h-10 rounded border border-black/10 bg-accent py-1.5 font-mono text-xl leading-none text-paper transition-opacity hover:opacity-90 md:min-h-11 md:py-2"
             >
               =
             </button>
@@ -281,8 +290,9 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
                   type="button"
                   onClick={() => append(` ${u}`)}
                   className="rounded border border-black/10 bg-paper-sink/60 px-2 py-1 font-mono text-sm text-ink transition-colors hover:border-accent hover:text-accent-ink"
+                  title={u !== formatUnit(u) ? `fügt ${u} ein` : undefined}
                 >
-                  {u}
+                  {formatUnit(u)}
                 </button>
               ))}
               <button
@@ -310,8 +320,8 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
                 <Latex className="text-ink" src={activeFormula.latex} />
                 <p className="mt-1 font-mono text-xs text-ink-2">
                   {Object.entries(active.values)
-                    .map(([k, v]) => `${k} = ${v}`)
-                    .join(' · ')}
+                  .map(([k, v]) => `${k} = ${formatResult(v)}`)
+                  .join(' · ')}
                 </p>
                 <button
                   type="button"
@@ -332,7 +342,7 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
 
             <div>
               <p className="mb-1 font-mono text-xs uppercase tracking-wide text-ink-faint">
-                Projektformeln
+                Formelsammlung
               </p>
               <ul className="flex flex-col gap-1">
                 {[...formulas.values()].map((f) => (
@@ -343,9 +353,10 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
                         setExpr(f.expr);
                         setTab('numbers');
                       }}
-                      className="flex min-h-9 w-full items-center gap-2 rounded px-1 py-0.5 text-left outline-none transition-colors hover:bg-paper-sink/60 focus-visible:ring-2 focus-visible:ring-accent"
+                      className="flex min-h-9 w-full items-baseline gap-3 rounded px-1 py-0.5 text-left outline-none transition-colors hover:bg-paper-sink/60 focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       <Latex className="text-sm text-ink" src={f.latex} />
+                      <span className="font-mono text-xs text-ink-faint">{f.result.name}</span>
                     </button>
                   </li>
                 ))}

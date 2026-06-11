@@ -28,12 +28,14 @@ function Difficulty({ value }: { value?: number }) {
   );
 }
 
-// Schloss-Symbol (gezeichnet, kein Emoji — DESIGN.md §9) für den Soft-Lock.
-function LockGlyph() {
+// Hinweis-Dreieck (gezeichnet, kein Emoji — DESIGN.md §9) für den Soft-Lock:
+// ein Schloss würde „gesperrt" signalisieren, dabei ist es nur eine Empfehlung.
+function HintGlyph() {
   return (
     <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
-      <rect x="2.5" y="5.5" width="7" height="5" rx="1" fill="none" stroke="currentColor" strokeWidth="1.1" />
-      <path d="M4 5.5 V4 a2 2 0 0 1 4 0 v1.5" fill="none" stroke="currentColor" strokeWidth="1.1" />
+      <path d="M6 1.8 L11 10.2 H1 Z" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
+      <line x1="6" y1="5" x2="6" y2="7.2" stroke="currentColor" strokeWidth="1.1" />
+      <circle cx="6" cy="8.8" r="0.55" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -59,8 +61,8 @@ function StatusLine({ status, progress, total }: { status: ProjectStatus; progre
       );
     case 'voraussetzung':
       return (
-        <span className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-faint">
-          <LockGlyph />
+        <span className="inline-flex items-center gap-1.5 font-mono text-xs text-warn">
+          <HintGlyph />
           Voraussetzung offen
         </span>
       );
@@ -104,14 +106,11 @@ export default function ProjectList() {
           <div className="grid gap-3 md:grid-cols-2">
             {list.map((p) => {
               const status = projectStatus(p, allProgress, recommended);
-              const soft = status === 'voraussetzung';
               return (
                 <Link
                   key={p.id}
                   to={`/projekt/${p.id}`}
-                  className={`rounded border border-black/10 bg-paper-2 p-4 shadow outline-none transition hover:-translate-y-px hover:border-rule-strong focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px active:shadow-none ${
-                    soft ? 'opacity-60' : ''
-                  }`}
+                  className={`rounded border border-black/10 bg-paper-2 p-4 shadow outline-none transition hover:-translate-y-px hover:border-rule-strong focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px active:shadow-none`}
                 >
                   <p className="font-display">
                     <span aria-hidden className="mr-2 font-mono">{p.icon}</span>

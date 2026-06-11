@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { Latex } from './Latex';
+import { formatUnit } from './units';
 import { useContent } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
 import { CadBuild } from './build/CadBuild';
@@ -29,7 +30,7 @@ function fmt(n: number): string {
 }
 
 function unitLabel(unit: string): string {
-  return unit && unit !== '-' ? ` ${unit}` : '';
+  return unit && unit !== '-' ? ` ${formatUnit(unit)}` : '';
 }
 
 // ── text (mit Varianten + globaler Tiefe, lokal überschreibbar) ──────────────
@@ -254,6 +255,9 @@ function FormulaTap({ latex, variables }: { latex: string; variables: FormulaVar
       )}
       {unmatched.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          {/* Ohne Caption hängt z. B. ein einsames „η" kontextlos unter der
+              Formel und wirkt wie ein Renderfehler (Befund B-27). */}
+          <span className="font-mono text-xs uppercase tracking-wide text-ink-faint">antippbar</span>
           {unmatched.map((v) => (
             <VariableChip key={v.var} v={v} />
           ))}

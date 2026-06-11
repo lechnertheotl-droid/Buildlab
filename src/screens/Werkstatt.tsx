@@ -10,6 +10,11 @@ import { projectById, projects, personaStartProject } from '../content';
 import { useAllProgress, useBuilds, useSettings } from '../db/repo';
 import type { BuildEntry } from '../db/types';
 
+// Anzeige-Namen der CAD-Parameter (UI spricht deutsch, das Modell englisch).
+const PARAM_LABELS: Record<string, string> = {
+  m: 'm', z: 'z', z1: 'z₁', z2: 'z₂', thickness: 'Breite', bore: 'Bohrung',
+};
+
 // Gezeichnetes Zahnrad in der Linien-Sprache der Bühnen (DESIGN.md §6/§9).
 function GearDoodle({ className }: { className?: string }) {
   return (
@@ -70,7 +75,7 @@ function BuildCard({ build }: { build: BuildEntry }) {
       <p className="font-display font-semibold text-ink">{build.label}</p>
       <p className="mt-1 font-mono text-xs text-ink-2">
         {Object.entries(build.params)
-          .map(([k, v]) => `${k} = ${String(v).replace('.', ',')}`)
+          .map(([k, v]) => `${PARAM_LABELS[k] ?? k} = ${String(v).replace('.', ',')}`)
           .join(' · ')}
       </p>
       <p className="mt-0.5 font-mono text-[10px] text-ink-faint">
@@ -106,6 +111,8 @@ export default function Werkstatt() {
   const completed = projects.filter((p) => allProgress[p.id]?.completedAt);
   const empty = builds.length === 0 && completed.length === 0;
   const start = personaStartProject(settings?.persona);
+  // Ehrliche CTA: läuft das Projekt schon, heißt es „weitermachen", nicht „starten".
+  const startBegonnen = !!allProgress[start.id];
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
@@ -118,7 +125,7 @@ export default function Werkstatt() {
           illustration={<GearDoodle className="h-14 w-14" />}
           action={
             <Link to={`/projekt/${start.id}`} className={buttonClass()}>
-              {start.title} starten →
+              {start.title} {startBegonnen ? 'weitermachen' : 'starten'} →
             </Link>
           }
         />
