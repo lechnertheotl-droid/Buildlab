@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Button, EmptyState, ScreenSkeleton, buttonClass } from '@buildlab/ui';
 import { Link } from 'react-router-dom';
-import { compileGear } from '@buildlab/cad';
+import { compileGear, compilePulley } from '@buildlab/cad';
 import { projectById, projects, personaStartProject } from '../content';
 import { useAllProgress, useBuilds, useSettings } from '../db/repo';
 import type { BuildEntry } from '../db/types';
@@ -13,6 +13,7 @@ import type { BuildEntry } from '../db/types';
 // Anzeige-Namen der CAD-Parameter (UI spricht deutsch, das Modell englisch).
 const PARAM_LABELS: Record<string, string> = {
   m: 'm', z: 'z', z1: 'z₁', z2: 'z₂', thickness: 'Breite', bore: 'Bohrung',
+  d: 'Ø', groove: 'Rille', d_seil: 'Seil-Ø',
 };
 
 // Gezeichnetes Zahnrad in der Linien-Sprache der Bühnen (DESIGN.md §6/§9).
@@ -55,10 +56,25 @@ function BuildCard({ build }: { build: BuildEntry }) {
     setBusy(true);
     setError(null);
     try {
-      if (build.cadModel !== 'gear') throw new Error(`Unbekanntes Modell '${build.cadModel}'`);
-      const { m, z, thickness, bore } = build.params;
-      const stl = await compileGear({ m, z, thickness, bore });
-      downloadStl(stl, `${build.label.replaceAll(' ', '-').toLowerCase()}.stl`);
+      let stl: string;
+      if (build.cadModel === 'gear') {
+        const { m, z, thickness, bore } = build.params;
+        stl = await compileGear({ m, z, thickness, bore });
+      } else if (build.cadModel === 'rolle') {
+        const { d, groove, bore, thickness } = build.params;
+        stl = await compilePulley({ d, groove, bore, thickness });
+      } else {
+        throw new Error(`Unbekanntes Modell '${build.cadModel}'`);
+      }
+      // Dateiname robust halten: Sonderzeichen (Ø, Umlaute) brechen sonst das
+      // download-Attribut in manchen Browsern.
+      const safe = build.label
+        .toLowerCase()
+        .replaceAll('ø', 'd')
+        .replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' })[c] ?? c)
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      downloadStl(stl, `${safe}.stl`);
     } catch {
       setError('Kompilieren fehlgeschlagen — öffne das Teil im Projekt und exportiere dort.');
     } finally {

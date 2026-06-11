@@ -95,8 +95,26 @@ export default function SkillMap() {
   const edges = concepts.flatMap((c) =>
     c.prerequisites
       .filter((p) => nodePos.has(p) && nodePos.has(c.id))
-      .map((p) => ({ from: nodePos.get(p)!, to: nodePos.get(c.id)! })),
+      .map((p) => ({
+        from: nodePos.get(p)!,
+        to: nodePos.get(c.id)!,
+        // Gruppenfremde Kanten (z. B. Statik → Maschinenelemente) queren weite
+        // Strecken — sie werden abgeblendet, damit sie nicht dominieren (B-31).
+        crossGroup: conceptById.get(p)?.group !== c.group,
+      })),
   );
+
+  // Sanfter Bogen statt Gerade: lange Kanten weichen so fremden Knoten aus,
+  // und kollineare Ketten (zahnrad→modul durch zaehnezahl) trennen sich (B-31).
+  const edgePath = (e: (typeof edges)[number]) => {
+    const dx = e.to.x - e.from.x;
+    const dy = e.to.y - e.from.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const bow = Math.min(0.18 * len, 56);
+    const mx = (e.from.x + e.to.x) / 2 - (dy / len) * bow;
+    const my = (e.from.y + e.to.y) / 2 + (dx / len) * bow;
+    return `M ${e.from.x} ${e.from.y} Q ${mx} ${my} ${e.to.x} ${e.to.y}`;
+  };
 
   const statusCounts = concepts.reduce<Record<string, number>>((acc, c) => {
     const { status } = nodeState(states[c.id]);
@@ -136,7 +154,13 @@ export default function SkillMap() {
             </text>
           ))}
           {edges.map((e, i) => (
-            <line key={i} x1={e.from.x} y1={e.from.y} x2={e.to.x} y2={e.to.y} stroke="var(--ink-faint)" strokeOpacity="0.4" />
+            <path
+              key={i}
+              d={edgePath(e)}
+              fill="none"
+              stroke="var(--ink-faint)"
+              strokeOpacity={e.crossGroup ? 0.22 : 0.4}
+            />
           ))}
           {skillmapLayout.nodes.map((n) => {
             const c = conceptById.get(n.conceptId);

@@ -4,7 +4,7 @@
   "version": 2,
   "level": 1,
   "icon": "⚖",
-  "durationMin": 35,
+  "durationMin": 45,
   "difficulty": 1,
   "buildResult": "Ein fertig ausgelegter Mini-Flaschenzug mit vier tragenden Strängen — samt Bauanleitung für Schnur, Karabiner und Haken.",
   "challenge": "Hebe eine Last von 2 kg (G = 19,62 N) mit höchstens 8 N Zugkraft — und erkläre, woher der Kraft-Rabatt kommt.",
@@ -291,6 +291,79 @@
           },
           "hint": "F = G/n — wie oft musst du 19,62 N teilen, bis weniger als 8 N übrig bleiben?",
           "explanation": "Ab n = 3 fällt die Zugkraft unter 8 N (6,54 N); mit n = 4 liegst du bei 4,905 N komfortabel im Ziel — mit Reserve für die Reibung. Der Preis: Du ziehst viermal so viel Seil, wie die Last steigt."
+        }
+      ]
+    },
+    {
+      "id": "rolle-bauen",
+      "title": "Deine Umlenkrolle drucken",
+      "goal": "Eine passende Umlenkrolle parametrisieren, beide Anforderungen erfüllen und als STL exportieren.",
+      "kind": "bauen",
+      "estMinutes": 8,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["rolle_fest_lose", "wirkungsgrad", "kraftuebersetzung"],
+          "layers": {
+            "intuitive": "Karabiner funktionieren — aber sie reiben. Eine echte Rolle dreht sich mit und schluckt viel weniger Kraft. Stell die Maße so ein, dass dein Seil sauber in der Rille läuft, und druck dir deine eigene.",
+            "practical": "Eine drehende Rolle senkt die Reibung gegenüber einem starren Karabiner deutlich — dein Wirkungsgrad steigt, die 8-N-Reserve wächst. Wichtig: Die Rille muss zum Seil passen (Mindest-Rillenradius r_min = d_Seil/2 + Spiel) und die Bohrung zum Karabiner.",
+            "rigorous": "Die Rolle entsteht parametrisch aus einem einzigen OpenSCAD-Modell (Zylinder, torische Seilrille, zentrale Bohrung). Auslegungsregel: r_min = d_Seil/2 + s mit Druckspiel s = 0,3 mm — zu enge Rillen klemmen das Seil und erhöhen die Reibung, zu weite lassen es springen. Vorschau und STL stammen aus derselben Geometrie."
+          }
+        },
+        {
+          "type": "build",
+          "cadModel": "rolle",
+          "parameters": {
+            "d": { "min": 20, "max": 60, "default": 40, "unit": "mm", "label": "Außendurchmesser" },
+            "groove": { "min": 1, "max": 4, "default": 1.5, "unit": "mm", "label": "Rillenradius" },
+            "bore": { "min": 4, "max": 12, "default": 8, "unit": "mm", "label": "Bohrung" },
+            "thickness": { "min": 8, "max": 20, "default": 12, "unit": "mm", "label": "Breite" },
+            "d_seil": { "min": 2, "max": 6, "default": 4, "unit": "mm", "label": "Dein Seildurchmesser" }
+          },
+          "constraints": [
+            {
+              "expr": "groove >= d_seil / 2 + 0.3",
+              "label": "Rille passt zum Seil (r ≥ d_Seil/2 + 0,3 mm Spiel)",
+              "proof": {
+                "pass": { "d": 40, "groove": 2.5, "bore": 8, "thickness": 12, "d_seil": 4 },
+                "fail": { "d": 40, "groove": 1.5, "bore": 8, "thickness": 12, "d_seil": 4 }
+              }
+            },
+            {
+              "expr": "bore >= 6",
+              "label": "Bohrung passt über den Karabiner (≥ 6 mm)",
+              "proof": {
+                "pass": { "d": 40, "groove": 2.5, "bore": 8, "thickness": 12, "d_seil": 4 },
+                "fail": { "d": 40, "groove": 2.5, "bore": 5, "thickness": 12, "d_seil": 4 }
+              }
+            },
+            {
+              "expr": "d <= 60 and d >= 4 * bore",
+              "label": "Bleibt druckbar und stabil (Ø ≤ 60 mm, mindestens 4× Bohrung)",
+              "proof": {
+                "pass": { "d": 40, "groove": 2.5, "bore": 8, "thickness": 12, "d_seil": 4 },
+                "fail": { "d": 28, "groove": 2.5, "bore": 12, "thickness": 12, "d_seil": 4 }
+              }
+            }
+          ],
+          "exports": ["stl"],
+          "bom": ["2× Umlenkrolle (gedruckt)", "3–4 m reißfeste Schnur", "2× Karabiner", "1× stabiler Haken", "Last mit Schlaufe (2 kg)"]
+        },
+        {
+          "type": "task",
+          "kind": "order",
+          "question": "Rolle gedruckt — bring den Aufbau deines Flaschenzugs in die richtige Reihenfolge.",
+          "concepts": ["rolle_fest_lose", "kraftuebersetzung"],
+          "items": [
+            "Haken oben befestigen (Türreck, Ast oder Besenstiel)",
+            "Karabiner mit der festen Rolle in den Haken hängen",
+            "Schnur am Haken anknoten und durch die feste Rolle fädeln",
+            "Karabiner mit der losen Rolle einhängen und die Last anschlaufen",
+            "Probezug: langsam ziehen und prüfen, ob das Seil in den Rillen bleibt"
+          ],
+          "correctOrder": [0, 1, 2, 3, 4],
+          "hint": "Von oben nach unten denken: erst der feste Punkt, dann das Seil, zuletzt die Last.",
+          "explanation": "Erst steht der feste Punkt (Haken + feste Rolle), dann wird das Seil gefädelt, dann kommt die lose Rolle mit der Last — und der Probezug deckt Fädelfehler auf, bevor die volle Last dranhängt."
         }
       ]
     },

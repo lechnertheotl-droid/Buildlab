@@ -116,11 +116,13 @@ STL-Download hinter Constraints; `pnpm verify` grün.
 - [ ] `modellrakete` — braucht `rocket-stability`, `flight-sim` (RK4 in Engine).
 - [ ] danach 3, 5–10, 12 gemäß `PROJECT_SPECS.md`.
 - [ ] Trainings-Pools je Skill-Map-Gruppe füllen.
-- [ ] Aufgabenarten-Abdeckung: `multi`, `order` und `fill` kommen im Content
-      noch nicht vor (Renderer existieren) — mit den nächsten Projekten
-      einbauen (Testbericht B-19).
-- [ ] `hebel-flaschenzug` um einen echten Bau-Schritt ergänzen (aktuell nur
-      Bauanleitung im Meilenstein-Hinweis — Testbericht B-20).
+- [x] Aufgabenarten-Abdeckung: alle 9 Arten kommen im Content vor — `multi`
+      (stirnradgetriebe „Die Übersetzung") und `order` (hebel-flaschenzug
+      Bau-Schritt) ergänzt am 11.06.2026. (`fill` war ein Berichtsfehler —
+      die neunte Art ist `order`.)
+- [x] `hebel-flaschenzug` hat einen echten Bau-Schritt: parametrische
+      Umlenkrolle (cad/rolle.scad → OpenSCAD-WASM → STL), Formel `groove_min`
+      mit Golden Test, Constraints mit Beweis-Paaren (11.06.2026).
 **Regel:** Projekt erst aus `draft`, wenn alle Kern-Interactives
 `status: "implementiert"` haben.
 

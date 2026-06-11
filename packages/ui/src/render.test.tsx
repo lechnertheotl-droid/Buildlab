@@ -162,6 +162,39 @@ describe('TaskView (9 Aufgabenarten)', () => {
     for (const row of errorFindTask.rows!) expect(html).toContain(row.label.slice(0, 10));
   });
 
+  it('multi rendert Checkboxen und verlangt die richtige Options-Menge (B-19)', () => {
+    const multiTask = project.steps[1].blocks[5] as TaskBlock; // i=4-Aussagen
+    expect(multiTask.kind).toBe('multi');
+    const html = wrap(<TaskView block={multiTask} />);
+    expect(html).toContain(multiTask.question);
+    expect(html).toContain('role="checkbox"');
+    expect((html.match(/role="checkbox"/g) ?? []).length).toBe(multiTask.options!.length);
+  });
+
+  it('order rendert die Karten gemischt mit Hoch/Runter-Tasten (B-19)', () => {
+    const orderTask = hebel.steps
+      .flatMap((s) => s.blocks)
+      .find((b) => (b as TaskBlock).kind === 'order') as TaskBlock;
+    expect(orderTask).toBeDefined();
+    const html = wrap(<TaskView block={orderTask} />);
+    for (const item of orderTask.items!) expect(html).toContain(item.slice(0, 20));
+    expect(html).toContain('nach oben');
+    expect(html).toContain('nach unten');
+    // Startreihenfolge ist garantiert ≠ korrekt (deterministisch gemischt).
+    const first = orderTask.items![orderTask.correctOrder![0]].slice(0, 20);
+    expect(html.indexOf(first)).toBeGreaterThan(html.indexOf('1.'));
+  });
+
+  it('match rendert je Paar ein Auswahlfeld mit allen rechten Seiten', () => {
+    const matchTask = project.steps[5].blocks.find(
+      (b) => (b as TaskBlock).kind === 'match',
+    ) as TaskBlock;
+    expect(matchTask).toBeDefined();
+    const html = wrap(<TaskView block={matchTask} />);
+    expect((html.match(/<select/g) ?? []).length).toBe(matchTask.pairs!.length);
+    for (const p of matchTask.pairs!) expect(html).toContain(p.left);
+  });
+
   it('target zeigt Ziel mit Toleranz und Aufforderung zur Canvas', () => {
     // Die Live-Kopplung (canvasInputs → Auto-Quittung) ist Client-seitig
     // (zustand nutzt im SSR den Initialzustand); hier prüfbar: die Ziel-Zeile.
@@ -219,7 +252,11 @@ describe('WorkspaceStep (SCREENS.md §6)', () => {
       <WorkspaceStep
         {...baseProps}
         stepIndex={1}
-        taskStates={{ 4: { solved: true, attempts: 1, usedHelp: false } }}
+        // Schritt 2 hat zwei Pflicht-Aufgaben: numeric (Index 4) + multi (Index 5, B-19).
+        taskStates={{
+          4: { solved: true, attempts: 1, usedHelp: false },
+          5: { solved: true, attempts: 1, usedHelp: false },
+        }}
       />,
     );
     expect(html).not.toContain('Noch eine Aufgabe offen');

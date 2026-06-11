@@ -101,6 +101,10 @@
         },
         {
           "project": "hebel-flaschenzug",
+          "step": "rolle-bauen"
+        },
+        {
+          "project": "hebel-flaschenzug",
           "step": "meilenstein"
         }
       ]
@@ -126,6 +130,10 @@
         {
           "project": "hebel-flaschenzug",
           "step": "auslegung"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "rolle-bauen"
         }
       ]
     },
@@ -174,6 +182,10 @@
         {
           "project": "hebel-flaschenzug",
           "step": "auslegung"
+        },
+        {
+          "project": "hebel-flaschenzug",
+          "step": "rolle-bauen"
         },
         {
           "project": "hebel-flaschenzug",
