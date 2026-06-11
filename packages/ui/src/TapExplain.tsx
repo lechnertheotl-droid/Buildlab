@@ -13,14 +13,28 @@ import type { Concept, FormulaVariable } from './types';
 
 function TapExplain({
   label,
+  ariaLabel,
   children,
 }: {
   label: ReactNode;
+  /** Expliziter Accessible Name — KaTeX-Labels lesen sich sonst als „η\\etaη". */
+  ariaLabel?: string;
   children: ReactNode | ((close: () => void) => ReactNode);
 }) {
   const [open, setOpen] = useState(false);
+  // Am rechten Bildschirmrand klappt das Popover nach links auf, statt aus dem
+  // Viewport zu laufen (Befund B-23, 375-px-Geräte).
+  const [alignRight, setAlignRight] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+
+  const toggle = () => {
+    if (!open && trigger.current) {
+      const r = trigger.current.getBoundingClientRect();
+      setAlignRight(r.left + 256 + 12 > window.innerWidth);
+    }
+    setOpen((o) => !o);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -46,8 +60,9 @@ function TapExplain({
       <button
         ref={trigger}
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-expanded={open}
+        aria-label={ariaLabel}
         className={[
           'cursor-pointer rounded-[3px] px-[1px] underline decoration-dotted decoration-ink-faint underline-offset-2 transition-colors',
           focusRing,
@@ -59,7 +74,9 @@ function TapExplain({
       {open && (
         <span
           role="dialog"
-          className="animate-fade absolute left-0 top-full z-20 mt-2 block w-64 rounded border border-black/10 bg-paper-3 p-3 text-left shadow-2"
+          className={`animate-fade absolute top-full z-20 mt-2 block w-64 max-w-[calc(100vw-1.5rem)] rounded border border-black/10 bg-paper-3 p-3 text-left shadow-2 ${
+            alignRight ? 'right-0' : 'left-0'
+          }`}
         >
           {typeof children === 'function' ? children(() => setOpen(false)) : children}
         </span>
@@ -118,7 +135,7 @@ export function VariablePopoverBody({ v }: { v: FormulaVariable }) {
 /** Antippbares Variablensymbol → Erklärung aus dem Formel-Objekt. */
 export function VariableChip({ v }: { v: FormulaVariable }) {
   return (
-    <TapExplain label={<Latex src={v.symbol} />}>
+    <TapExplain label={<Latex src={v.symbol} />} ariaLabel={`${v.name} — erklären`}>
       <VariablePopoverBody v={v} />
     </TapExplain>
   );

@@ -8,9 +8,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { evaluateFormula } from '@buildlab/engine';
 import { explodePoint, shade } from '@buildlab/iso';
 import { BlockRenderer } from '../blocks';
+import { Latex } from '../Latex';
 import { useContent } from '../content-context';
 import { useCountUp } from '../useCountUp';
 import { useWorkspaceStore } from '../store';
+import { formatUnit } from '../units';
 import { CadBuild } from '../build/CadBuild';
 import { buttonClass } from '../primitives/Button';
 import { focusRing } from '../primitives/focus';
@@ -46,12 +48,13 @@ function isCanvasBlock(block: Block): boolean {
 function CanvasResultLine({ project, step }: { project: Project; step: Step }) {
   const { formulas } = useContent();
   const active = useWorkspaceStore((s) => s.active);
-  let result: { symbol: string; value: number; unit: string } | null = null;
+  let result: { name?: string; symbol: string; value: number; unit: string } | null = null;
   if (active) {
     const formula = formulas.get(active.formulaId);
     if (formula) {
       try {
         result = {
+          name: formula.result.name,
           symbol: formula.result.symbol,
           value: evaluateFormula(formula, active.values),
           unit: formula.result.unit,
@@ -72,13 +75,14 @@ function CanvasResultLine({ project, step }: { project: Project; step: Step }) {
     >
       {result ? (
         <>
+          {result.name && <span className="text-xs text-ink-faint">{result.name} ·</span>}
           <span className="text-ink-2">{result.symbol} =</span>
           <span className="text-accent-ink">
             {new Intl.NumberFormat('de-DE', {
               minimumFractionDigits: decimals,
               maximumFractionDigits: decimals,
             }).format(animated)}
-            {result.unit && result.unit !== '-' ? ` ${result.unit}` : ''}
+            {result.unit && result.unit !== '-' ? ` ${formatUnit(result.unit)}` : ''}
           </span>
         </>
       ) : (
@@ -278,6 +282,20 @@ export function WorkspaceStep({
   const hasBuildBlock = step.blocks.some((b) => b.type === 'build');
   const stepDone =
     requiredTasks.every((i) => taskStates[i]?.solved) && (!hasBuildBlock || buildOk === true);
+  const isLastStep = stepIndex >= project.steps.length - 1;
+  const weiterFrei = stepDone && !isLastStep;
+  const lockHintText =
+    hasBuildBlock && buildOk !== true
+      ? 'Erst alle Anforderungen in der Bau-Ansicht erfüllen.'
+      : 'Noch eine Aufgabe offen — sie ist direkt über mir.';
+  // Sichtbarer Hinweis nach Tap auf den gesperrten Weiter-Knopf (blendet sich aus).
+  const [lockHint, setLockHint] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lockHint) return;
+    const t = setTimeout(() => setLockHint(null), 4000);
+    return () => clearTimeout(t);
+  }, [lockHint]);
+  useEffect(() => setLockHint(null), [stepIndex, stepDone]);
 
   // Schritt-Abschluss genau einmal melden.
   const completedRef = useRef(false);
@@ -351,6 +369,17 @@ export function WorkspaceStep({
     .map((b, i) => ({ b, i }))
     .filter(({ i }) => i !== canvasIndex);
   const canvasBlock = canvasIndex !== null ? step.blocks[canvasIndex] : null;
+  // Für die Platzhalter-Bühne (B-28): die Formeln des Schritts (max. 2).
+  const { formulas: formulaMap } = useContent();
+  const stepFormulas = useMemo(
+    () =>
+      step.blocks
+        .filter((b): b is Block & { type: 'formula'; formulaId: string } => b.type === 'formula')
+        .map((b) => formulaMap.get(b.formulaId))
+        .filter((f): f is NonNullable<typeof f> => !!f)
+        .slice(0, 2),
+    [step, formulaMap],
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-24 pt-6 md:px-6 md:pb-6">
@@ -393,11 +422,23 @@ export function WorkspaceStep({
                   ) : step.kind === 'meilenstein' ? (
                     <MilestoneFinale project={project} />
                   ) : (
-                    <div className="flex min-h-40 items-center justify-center rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
+                    <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
                       <p className="font-display text-xl text-ink-2">
                         <span aria-hidden className="mr-2 font-mono">{project.icon}</span>
                         {project.title}
                       </p>
+                      {/* Schritte ohne Interactive: die Formeln des Schritts geben
+                          der Bühne Inhalt, statt sie leer wirken zu lassen (B-28). */}
+                      {stepFormulas.length > 0 && (
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+                            In diesem Schritt
+                          </span>
+                          {stepFormulas.map((f) => (
+                            <Latex key={f.id} className="text-lg text-ink-2" src={f.latex} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -488,21 +529,33 @@ export function WorkspaceStep({
                 );
               })}
             </div>
+            {/* aria-disabled statt disabled: bleibt antippbar/fokussierbar, ein Tap
+                zeigt den Grund sichtbar an (title allein ist auf Touch unsichtbar, B-09). */}
             <button
               type="button"
-              onClick={() => onNavigate(stepIndex + 1)}
-              disabled={!stepDone || stepIndex >= project.steps.length - 1}
-              title={
-                stepDone
-                  ? undefined
-                  : hasBuildBlock && buildOk !== true
-                    ? 'Erst alle Anforderungen in der Bau-Ansicht erfüllen.'
-                    : 'Noch eine Aufgabe offen — sie ist direkt über mir.'
-              }
-              className={`${buttonClass()} whitespace-nowrap !px-2.5 md:!px-4`}
+              aria-disabled={!weiterFrei}
+              onClick={() => {
+                if (weiterFrei) {
+                  onNavigate(stepIndex + 1);
+                } else if (!isLastStep) {
+                  setLockHint(lockHintText);
+                }
+              }}
+              title={stepDone ? undefined : lockHintText}
+              className={`${buttonClass()} whitespace-nowrap !px-2.5 md:!px-4 ${
+                weiterFrei ? '' : 'cursor-not-allowed opacity-40 active:translate-y-0'
+              }`}
             >
               Weiter ›
             </button>
+            {lockHint && (
+              <p
+                role="status"
+                className="bl-quittung absolute inset-x-3 -top-9 rounded border border-black/10 bg-paper-3 px-3 py-1.5 text-center font-mono text-xs text-ink-2 shadow md:static md:mt-0 md:inline-block md:w-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none"
+              >
+                {lockHint}
+              </p>
+            )}
           </nav>
         </section>
       </div>

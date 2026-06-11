@@ -132,7 +132,8 @@ export default function Onboarding() {
               „{DEPTHS.find((d) => d.id === depth)!.sample}“
             </blockquote>
             <p className="mt-2 text-xs text-ink-faint">Du kannst das jederzeit umstellen — global in den Einstellungen, lokal an jedem Text.</p>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex items-center justify-between">
+              <Button variant="ghost" onClick={() => setStep(0)}>‹ Zurück</Button>
               <Button onClick={() => setStep(2)}>Weiter ›</Button>
             </div>
           </section>
@@ -160,12 +161,15 @@ export default function Onboarding() {
                 ist das hier der beste Start.
               </p>
             )}
-            <button
-              onClick={() => finish('/projekte')}
-              className={`mt-3 min-h-11 text-sm text-ink-2 underline decoration-black/20 underline-offset-4 hover:text-ink ${focusRing}`}
-            >
-              lieber selbst aussuchen
-            </button>
+            <div className="mt-3 flex items-center gap-4">
+              <Button variant="ghost" onClick={() => setStep(1)}>‹ Zurück</Button>
+              <button
+                onClick={() => finish('/projekte')}
+                className={`min-h-11 text-sm text-ink-2 underline decoration-black/20 underline-offset-4 hover:text-ink ${focusRing}`}
+              >
+                lieber selbst aussuchen
+              </button>
+            </div>
           </section>
         )}
 

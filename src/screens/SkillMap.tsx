@@ -44,6 +44,17 @@ function NodeCircle({ status }: { status: string }) {
   }
 }
 
+
+// Lange Konzeptnamen am letzten passenden Leerzeichen in zwei Zeilen brechen;
+// lange Einzelwörter (Teilkreisdurchmesser …) bleiben einzeilig, aber kleiner —
+// nichts wird mehr hart abgeschnitten.
+function nodeLabel(name: string): { lines: string[]; size: number } {
+  if (name.length <= 18) return { lines: [name], size: 11 };
+  const cut = name.lastIndexOf(' ', 18);
+  if (cut <= 0) return { lines: [name], size: 9 };
+  return { lines: [name.slice(0, cut), name.slice(cut + 1)], size: 11 };
+}
+
 export default function SkillMap() {
   const states = useConceptStates();
   const [selected, setSelected] = useState<string | null>(null);
@@ -165,10 +176,14 @@ export default function SkillMap() {
                       <text textAnchor="middle" dy="3.5" fontSize="9" fill="var(--accent-ink)">⟳</text>
                     </g>
                   )}
+                  {/* Label gehört zur Klickfläche (Befund B-31: Label-Klick öffnete nichts);
+                      lange Namen brechen in zwei Zeilen statt hart abzuschneiden. */}
+                  <text textAnchor="middle" y="30" fontSize={nodeLabel(c.name).size} className="fill-[color:var(--ink-2)] font-mono">
+                    {nodeLabel(c.name).lines.map((line, li) => (
+                      <tspan key={li} x="0" dy={li === 0 ? 0 : 12}>{line}</tspan>
+                    ))}
+                  </text>
                 </g>
-                <text textAnchor="middle" y="30" fontSize="11" className="fill-[color:var(--ink-2)] font-mono">
-                  {c.name.length > 18 ? `${c.name.slice(0, 17)}…` : c.name}
-                </text>
               </g>
             );
           })}

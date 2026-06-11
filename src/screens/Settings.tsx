@@ -163,6 +163,16 @@ export default function Settings() {
             <span className="text-ink-2">nicht gewährt — Backup empfohlen</span>
           )}
         </p>
+        {persisted === false && (
+          <div className="mt-2">
+            <Button variant="secondary" size="sm" onClick={() => void requestPersistentStorage().then(setPersisted)}>
+              erneut anfragen
+            </Button>
+            <p className="mt-1 text-xs text-ink-faint">
+              Browser gewähren das oft erst, wenn die App häufiger genutzt oder installiert wurde.
+            </p>
+          </div>
+        )}
         <p className="mt-1 text-xs text-ink-faint">Alles bleibt auf deinem Gerät. Kein Konto, kein Server.</p>
       </Section>
 

@@ -169,7 +169,7 @@ describe('TaskView (9 Aufgabenarten)', () => {
     expect(html).toContain('Ziel:');
     expect(html).toContain('80');
     expect(html).toContain('±');
-    expect(html).toContain('stell die Regler');
+    expect(html).toContain('beweg die Regler');
     // Store-Logik direkt: setCanvasInputs/clearCanvasInputs arbeiten korrekt.
     useWorkspaceStore.getState().setCanvasInputs({ m: 2, z1: 20, z2: 60 });
     expect(useWorkspaceStore.getState().canvasInputs).toEqual({ m: 2, z1: 20, z2: 60 });
@@ -282,7 +282,9 @@ describe('Projekt hebel-flaschenzug (R7-Content)', () => {
     expect(targetTask.kind).toBe('target');
     const html = wrap(<TaskView block={targetTask} />);
     expect(html).toContain('Ziel:');
-    expect(html).toContain('4,905');
+    // Große Toleranz (±50 %) wird als Korridor angezeigt (Befund B-15).
+    expect(html).toContain('zwischen');
+    expect(html).toContain('7,4');
   });
 });
 

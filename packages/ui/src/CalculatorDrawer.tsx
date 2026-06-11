@@ -89,7 +89,7 @@ export function CalculatorDrawer(calcProps: CalculatorProps = {}) {
   // Schwebend = höchste Erhebung (paper-3, DESIGN.md §1).
   const shellClass = floating
     ? 'fixed z-40 w-[320px] rounded-lg border border-black/10 bg-paper-3 shadow-2'
-    : 'fixed inset-x-0 bottom-0 z-40 flex max-h-[70vh] w-full flex-col border-t border-black/10 bg-paper-2 shadow-2 md:inset-x-auto md:right-0 md:top-0 md:h-screen md:max-h-none md:w-[340px] md:border-l md:border-t-0';
+    : 'fixed inset-x-0 bottom-0 z-40 flex max-h-[78vh] w-full flex-col border-t border-black/10 bg-paper-2 pb-[env(safe-area-inset-bottom)] shadow-2 md:inset-x-auto md:right-0 md:top-0 md:h-screen md:max-h-none md:w-[340px] md:border-l md:border-t-0 md:pb-0';
   const shellStyle = floating
     ? { left: pos.x, top: pos.y, maxHeight: '80vh' }
     : undefined;

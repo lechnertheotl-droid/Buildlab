@@ -255,6 +255,9 @@ function FormulaTap({ latex, variables }: { latex: string; variables: FormulaVar
       )}
       {unmatched.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          {/* Ohne Caption hängt z. B. ein einsames „η" kontextlos unter der
+              Formel und wirkt wie ein Renderfehler (Befund B-27). */}
+          <span className="font-mono text-xs uppercase tracking-wide text-ink-faint">antippbar</span>
           {unmatched.map((v) => (
             <VariableChip key={v.var} v={v} />
           ))}

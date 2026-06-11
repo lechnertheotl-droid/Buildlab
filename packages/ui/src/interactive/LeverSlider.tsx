@@ -225,7 +225,7 @@ export function LeverSlider({
 
   // Aktuellen Kontext für Universal-Rechner UND target-Aufgaben publizieren
   // (canvasInputs-Kopplung, ENGINE_SPEC.md §3 target).
-  useEngineValue(formulaId, { [forceVar]: force, [armVar]: arm }, caption ?? formula?.result.name ?? formulaId);
+  useEngineValue(formulaId, { [forceVar]: force, [armVar]: arm }, formula?.result.name ?? caption ?? formulaId);
 
   if (!formula) {
     return (

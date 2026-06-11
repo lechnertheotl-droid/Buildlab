@@ -142,7 +142,7 @@ Dominanz auf **einer** Karte: weitermachen. Maximal drei Module, feste Ordnung.
 
 - **Fortsetzen-Karte:** zuletzt aktives, nicht abgeschlossenes Projekt.
   Restdauer = Summe `durationMin` der offenen Schritte (Orientierung, kein Timer).
-- **Auffrischen-Karte:** nur sichtbar bei ≥ 3 fälligen Konzepten
+- **Auffrischen-Karte:** sichtbar, sobald mindestens 1 Konzept fällig ist (sonst ließe sich eine einzelne fällige Karte nie vom Dashboard aus abbauen)
   (`LERNMODELL.md` §6); listet bis zu 3 Konzept-Namen.
 - **Als Nächstes:** bis zu 2 Empfehlungen nach der Regel aus `LERNMODELL.md` §9.
 - **Leerzustand** (nie etwas gestartet): Hero-Karte „Dein erstes Projekt" mit

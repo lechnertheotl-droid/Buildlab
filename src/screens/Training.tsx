@@ -45,7 +45,7 @@ export default function Training() {
         .filter(([, p]) => p.completedAt)
         .map(([pid]) => pid),
     );
-    return dueConcepts(states)
+    const drawn = dueConcepts(states)
       .slice(0, 10)
       .map((conceptId) => {
         const pool = tasksForConcept(conceptId, completedProjects);
@@ -53,8 +53,13 @@ export default function Training() {
           conceptId,
           task: pool.length ? pool[Math.floor(Math.random() * pool.length)] : null,
         };
-      })
-      .filter((e): e is { conceptId: string; task: TaskBlock } => e.task !== null);
+      });
+    return {
+      cards: drawn.filter((e): e is { conceptId: string; task: TaskBlock } => e.task !== null),
+      // Fällige Konzepte ohne Trainings-Pool nicht stillschweigend verschlucken —
+      // der Screen sagt ehrlich, dass für sie noch Übungen fehlen (B-12).
+      missingPool: drawn.filter((e) => e.task === null).map((e) => e.conceptId),
+    };
     // bewusst nur beim ersten erfolgreichen Laden einfrieren
     // (sonst rutscht der Stapel unter dem Lernenden weg)
   }, [states === undefined, allProgress === undefined]);
@@ -63,8 +68,9 @@ export default function Training() {
     return <ScreenSkeleton layout="detail" />;
   }
 
-  const done = sessionIndex >= session.length;
-  const current = done ? null : session[sessionIndex];
+  const { cards, missingPool } = session;
+  const done = sessionIndex >= cards.length;
+  const current = done ? null : cards[sessionIndex];
 
   const onResult = (conceptId: string, result: TaskResult) => {
     // LERNMODELL §3.1/§7.4: 1. Versuch ohne Hilfe → Box +1; mit Hilfe → Box −1;
@@ -78,7 +84,17 @@ export default function Training() {
     <div className="mx-auto max-w-2xl px-6 py-10">
       <h1 className="mb-2 font-display text-display-sm text-ink-strong md:text-display">Training</h1>
 
-      {session.length === 0 ? (
+      {missingPool.length > 0 && (
+        <p className="mb-4 rounded border border-black/10 bg-paper-sink/60 p-3 text-sm text-ink-2">
+          <span className="font-mono text-xs uppercase tracking-wider text-ink-faint">Hinweis · </span>
+          {missingPool.length === 1 ? 'Ein fälliges Konzept hat' : `${missingPool.length} fällige Konzepte haben`}{' '}
+          noch keine Übungsaufgaben (
+          {missingPool.map((id) => conceptById.get(id)?.name ?? id).join(' · ')}
+          ) — sie warten auf kommende Trainings-Pools und zählen nicht gegen dich.
+        </p>
+      )}
+
+      {cards.length === 0 ? (
         <div className="mt-4">
           <EmptyState
             title="Nichts fällig. Dein Kopf ist auf Stand — bau lieber was."
@@ -93,10 +109,10 @@ export default function Training() {
         <div className="bl-gleiten mt-4 rounded-lg border border-black/10 bg-paper-2 p-6 shadow">
           <p className="font-display text-lead font-medium text-ink">
             Heute gefestigt:{' '}
-            {session.map((e) => conceptById.get(e.conceptId)?.name ?? e.conceptId).join(' · ')}
+            {cards.map((e) => conceptById.get(e.conceptId)?.name ?? e.conceptId).join(' · ')}
           </p>
           <ul className="mt-3 space-y-1 font-mono text-sm">
-            {session.map((e) => (
+            {cards.map((e) => (
               <li key={e.conceptId} className="flex items-center gap-2">
                 {/* Symbol trägt die Farbe, Text bleibt kontraststark (DESIGN.md §5). */}
                 <span aria-hidden className={results[e.conceptId] ? 'text-ok' : 'text-warn'}>
@@ -118,7 +134,7 @@ export default function Training() {
           componentIds={componentIds}
         >
           <p className="mb-4 font-mono text-xs uppercase tracking-widest text-ink-faint">
-            Auffrischen · {sessionIndex + 1} von {session.length} ·{' '}
+            Auffrischen · {sessionIndex + 1} von {cards.length} ·{' '}
             <Link
               to={`/konzept/${current.conceptId}`}
               className="text-accent-ink underline decoration-black/20 underline-offset-2 outline-none hover:decoration-current focus-visible:ring-2 focus-visible:ring-accent"

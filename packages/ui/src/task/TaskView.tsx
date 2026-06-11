@@ -480,13 +480,26 @@ function TargetBody({ block, flowApi }: { block: TaskBlock; flowApi: ReturnType<
   return (
     <div className="font-mono text-sm" aria-live="polite">
       <p className="text-ink-2">
-        Ziel: <Latex src={formula?.result.symbol ?? ''} /> = {fmt(target.goal.value)}
-        {unitLabel(formula?.result.unit)} (±{fmt(target.goal.tolerance * 100)} %)
+        {target.goal.tolerance > 0.05 ? (
+          // Große Toleranz = Korridor; „4,905 N (±50 %)" liest sich wie ein
+          // Punktziel und verwirrt (Befund B-15) — der Bereich sagt, was zählt.
+          <>
+            Ziel: <Latex src={formula?.result.symbol ?? ''} /> zwischen{' '}
+            {fmtCoarse(target.goal.value * (1 - target.goal.tolerance))} und{' '}
+            {fmtCoarse(target.goal.value * (1 + target.goal.tolerance))}
+            {unitLabel(formula?.result.unit)}
+          </>
+        ) : (
+          <>
+            Ziel: <Latex src={formula?.result.symbol ?? ''} /> = {fmt(target.goal.value)}
+            {unitLabel(formula?.result.unit)} (±{fmt(target.goal.tolerance * 100)} %)
+          </>
+        )}
       </p>
       <p className="mt-1">
         aktuell:{' '}
         {value === null ? (
-          <span className="text-ink-faint">— stell die Regler in der Ansicht rechts</span>
+          <span className="text-ink-faint">— beweg die Regler in der Ansicht</span>
         ) : (
           <span className={hit || flow.solved ? 'text-ok' : 'text-warn'}>
             {fmt(value)}

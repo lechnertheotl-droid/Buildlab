@@ -71,7 +71,7 @@ export function SegmentedControl<T extends string>({
                 move(i, -1);
               }
             }}
-            className={`${focusRing} ${sizeClass} font-mono transition-colors duration-150 disabled:cursor-default ${
+            className={`${focusRing} relative focus-visible:z-10 ${sizeClass} font-mono transition-colors duration-150 disabled:cursor-default ${
               active
                 ? outlineActive
                   ? 'shadow-[inset_0_0_0_2px_var(--accent)] text-accent-ink'
