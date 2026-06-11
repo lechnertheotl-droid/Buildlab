@@ -45,10 +45,23 @@ function formatResult(value: unknown): string {
     return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 }).format(value);
   }
   if (math.isUnit(value as never)) {
-    return (value as { toString: () => string }).toString();
+    // Zahlteil deutsch formatieren statt mathjs-toString (engl. Dezimalpunkt).
+    try {
+      const u = value as { toNumeric: () => number; formatUnits: () => string };
+      return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 6 }).format(u.toNumeric())} ${u.formatUnits()}`;
+    } catch {
+      return (value as { toString: () => string }).toString();
+    }
   }
   return String(value);
 }
+
+// Deutsche Eingabe: Komma ist Dezimaltrenner. mathjs erwartet Punkt — vor dem
+// Parsen normalisieren. Bewusster Trade-off: Mehrarg-Funktionen wie max(1,2)
+// sind damit nicht tippbar; das Keypad bietet nur Einarg-Funktionen, und das
+// Komma-Versprechen der Aufgaben („Komma oder Punkt sind beide ok") wiegt
+// für die Zielgruppe schwerer.
+const normalizeGermanExpr = (expr: string) => expr.replace(/,/g, '.');
 
 // Fachlich dimensionslose Labels, die mathjs nicht als Unit kennt (wie in der Engine).
 const DIMENSIONLESS_LABELS = new Set(['-', 'Kaliber']);
@@ -75,7 +88,7 @@ const KEYS: { label: string; insert?: string; action?: 'eval' | 'clear' | 'back'
   { label: '7', insert: '7' }, { label: '8', insert: '8' }, { label: '9', insert: '9' }, { label: '÷', insert: '/' },
   { label: '4', insert: '4' }, { label: '5', insert: '5' }, { label: '6', insert: '6' }, { label: '×', insert: '*' },
   { label: '1', insert: '1' }, { label: '2', insert: '2' }, { label: '3', insert: '3' }, { label: '−', insert: '-' },
-  { label: '0', insert: '0' }, { label: ',', insert: '.' }, { label: 'DEL', action: 'back' }, { label: '+', insert: '+' },
+  { label: '0', insert: '0' }, { label: ',', insert: ',' }, { label: 'DEL', action: 'back' }, { label: '+', insert: '+' },
   { label: 'sin', insert: 'sin(' }, { label: 'cos', insert: 'cos(' }, { label: 'tan', insert: 'tan(' }, { label: '√', insert: 'sqrt(' },
   { label: 'π', insert: 'pi' }, { label: 'e', insert: 'e' }, { label: 'x²', insert: '^2' }, { label: 'xⁿ', insert: '^' },
   { label: '(', insert: '(' }, { label: ')', insert: ')' }, { label: 'ans', insert: 'ans' }, { label: 'C', action: 'clear' },
@@ -107,7 +120,7 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
     if (!expr.trim()) return '';
     try {
       const scope = { ...SCOPE_CONSTANTS, ...(ans !== null ? { ans } : {}) };
-      return formatResult(math.evaluate(expr, scope));
+      return formatResult(math.evaluate(normalizeGermanExpr(expr), scope));
     } catch {
       return '';
     }
@@ -122,7 +135,7 @@ export function Calculator({ initialHistory, historyLoading, onEvaluate }: Calcu
     if (!expr.trim()) return;
     try {
       const scope = { ...SCOPE_CONSTANTS, ...(ans !== null ? { ans } : {}) };
-      const value = math.evaluate(expr, scope);
+      const value = math.evaluate(normalizeGermanExpr(expr), scope);
       const display = formatResult(value);
       setAns(value);
       setHistory((h) =>

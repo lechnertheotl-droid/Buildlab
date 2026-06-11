@@ -55,15 +55,25 @@ export function useDbValue<T>(loader: () => Promise<T>, deps: unknown[] = []): T
 let healthy = true;
 export const isDbHealthy = () => healthy;
 
-async function write(fn: (db: Awaited<ReturnType<typeof getDb>>) => Promise<unknown>) {
-  try {
-    const db = await getDb();
-    await fn(db);
-    healthy = true;
-  } catch {
-    healthy = false;
-  }
-  notifyChanged();
+// Writes laufen strikt nacheinander: jedes Read-Modify-Write sieht den Stand
+// des vorherigen. Ohne diese Kette überschreiben sich z. B. enterStep und
+// completeStep beim Meilenstein gegenseitig (Lost Update auf projectProgress).
+let writeChain: Promise<void> = Promise.resolve();
+
+function write(fn: (db: Awaited<ReturnType<typeof getDb>>) => Promise<unknown>): Promise<void> {
+  const run = async () => {
+    try {
+      const db = await getDb();
+      await fn(db);
+      healthy = true;
+    } catch {
+      healthy = false;
+    }
+    notifyChanged();
+  };
+  const next = writeChain.then(run, run);
+  writeChain = next;
+  return next;
 }
 
 // ── settings ─────────────────────────────────────────────────────────────────
@@ -90,8 +100,11 @@ export async function setSetting<K extends keyof SettingsShape>(name: K, value: 
 }
 
 // ── projectProgress ──────────────────────────────────────────────────────────
-export async function getProgress(projectId: string): Promise<ProjectProgress | undefined> {
-  return (await getDb()).get('projectProgress', projectId);
+// `null` = geladen, aber noch kein Fortschritt — unterscheidbar von
+// `undefined` (= Hook lädt noch). Workspace braucht diese Unterscheidung,
+// um enterStep nicht vor der Vorspul-Prüfung feuern zu lassen.
+export async function getProgress(projectId: string): Promise<ProjectProgress | null> {
+  return (await (await getDb()).get('projectProgress', projectId)) ?? null;
 }
 
 export async function getAllProgress(): Promise<Record<string, ProjectProgress>> {

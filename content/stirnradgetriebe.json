@@ -331,7 +331,7 @@
           "params": {
             "z1": 20,
             "z2": 60,
-            "m": 2,
+            "m": 3,
             "z1Range": [
               12,
               80
@@ -637,7 +637,7 @@
             "z2": {
               "min": 30,
               "max": 120,
-              "default": 60,
+              "default": 40,
               "unit": "-",
               "label": "Zähnezahl Abtrieb"
             },
