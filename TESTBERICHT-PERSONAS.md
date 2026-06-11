@@ -85,6 +85,7 @@ Target-Kopplung beim Mount mit dem aktuellen Canvas-Stand initialisieren statt
 mit „—“.
 
 ### B-05 · Explosionsansicht im Meilenstein ist hartkodiert und beim Flaschenzug schlicht falsch
+**Status: ✅ behoben (11.06.2026)** — Teile-Labels kommen jetzt aus dem Content (`step.finaleParts`, neues optionales Schema-Feld); ohne Labels rendert das Finale unbeschriftet. Werkstatt-Satz unterscheidet Bau-Projekte („Dein Bauteil wartet…") von reinen Abschlüssen („Dein Abschluss steht…").
 **Screen:** Meilenstein beider Projekte · **Persona:** Jonas
 Das Finale zeigt immer denselben Scheiben-Stapel mit den Labels
 „Grundplatte / Rad 1 / Rad 2 / Deckel“ — auch beim **Flaschenzug**, der weder
@@ -96,6 +97,7 @@ generisch „Bauteil“.
 zeigen, wenn das Projekt tatsächlich Bau-Einträge erzeugt.
 
 ### B-06 · Stufen-Aufgabe: Fehlermeldung aus Stufe 1 bleibt unter Stufe 2 stehen
+**Status: ✅ behoben (11.06.2026)** — `useFlow.clearMessage()` räumt die ✗-Meldung beim Stufen-Aufstieg.
 **Screen:** Schritt 5 (steps-Aufgabe) · **Persona:** Sarah
 Antwortet man in Stufe 1 falsch (✗-Meldung) und dann richtig, erscheint Stufe 2 —
 aber die alte ✗-Meldung („Noch nicht ganz …“) bleibt sichtbar, als hätte man in
@@ -103,6 +105,7 @@ Stufe 2 schon gefehlt. In `TaskView.tsx` wird beim Stufenwechsel `stageMsg`
 zurückgesetzt, der task-weite `fail()`-Status aber nicht.
 
 ### B-07 · Studium-Persona bekommt stillschweigend ein Fallback-Projekt empfohlen
+**Status: ✅ behoben (11.06.2026)** — `personaStart()` liefert ein Fallback-Flag; das Onboarding sagt jetzt dazu, dass das maßgeschneiderte Projekt noch in Arbeit ist.
 **Screen:** Onboarding Schritt 3 · **Persona:** Sarah
 `PERSONA_START.studium = 'fachwerkbruecke'` — das Projekt existiert noch nicht,
 also fällt `personaStartProject` kommentarlos auf `projects[0]` zurück: Wer

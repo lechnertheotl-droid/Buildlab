@@ -300,6 +300,7 @@
       "goal": "Die Engine bestätigt deine Auslegung — und dein Flaschenzug wandert in die Werkstatt.",
       "kind": "meilenstein",
       "estMinutes": 3,
+      "finaleParts": ["Haken", "Feste Rolle", "Lose Rolle", "Last"],
       "blocks": [
         {
           "type": "text",

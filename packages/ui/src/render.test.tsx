@@ -404,8 +404,12 @@ describe('Meilenstein (SCREENS.md §6.3)', () => {
       />,
     );
     expect(html).toContain('Explosionsansicht');
-    expect(html).toContain('Grundplatte');
-    expect(html).toContain('Deckel');
+    // Teile-Labels kommen aus dem Content (step.finaleParts), nicht aus dem Code.
+    for (const label of project.steps[msIndex].finaleParts ?? []) {
+      expect(html).toContain(label);
+    }
+    expect(project.steps[msIndex].finaleParts?.length).toBeGreaterThan(0);
+    // Projekt mit build-Block → Bauteil-Satz; ohne → Abschluss-Satz.
     expect(html).toContain('Dein Bauteil wartet in der Werkstatt.');
   });
 });

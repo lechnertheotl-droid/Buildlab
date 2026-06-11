@@ -5,7 +5,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, SegmentedControl, cardClass, focusRing } from '@buildlab/ui';
-import { personaStartProject } from '../content';
+import { personaStart } from '../content';
 import { setSetting } from '../db/repo';
 import type { Depth, Persona } from '../db/types';
 
@@ -69,7 +69,7 @@ export default function Onboarding() {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [depth, setDepth] = useState<Depth>('practical');
 
-  const start = personaStartProject(persona ?? undefined);
+  const { project: start, fallback } = personaStart(persona ?? undefined);
 
   const finish = async (target: string) => {
     if (persona) await setSetting('persona', persona);
@@ -154,6 +154,12 @@ export default function Onboarding() {
                 Los geht's →
               </Button>
             </div>
+            {fallback && (
+              <p className="mt-2 text-xs text-ink-faint">
+                Dein maßgeschneidertes Projekt ist noch in der Werkstatt — bis es fertig ist,
+                ist das hier der beste Start.
+              </p>
+            )}
             <button
               onClick={() => finish('/projekte')}
               className={`mt-3 min-h-11 text-sm text-ink-2 underline decoration-black/20 underline-offset-4 hover:text-ink ${focusRing}`}

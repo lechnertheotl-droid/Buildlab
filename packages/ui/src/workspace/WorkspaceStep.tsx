@@ -137,11 +137,13 @@ function RefreshCard({
 // Explosionsansicht (SCREENS.md §6.3 / DESIGN.md §6): die Teile des Bauteils
 // gleiten per `packages/iso`-explode auseinander (one-shot rAF, 900 ms),
 // Maßlinien beschriften sie. Reduzierte Bewegung → sofort explodiert.
-const FINALE_PARTS: { label: string; r: number; h: number; color: string }[] = [
-  { label: 'Grundplatte', r: 46, h: 9, color: '#9a9489' },
-  { label: 'Rad 1', r: 34, h: 12, color: '#a9a294' },
-  { label: 'Rad 2', r: 22, h: 12, color: '#a9a294' },
-  { label: 'Deckel', r: 11, h: 8, color: '#9a9489' },
+// Nur Geometrie — die Teile-Labels kommen aus dem Content (step.finaleParts),
+// damit kein Projekt fremde Teilenamen angedichtet bekommt.
+const FINALE_GEOMETRY: { r: number; h: number; color: string }[] = [
+  { r: 46, h: 9, color: '#9a9489' },
+  { r: 34, h: 12, color: '#a9a294' },
+  { r: 22, h: 12, color: '#a9a294' },
+  { r: 11, h: 8, color: '#9a9489' },
 ];
 
 function FinaleDisc({ cx, bottomY, r, h, color }: { cx: number; bottomY: number; r: number; h: number; color: string }) {
@@ -158,6 +160,15 @@ function FinaleDisc({ cx, bottomY, r, h, color }: { cx: number; bottomY: number;
 
 function MilestoneFinale({ project }: { project: Project }) {
   const [factor, setFactor] = useState(0);
+  // Labels aus dem Meilenstein-Step; ohne finaleParts bleibt das Finale
+  // unbeschriftet (keine erfundenen Teilenamen). Werkstatt-Satz je nachdem,
+  // ob das Projekt wirklich etwas baut (build-Block) oder nur abschließt.
+  const labels = project.steps.find((s) => s.kind === 'meilenstein')?.finaleParts ?? [];
+  const hasBuild = project.steps.some((s) => s.blocks.some((b) => b.type === 'build'));
+  const parts = (labels.length ? labels : FINALE_GEOMETRY.map(() => null)).map((label, i) => ({
+    label,
+    ...FINALE_GEOMETRY[Math.min(i, FINALE_GEOMETRY.length - 1)],
+  }));
   useEffect(() => {
     if (reducedMotionActive()) {
       setFactor(1);
@@ -179,7 +190,7 @@ function MilestoneFinale({ project }: { project: Project }) {
   const baseY = 168;
   const center = { x: 0, y: baseY, z: 0 };
   let stackY = baseY;
-  const placed = FINALE_PARTS.map((part) => {
+  const placed = parts.map((part) => {
     const assembled = stackY;
     stackY -= part.h + 2;
     const bottomY = explodePoint({ x: 0, y: assembled, z: 0 }, center, factor * 1.4).y;
@@ -189,13 +200,18 @@ function MilestoneFinale({ project }: { project: Project }) {
   return (
     <div className="bl-einzeichnen rounded-lg border border-black/10 bg-paper-2 p-6 text-center shadow">
       <svg viewBox="0 0 240 190" className="mx-auto w-60" role="img" aria-label="Explosionsansicht des fertigen Bauteils">
-        <desc>Die Teile des Bauteils gleiten auseinander; Maßlinien beschriften {FINALE_PARTS.map((p) => p.label).join(', ')}.</desc>
+        <desc>
+          {labels.length
+            ? `Die Teile des Bauteils gleiten auseinander; Maßlinien beschriften ${labels.join(', ')}.`
+            : 'Die Teile des Bauteils gleiten auseinander.'}
+        </desc>
         <ellipse cx={cx} cy={baseY + 8} rx={56} ry={12} fill="#000" opacity={0.1} />
-        {placed.map((p) => (
-          <FinaleDisc key={p.label} cx={cx} bottomY={p.bottomY} r={p.r} h={p.h} color={p.color} />
+        {placed.map((p, i) => (
+          <FinaleDisc key={i} cx={cx} bottomY={p.bottomY} r={p.r} h={p.h} color={p.color} />
         ))}
         {/* Maßlinien (DESIGN.md §3): dünne Akzent-Leader mit Mono-Labels. */}
         {placed.map((p, i) => {
+          if (!p.label) return null;
           const y = p.bottomY - p.h / 2;
           return (
             <g key={p.label} className={`bl-einzeichnen ${i ? `bl-einzeichnen-d${Math.min(i, 3)}` : ''}`}>
@@ -210,7 +226,9 @@ function MilestoneFinale({ project }: { project: Project }) {
       </svg>
       <p className="mt-3 font-display text-display-sm text-ink-strong">Steht.</p>
       <p className="mt-1 font-display text-lg text-ink">{project.buildResult}</p>
-      <p className="mt-1 font-mono text-sm text-ink-2">Dein Bauteil wartet in der Werkstatt.</p>
+      <p className="mt-1 font-mono text-sm text-ink-2">
+        {hasBuild ? 'Dein Bauteil wartet in der Werkstatt.' : 'Dein Abschluss steht in der Werkstatt.'}
+      </p>
     </div>
   );
 }

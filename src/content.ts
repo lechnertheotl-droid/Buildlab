@@ -29,6 +29,7 @@ export interface ProjectMeta {
     goal: string;
     kind: 'lernen' | 'bauen' | 'meilenstein';
     estMinutes?: number;
+    finaleParts?: string[];
     blocks: unknown[];
   }[];
 }
@@ -150,8 +151,19 @@ export const PERSONA_START: Record<string, string> = {
 };
 
 export function personaStartProject(persona: string | undefined): ProjectMeta {
+  return personaStart(persona).project;
+}
+
+/**
+ * Start-Empfehlung inkl. Ehrlichkeits-Flag: `fallback` ist true, wenn das
+ * kuratierte Wunschprojekt der Persona (PERSONA_START) noch nicht als Content
+ * existiert und stattdessen ein Ersatz empfohlen wird — das Onboarding sagt
+ * das dann dazu, statt den Ersatz als Maßanfertigung auszugeben.
+ */
+export function personaStart(persona: string | undefined): { project: ProjectMeta; fallback: boolean } {
   const wanted = persona ? PERSONA_START[persona] : undefined;
-  return (wanted && projectById.get(wanted)) || projects[0];
+  const project = (wanted && projectById.get(wanted)) || projects[0];
+  return { project, fallback: !!wanted && !projectById.get(wanted) };
 }
 
 /** Restdauer eines Projekts in Minuten (Orientierung, nie Timer). */
