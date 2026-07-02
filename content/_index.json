@@ -17,6 +17,13 @@
         }
       ]
     },
+    "barrowman": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "druckpunkt-und-finnen"
+      },
+      "usedIn": []
+    },
     "drehmoment": {
       "introducedIn": {
         "project": "hebel-flaschenzug",
@@ -38,6 +45,50 @@
         {
           "project": "stirnradgetriebe",
           "step": "drehzahl-drehmoment"
+        }
+      ]
+    },
+    "druckpunkt": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "druckpunkt-und-finnen"
+      },
+      "usedIn": [
+        {
+          "project": "modellrakete",
+          "step": "das-stabilitaetsmass"
+        },
+        {
+          "project": "modellrakete",
+          "step": "finnen-und-nase-bauen"
+        }
+      ]
+    },
+    "flugphasen": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "die-schubkurve"
+      },
+      "usedIn": [
+        {
+          "project": "modellrakete",
+          "step": "flug-simulieren"
+        },
+        {
+          "project": "modellrakete",
+          "step": "meilenstein"
+        }
+      ]
+    },
+    "gesamtimpuls": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "die-schubkurve"
+      },
+      "usedIn": [
+        {
+          "project": "modellrakete",
+          "step": "flug-simulieren"
         }
       ]
     },
@@ -82,6 +133,18 @@
         {
           "project": "hebel-flaschenzug",
           "step": "meilenstein"
+        },
+        {
+          "project": "modellrakete",
+          "step": "wie-fliegt-eine-rakete"
+        },
+        {
+          "project": "modellrakete",
+          "step": "schwerpunkt-finden"
+        },
+        {
+          "project": "modellrakete",
+          "step": "luftwiderstand"
         }
       ]
     },
@@ -106,6 +169,18 @@
         {
           "project": "hebel-flaschenzug",
           "step": "meilenstein"
+        }
+      ]
+    },
+    "luftwiderstand": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "luftwiderstand"
+      },
+      "usedIn": [
+        {
+          "project": "modellrakete",
+          "step": "flug-simulieren"
         }
       ]
     },
@@ -134,6 +209,62 @@
         {
           "project": "hebel-flaschenzug",
           "step": "rolle-bauen"
+        }
+      ]
+    },
+    "schub": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "wie-fliegt-eine-rakete"
+      },
+      "usedIn": [
+        {
+          "project": "modellrakete",
+          "step": "luftwiderstand"
+        },
+        {
+          "project": "modellrakete",
+          "step": "die-schubkurve"
+        }
+      ]
+    },
+    "schwerpunkt": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "schwerpunkt-finden"
+      },
+      "usedIn": [
+        {
+          "project": "modellrakete",
+          "step": "druckpunkt-und-finnen"
+        },
+        {
+          "project": "modellrakete",
+          "step": "das-stabilitaetsmass"
+        },
+        {
+          "project": "modellrakete",
+          "step": "finnen-und-nase-bauen"
+        }
+      ]
+    },
+    "stabilitaetsmass": {
+      "introducedIn": {
+        "project": "modellrakete",
+        "step": "das-stabilitaetsmass"
+      },
+      "usedIn": [
+        {
+          "project": "modellrakete",
+          "step": "finnen-und-nase-bauen"
+        },
+        {
+          "project": "modellrakete",
+          "step": "flug-simulieren"
+        },
+        {
+          "project": "modellrakete",
+          "step": "meilenstein"
         }
       ]
     },

@@ -6,7 +6,7 @@
 // (ehrliches End-to-End statt Fixture).
 
 import { describe, it, expect } from 'vitest';
-import { renderGearStl, renderPulleyStl } from './run-openscad';
+import { renderGearStl, renderPulleyStl, renderRaketeStl } from './run-openscad';
 import { validateStl, parseStl } from './stl';
 import { meshToIso } from './mesh-iso';
 
@@ -74,5 +74,44 @@ describe('OpenSCAD-WASM Umlenkrolle (rolle.scad, Testbefund B-20)', () => {
       expect(a).not.toBe(b);
     },
     60_000,
+  );
+});
+
+describe('OpenSCAD-WASM Modellrakete (rakete.scad)', () => {
+  // Der Default-Bau aus content/modellrakete.json — dieselbe Geometrie, die das
+  // Engine-Massenmodell als „dokumentierte Beispielrakete" durchrechnet.
+  const beispiel = { d: 24, tubeLen: 220, noseLen: 80, finRoot: 60, finTip: 30, finSpan: 40, finCount: 4 } as const;
+
+  it(
+    'rendert Rumpf UND Nase zu validem STL und lässt beide isometrisch darstellen',
+    async () => {
+      for (const part of ['rumpf', 'nase'] as const) {
+        const stl = await renderRaketeStl({ ...beispiel, part, fn: 16 });
+        const res = validateStl(stl);
+        expect(res.ok, `Teil '${part}' muss valides STL liefern`).toBe(true);
+        expect(res.triangles ?? 0).toBeGreaterThan(0);
+
+        const tris = parseStl(stl);
+        expect(tris.length).toBe(res.triangles);
+
+        const iso = meshToIso(tris, { width: 320, height: 220 });
+        expect(iso.polygons.length).toBeGreaterThan(0);
+      }
+    },
+    120_000,
+  );
+
+  it(
+    'ist wirklich parametrisch: mehr Finnen ⇒ mehr Facetten am Rumpf',
+    async () => {
+      const drei = await renderRaketeStl({ ...beispiel, part: 'rumpf', finCount: 3, fn: 16 });
+      const sechs = await renderRaketeStl({ ...beispiel, part: 'rumpf', finCount: 6, fn: 16 });
+      const ra = validateStl(drei);
+      const rb = validateStl(sechs);
+      expect(ra.ok).toBe(true);
+      expect(rb.ok).toBe(true);
+      expect(rb.triangles ?? 0).toBeGreaterThan(ra.triangles ?? 0);
+    },
+    120_000,
   );
 });

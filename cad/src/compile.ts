@@ -5,7 +5,7 @@
 // bei Bedarf geladen) und SSR berührt es nicht. Ergebnisse werden nach Parameter-Hash
 // gecacht: gleiche Parameter → identisches STL (Determinismus, Vorschau == Export).
 
-import type { GearParams, PulleyParams } from './run-openscad';
+import type { GearParams, PulleyParams, RaketeParams } from './run-openscad';
 
 interface ResponseMsg {
   id: number;
@@ -27,6 +27,13 @@ function paramKey(p: GearParams): string {
 
 function pulleyKey(p: PulleyParams): string {
   return `rolle|${round3(p.d)}|${round3(p.groove)}|${round3(p.bore)}|${round3(p.thickness)}|${round3(p.fn ?? 48)}`;
+}
+
+function raketeKey(p: RaketeParams): string {
+  return (
+    `rakete|${p.part}|${round3(p.d)}|${round3(p.tubeLen)}|${round3(p.noseLen)}|` +
+    `${round3(p.finRoot)}|${round3(p.finTip)}|${round3(p.finSpan)}|${round3(p.finCount)}|${round3(p.fn ?? 32)}`
+  );
 }
 
 function getWorker(): Worker {
@@ -79,5 +86,24 @@ export function compilePulley(params: PulleyParams): Promise<string> {
       reject,
     });
     getWorker().postMessage({ id, model: 'rolle', params });
+  });
+}
+
+/** Kompiliert ein Raketen-Teil (Rumpf/Nase) zu ASCII-STL (gecacht). */
+export function compileRakete(params: RaketeParams): Promise<string> {
+  const key = raketeKey(params);
+  const hit = cache.get(key);
+  if (hit !== undefined) return Promise.resolve(hit);
+
+  const id = nextId++;
+  return new Promise<string>((resolve, reject) => {
+    pending.set(id, {
+      resolve: (stl) => {
+        cache.set(key, stl);
+        resolve(stl);
+      },
+      reject,
+    });
+    getWorker().postMessage({ id, model: 'rakete', params });
   });
 }

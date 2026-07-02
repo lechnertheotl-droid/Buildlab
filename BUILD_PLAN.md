@@ -113,7 +113,13 @@ STL-Download hinter Constraints; `pnpm verify` grün.
 - [ ] `fachwerkbruecke` (Tür Studium) — braucht `vector-drag`, `force-balance`,
       `truss-load` (Engine-Löser zuerst, siehe `ENGINE_SPEC.md` §7);
       bis dahin `draft: true`.
-- [ ] `modellrakete` — braucht `rocket-stability`, `flight-sim` (RK4 in Engine).
+- [x] `modellrakete` — komplett live (02.07.2026): RK4-Flug-Sim mit
+      C6-Schubkurve und Barrowman/CG-Massenmodell in `packages/engine/rocket.js`
+      (Golden Tests inkl. Anti-Drift zu den Bau-Constraints), Interactives
+      `rocket-stability` + `flight-sim` implementiert, parametrisches CAD
+      `cad/rakete.scad` (Rumpf + Nase → STL), neue Formeln `newton`, `impulse`,
+      `burnout_v`, `rocket_cg`, `rocket_cp`; Meilenstein: S ∈ [1, 2] Kaliber
+      ∧ Apogäum ≥ 100 m.
 - [ ] danach 3, 5–10, 12 gemäß `PROJECT_SPECS.md`.
 - Jedes neue Projekt autorisiert seinen Schritt-Graphen mit (`step.requires`,
   siehe R9) — Verifier-Regeln 18–21 prüfen Form, Azyklik, Meilenstein-Senke

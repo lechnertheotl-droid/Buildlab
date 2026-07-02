@@ -64,7 +64,7 @@
    "value": 29.1,
    "unit": "N*m"
   },
-  "tol": 1e-06
+  "tol": 0.000001
  },
  {
   "id": "reaction_50",
@@ -158,7 +158,7 @@
    "value": 1.53125,
    "unit": "N"
   },
-  "tol": 1e-06
+  "tol": 0.000001
  },
  {
   "id": "stability_example",
@@ -183,6 +183,82 @@
   },
   "expected": {
    "value": 2.3,
+   "unit": "mm"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "newton_gewicht_100g",
+  "formulaId": "newton",
+  "inputs": {
+   "m": 0.1,
+   "a": 9.81
+  },
+  "expected": {
+   "value": 0.981,
+   "unit": "N"
+  },
+  "tol": 0.000001
+ },
+ {
+  "id": "impulse_c6",
+  "formulaId": "impulse",
+  "inputs": {
+   "F": 4.74,
+   "t": 1.86
+  },
+  "expected": {
+   "value": 8.8164,
+   "unit": "N*s"
+  },
+  "tol": 0.000001
+ },
+ {
+  "id": "burnout_v_c6",
+  "formulaId": "burnout_v",
+  "inputs": {
+   "I": 8.82,
+   "m": 0.077
+  },
+  "expected": {
+   "value": 114.54545454545455,
+   "unit": "m/s"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "rocket_cg_viermassen",
+  "formulaId": "rocket_cg",
+  "inputs": {
+   "mNase": 20,
+   "xNase": 60,
+   "mRohr": 30,
+   "xRohr": 230,
+   "mFin": 15,
+   "xFin": 330,
+   "mMotor": 24,
+   "xMotor": 345
+  },
+  "expected": {
+   "value": 239.6629213483146,
+   "unit": "mm"
+  },
+  "tol": 1e-09
+ },
+ {
+  "id": "rocket_cp_rechteckflossen",
+  "formulaId": "rocket_cp",
+  "inputs": {
+   "d": 24,
+   "noseLen": 60,
+   "tubeLen": 240,
+   "finRoot": 40,
+   "finTip": 40,
+   "finSpan": 30,
+   "finCount": 3
+  },
+  "expected": {
+   "value": 233.82022471910113,
    "unit": "mm"
   },
   "tol": 1e-09

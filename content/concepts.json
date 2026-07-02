@@ -65,5 +65,29 @@
 
   { "id": "stabilitaetsmass", "name": "Stabilitätsmaß", "symbol": "S", "unit": "Kaliber", "group": "stroemung",
     "short": "Wie stabil eine Rakete fliegt: Abstand Druckpunkt–Schwerpunkt, gemessen in Rohrdurchmessern. Gut sind 1–2.",
-    "prerequisites": ["luftwiderstand"], "relatedFormulas": ["stability"] }
+    "prerequisites": ["luftwiderstand"], "relatedFormulas": ["stability"] },
+
+  { "id": "schub", "name": "Schub", "symbol": "F_S", "unit": "N", "group": "stroemung",
+    "short": "Die Kraft, mit der der Motor die Rakete nach vorn drückt — der Rückstoß des ausströmenden Gases.",
+    "prerequisites": ["kraft"], "relatedFormulas": ["newton"] },
+
+  { "id": "gesamtimpuls", "name": "Gesamtimpuls", "symbol": "I", "unit": "N*s", "group": "kinematik",
+    "short": "Der gesamte Kraftstoß des Motors: Schub mal Zeit über die Brenndauer aufsummiert — die Fläche unter der Schubkurve.",
+    "prerequisites": ["schub"], "relatedFormulas": ["impulse", "burnout_v"] },
+
+  { "id": "schwerpunkt", "name": "Schwerpunkt (CG)", "symbol": "x_{CG}", "unit": "mm", "group": "statik",
+    "short": "Der Punkt, an dem die Rakete perfekt balanciert — hier greift die Gewichtskraft an.",
+    "prerequisites": ["kraft"], "relatedFormulas": ["rocket_cg"] },
+
+  { "id": "druckpunkt", "name": "Druckpunkt (CP)", "symbol": "x_{CP}", "unit": "mm", "group": "stroemung",
+    "short": "Der Punkt, an dem die Luftkräfte im Mittel angreifen. Liegt er hinter dem Schwerpunkt, richtet sich die Rakete von selbst wieder auf.",
+    "prerequisites": ["luftwiderstand"], "relatedFormulas": ["rocket_cp"] },
+
+  { "id": "flugphasen", "name": "Flugphasen", "unit": "-", "group": "kinematik",
+    "short": "Der Flug in Etappen: Boost (der Motor schiebt), Coast (Ausrollen gegen Schwerkraft und Luft), Apogäum (höchster Punkt), Sinken.",
+    "prerequisites": ["schub", "luftwiderstand"] },
+
+  { "id": "barrowman", "name": "Barrowman-Methode", "unit": "-", "group": "stroemung",
+    "short": "Das Rechenrezept für den Druckpunkt: Nase und Finnen liefern je einen Beitrag, gewichtet nach ihrer aerodynamischen Wirkung.",
+    "prerequisites": ["druckpunkt"], "relatedFormulas": ["rocket_cp"] }
 ]
