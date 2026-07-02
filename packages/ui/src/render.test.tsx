@@ -91,6 +91,36 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     expect(html).toContain('2 kg'); // Masse-Beschriftung der Last
   });
 
+  it('RocketStability zeigt CG, CP und Stabilität aus der Engine (Beispielrakete)', () => {
+    const block: InteractiveBlock = {
+      type: 'interactive',
+      componentId: 'rocket-stability',
+      params: { ballast: 8, show: ['ballast'] },
+    };
+    const html = wrap(<InteractiveRenderer block={block} />);
+    expect(html).toContain('209 mm'); // CG aus rocket_cg
+    expect(html).toContain('248 mm'); // CP aus rocket_cp (Barrowman)
+    expect(html).toContain('1,63 Kaliber'); // S aus stability
+    expect(html).toContain('stabil'); // Ampel-Urteil in Worten, nie nur Farbe
+    expect(html).toContain('aus der Engine');
+    expect(html).toContain('aria-live');
+  });
+
+  it('FlightSim zeichnet die RK4-Flugbahn mit Apogäum und Ziellinie', () => {
+    const block: InteractiveBlock = {
+      type: 'interactive',
+      componentId: 'flight-sim',
+      params: { motorClass: 'C6', massG: 53, showGoal: 100 },
+    };
+    const html = wrap(<InteractiveRenderer block={block} />);
+    expect(html).toContain('Apogäum'); // Marker + Ergebniszeile
+    expect(html).toContain('291 m'); // Apogäum aus simulateFlight (RK4)
+    expect(html).toContain('88 m/s'); // v_max aus der Engine
+    expect(html).toContain('✓ Ziel 100 m'); // Challenge-Linie erreicht
+    expect(html).toContain('<polyline'); // die Flugbahn selbst
+    expect(html).toContain('Boost'); // Flugphasen-Beschriftung
+  });
+
   it('PulleySystem fädelt das Seil bei anderem n sichtbar neu', () => {
     const render = (n: number) =>
       wrap(
@@ -117,7 +147,7 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
   });
 
   it('zeigt für geplante Registry-Komponenten einen ruhigen Platzhalter', () => {
-    const block: InteractiveBlock = { type: 'interactive', componentId: 'flight-sim' };
+    const block: InteractiveBlock = { type: 'interactive', componentId: 'vector-drag' };
     const html = wrap(<InteractiveRenderer block={block} />);
     expect(html).toContain('folgt in einer späteren Phase');
   });

@@ -1,0 +1,563 @@
+{
+  "id": "modellrakete",
+  "title": "Modellrakete",
+  "version": 2,
+  "level": 3,
+  "icon": "🚀",
+  "durationMin": 70,
+  "difficulty": 4,
+  "recommendedAfter": ["fachwerkbruecke"],
+  "buildResult": "Eine druckbare, real flugfähige Modellrakete: Rumpf mit Finnen und Motorschacht plus Nase mit Steckschulter, beides als STL.",
+  "challenge": "Baue eine stabile Rakete für den Motor Estes C6: Sie steigt gerade (Stabilitätsmaß 1–2 Kaliber) und erreicht mindestens 100 m Gipfelhöhe.",
+  "conceptsIntroduced": [
+    "schub",
+    "schwerpunkt",
+    "druckpunkt",
+    "barrowman",
+    "stabilitaetsmass",
+    "luftwiderstand",
+    "gesamtimpuls",
+    "flugphasen"
+  ],
+  "steps": [
+    {
+      "id": "wie-fliegt-eine-rakete",
+      "requires": [],
+      "title": "Wie fliegt eine Rakete?",
+      "goal": "Verstehen, dass Schub gegen Gewichtskraft antritt — und Abheben Beschleunigung heißt.",
+      "kind": "lernen",
+      "canvas": 3,
+      "estMinutes": 6,
+      "blocks": [
+        {
+          "type": "text",
+          "variant": "hook",
+          "layers": {
+            "intuitive": "Schnipp einen aufgeblasenen Luftballon los: Er flitzt wild durchs Zimmer, angetrieben von der ausströmenden Luft. Deine Rakete macht im Kern genau dasselbe — nur dass sie dabei bitte geradeaus fliegen soll. Der Unterschied ist keine Zauberei, sondern Physik in drei Schritten."
+          }
+        },
+        {
+          "type": "text",
+          "introduces": ["schub"],
+          "uses": ["kraft"],
+          "layers": {
+            "intuitive": "Der Motor wirft heißes Gas mit Karacho nach hinten raus — und als Gegengeschenk schiebt es die Rakete nach vorn. Diese Kraft heißt Schub. Gegen ihn zieht die Gewichtskraft nach unten. Wer gewinnt, entscheidet, ob deine Rakete abhebt oder auf der Rampe schmollt.",
+            "practical": "Zwei Kräfte im Duell: Schub F_S nach oben, Gewichtskraft F = m·g nach unten. Was übrig bleibt, beschleunigt die Rakete (F = m·a). Der Estes C6 drückt kurz nach der Zündung mit bis zu 14,09 N — deine startklare Rakete wiegt weniger als 1 N. Der Überschuss ist gewaltig, deshalb zischt sie so ab.",
+            "rigorous": "Newton II: a = (F_S − m·g)/m. Der Schub stammt aus dem Impulsstrom des ausströmenden Gases (actio = reactio). Solange F_S ≤ m·g ist, hält die Rampe die Rakete im Gleichgewicht; erst darüber wird a > 0. Beachte: m ist nicht konstant — der Treibsatz brennt ab, die Rakete wird im Flug leichter."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "newton",
+          "note": "Die Grundgleichung des ganzen Flugs: Kraftüberschuss macht Beschleunigung."
+        },
+        {
+          "type": "interactive",
+          "componentId": "value-slider",
+          "params": {
+            "formulaId": "newton",
+            "var": "m",
+            "min": 0.02,
+            "max": 0.2,
+            "step": 0.005,
+            "fixed": { "a": 9.81 }
+          },
+          "caption": "Zieh die Masse hoch und schau auf die Gewichtskraft: Der C6 stemmt in der Spitze 14,09 N (Datenblatt) — ab wann wird es eng fürs Abheben?"
+        },
+        {
+          "type": "task",
+          "kind": "single",
+          "question": "Deine Rakete steht startklar auf der Rampe. Was muss gelten, damit sie abhebt?",
+          "concepts": ["schub"],
+          "options": [
+            { "text": "Der Schub muss größer sein als die Gewichtskraft." },
+            {
+              "text": "Der Motor muss nur brennen — Schub ist Schub.",
+              "why": "Brennen allein reicht nicht: Solange der Schub kleiner als das Gewicht ist, drückt die Rampe einfach dagegen und nichts bewegt sich."
+            },
+            {
+              "text": "Die Rakete muss leichter als Luft sein.",
+              "why": "Das gilt für Ballons. Raketen sind viel schwerer als Luft — sie steigen, weil der Rückstoß des Gases sie schiebt."
+            },
+            {
+              "text": "Der Schub muss genau so groß sein wie die Gewichtskraft.",
+              "why": "Dann würde sie höchstens schweben. Zum Steigen braucht sie einen Überschuss, der sie beschleunigt (F = m·a)."
+            }
+          ],
+          "answer": 0,
+          "hint": "Denk an F = m·a: Welche zwei Kräfte ziehen an der Rakete — und was muss übrig bleiben, damit sie beschleunigt?",
+          "explanation": "Abheben heißt beschleunigen: Aus F = m·a folgt, dass netto eine Kraft nach oben übrig bleiben muss. Erst wenn der Schub die Gewichtskraft übersteigt, wird a positiv — der C6 schafft das kurz nach der Zündung mit bis zu 14 N Spitzenschub."
+        }
+      ]
+    },
+    {
+      "id": "schwerpunkt-finden",
+      "requires": ["wie-fliegt-eine-rakete"],
+      "title": "Schwerpunkt finden",
+      "goal": "Den Schwerpunkt als Massen-Mittelpunkt verstehen und gezielt mit Ballast verschieben.",
+      "kind": "lernen",
+      "canvas": 1,
+      "estMinutes": 8,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["schwerpunkt"],
+          "uses": ["kraft"],
+          "layers": {
+            "intuitive": "Leg einen Bleistift quer über deinen Finger und verschieb ihn, bis er balanciert: Dieser Punkt ist sein Schwerpunkt. Deine Rakete hat auch einen — und im Flug dreht sie sich um genau diesen Punkt. Mit einem Klecks Knete in der Nase schiebst du ihn nach vorn. Warum du das willst, siehst du gleich.",
+            "practical": "Der Schwerpunkt (CG) ist der gewichtete Mittelwert aller Massen: Bauteil-Masse mal Abstand von der Spitze, aufsummiert, durch die Gesamtmasse geteilt. In der Werkstatt geht's auch ohne Rechnung: fertige Rakete auf einer Schnur auspendeln. Ballast vorn wirkt stark, weil er weit weg vom Rest sitzt.",
+            "rigorous": "x_CG = Σmᵢxᵢ / Σmᵢ. Für deine Rakete zählen vier Posten: Nase (samt Ballast), Rohr, Finnen und Motor. Der Motor sitzt ganz hinten und zieht den CG deutlich Richtung Heck — gerechnet wird deshalb immer startbereit, mit vollem Motor: Das ist der kritischste Moment."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "rocket-stability",
+          "params": {
+            "ballast": 0,
+            "show": ["ballast"],
+            "highlight": "cg",
+            "goalX": 200
+          },
+          "caption": "Schieb Knete in die Nase und beobachte, wie der ⊕-Marker nach vorn wandert."
+        },
+        {
+          "type": "calc",
+          "formulaId": "rocket_cg",
+          "inputs": {
+            "mNase": 20,
+            "xNase": 60,
+            "mRohr": 30,
+            "xRohr": 230,
+            "mFin": 15,
+            "xFin": 330,
+            "mMotor": 24,
+            "xMotor": 345
+          },
+          "expected": { "value": 239.6629213483146, "unit": "mm" },
+          "narrative": "Vier Posten, gewichtet gemittelt: (20·60 + 30·230 + 15·330 + 24·345) geteilt durch 89 g ergibt rund 239,7 mm hinter der Spitze. Der schwere Motor ganz hinten zieht kräftig mit."
+        },
+        {
+          "type": "task",
+          "kind": "target",
+          "question": "Bring den Schwerpunkt mit Ballast auf 200 mm hinter die Spitze (±2 %) — die grüne Ziel-Marke im Bild.",
+          "concepts": ["schwerpunkt"],
+          "target": {
+            "formulaId": "rocket_cg",
+            "vars": ["mNase", "xNase"],
+            "goal": { "value": 200, "tolerance": 0.02 },
+            "proof": {
+              "pass": {
+                "mNase": 16.053891053999283,
+                "xNase": 43.36690217581396,
+                "mRohr": 23.448244380604713,
+                "xRohr": 190,
+                "mFin": 17.856,
+                "xFin": 270,
+                "mMotor": 24,
+                "xMotor": 265
+              },
+              "fail": {
+                "mNase": 4.053891053999284,
+                "xNase": 53.333333333333336,
+                "mRohr": 23.448244380604713,
+                "xRohr": 190,
+                "mFin": 17.856,
+                "xFin": 270,
+                "mMotor": 24,
+                "xMotor": 265
+              }
+            }
+          },
+          "hint": "Mehr Masse vorn zieht den Mittelwert Richtung Spitze. Taste dich in Gramm-Schritten heran — die Marke zeigt dir, wann du da bist.",
+          "explanation": "Mit rund 12 g Knete in der Nase liegt der Schwerpunkt bei etwa 201 mm. Ballast wirkt so stark, weil er weit vor dem alten Schwerpunkt sitzt — ein langer Hebel im gewichteten Mittel."
+        }
+      ]
+    },
+    {
+      "id": "druckpunkt-und-finnen",
+      "requires": ["schwerpunkt-finden"],
+      "title": "Druckpunkt & Finnen",
+      "goal": "Den Druckpunkt als Angriffspunkt der Luftkräfte verstehen und mit Finnen gezielt verschieben.",
+      "kind": "lernen",
+      "canvas": 1,
+      "estMinutes": 8,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["druckpunkt", "barrowman"],
+          "uses": ["schwerpunkt"],
+          "layers": {
+            "intuitive": "Wirf einen Pfeil ohne Federn: Er trudelt. Mit Federn hinten fliegt er schnurgerade — die Luft dreht ihn von selbst wieder in die Bahn. Die Luft greift nämlich nicht überall gleich an; ihr gemeinsamer Angriffspunkt ist der Druckpunkt. Sitzen hinten große Finnen, wandert er nach hinten — und deine Rakete richtet sich selbst auf wie eine Wetterfahne.",
+            "practical": "Der Druckpunkt (CP) ist das Gegenstück zum Schwerpunkt — nur für die Luftkräfte statt für die Massen. Das Rechenrezept dafür heißt Barrowman-Methode: Nase und Finnen liefern je einen Beitrag, und je größer und zahlreicher die Finnen, desto weiter rückt der CP nach hinten. Für einen stabilen Flug muss er hinter dem Schwerpunkt liegen.",
+            "rigorous": "Barrowman (reduziert): Die Kegelnase trägt C_N,n = 2 bei x_n = ⅔·L_n; Trapezflossen tragen C_N,f aus Spannweite, Tiefe und Anzahl (mit Körper-Interferenzfaktor) bei ihrem Flächen-Hebelpunkt x_f. Der CP ist das gewichtete Mittel x_CP = ΣC_N,i·x_i / ΣC_N,i. Gültig für kleine Anstellwinkel, Rumpfauftrieb vernachlässigt — exakt die Näherung, die auch dein Bau-Schritt rechnet."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "rocket-stability",
+          "params": {
+            "ballast": 8,
+            "show": ["finSpan", "finCount"],
+            "highlight": "cp"
+          },
+          "caption": "Größere Spannweite, mehr Finnen — beobachte, wie der ●-Marker nach hinten rückt."
+        },
+        {
+          "type": "calc",
+          "formulaId": "rocket_cp",
+          "inputs": {
+            "d": 24,
+            "noseLen": 60,
+            "tubeLen": 240,
+            "finRoot": 40,
+            "finTip": 40,
+            "finSpan": 30,
+            "finCount": 3
+          },
+          "expected": { "value": 233.82022471910113, "unit": "mm" },
+          "narrative": "Rechteckflossen (40 mm vorn wie hinten) machen Barrowman handrechenbar: Die Nase liefert C_N = 2 bei 40 mm, die drei Finnen ihren großen Beitrag weit hinten — zusammen landet der Druckpunkt bei rund 234 mm."
+        },
+        {
+          "type": "task",
+          "kind": "multi",
+          "question": "Was schiebt den Druckpunkt nach hinten, Richtung Heck? Wähle alles Richtige.",
+          "concepts": ["druckpunkt", "barrowman"],
+          "options": [
+            { "text": "Größere Finnen-Spannweite" },
+            { "text": "Mehr Finnen (z. B. 4 statt 3)" },
+            {
+              "text": "Mehr Ballast in der Nase",
+              "why": "Ballast verschiebt Masse, nicht Luft: Er zieht den Schwerpunkt nach vorn — der Druckpunkt bleibt genau, wo er ist."
+            },
+            {
+              "text": "Ein dickeres Rohr",
+              "why": "Ein dickeres Rohr macht die Finnen im Verhältnis kleiner — ihr Barrowman-Beitrag sinkt und der Druckpunkt rückt sogar nach vorn."
+            }
+          ],
+          "answer": [0, 1],
+          "hint": "Der Druckpunkt gehört zur Luft, nicht zur Masse. Was ändert, wo und wie stark die Luft angreift?",
+          "explanation": "Nur die Aerodynamik zählt: Mehr Finnenfläche (Spannweite) und mehr Finnen vergrößern den Heck-Beitrag in der Barrowman-Summe — der CP wandert nach hinten. Ballast wirkt allein auf den Schwerpunkt, und ein dickeres Rohr verkleinert den relativen Finnen-Hebel."
+        }
+      ]
+    },
+    {
+      "id": "das-stabilitaetsmass",
+      "requires": ["druckpunkt-und-finnen"],
+      "title": "Das Stabilitätsmaß",
+      "goal": "Das Stabilitätsmaß aus CP, CG und Kaliber berechnen und die 1–2-Kaliber-Regel anwenden.",
+      "kind": "lernen",
+      "estMinutes": 8,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["stabilitaetsmass"],
+          "uses": ["schwerpunkt", "druckpunkt"],
+          "layers": {
+            "intuitive": "Jetzt kommen deine zwei Punkte zusammen. Liegt der Druckpunkt hinter dem Schwerpunkt, dreht der Fahrtwind die Rakete immer wieder gerade — wie eine Wetterfahne. Liegt er davor: Purzelbaum. Die spannende Frage ist also nicht ob, sondern wie weit CP hinter CG liegt.",
+            "practical": "Das Stabilitätsmaß S misst den Abstand CP−CG in Kalibern, also in Rohrdurchmessern. Faustregel der Raketenbauer: 1 bis 2 Kaliber. Unter 1: kippelig, die Rückstellung ist zu schwach. Über 2: überstabil — bei Seitenwind dreht sich die Rakete in den Wind und fliegt schräg weg.",
+            "rigorous": "S = (x_CP − x_CG)/d. Die Normierung auf das Kaliber macht Entwürfe vergleichbar: Der Rückstellhebel wird in Rohrdurchmessern gemessen. Unter 1 Kaliber reicht das aufrichtende Moment gegen Störungen nicht sicher; deutlich über 2 wächst die Windempfindlichkeit, weil schon kleine Anstellwinkel große Momente erzeugen."
+          }
+        },
+        { "type": "formula", "formulaId": "stability" },
+        {
+          "type": "calc",
+          "formulaId": "stability",
+          "inputs": { "xcp": 520, "xcg": 480, "d": 24 },
+          "expected": { "value": 1.6666666666666667, "unit": "Kaliber" },
+          "narrative": "(520 − 480)/24 = 40/24 ≈ 1,67 Kaliber — mitten im grünen Bereich."
+        },
+        {
+          "type": "text",
+          "variant": "merksatz",
+          "layers": {
+            "intuitive": "Gut fliegt, was 1 bis 2 Kaliber hat: Der Druckpunkt liegt ein bis zwei Rohrdurchmesser hinter dem Schwerpunkt."
+          }
+        },
+        {
+          "type": "task",
+          "kind": "numeric",
+          "question": "Dein Entwurf: Druckpunkt bei 248 mm, Schwerpunkt bei 212 mm, Rohrdurchmesser 24 mm. Berechne das Stabilitätsmaß — die Einheit gehört zur Antwort.",
+          "concepts": ["stabilitaetsmass"],
+          "source": {
+            "formulaId": "stability",
+            "inputs": { "xcp": 248, "xcg": 212, "d": 24 }
+          },
+          "answer": 1.5,
+          "tolerance": 0.01,
+          "unit": "Kaliber",
+          "unitChoices": ["Kaliber", "mm", "-"],
+          "hint": "Erst der Abstand zwischen den beiden Punkten, dann durch den Rohrdurchmesser teilen.",
+          "explanation": "S = (248 − 212)/24 = 36/24 = 1,5 Kaliber. Die Millimeter kürzen sich weg — übrig bleibt der Abstand in Rohrdurchmessern, dem „Kaliber“ der Rakete. 1,5 liegt sauber in der 1–2-Regel."
+        }
+      ]
+    },
+    {
+      "id": "luftwiderstand",
+      "requires": ["wie-fliegt-eine-rakete"],
+      "title": "Luftwiderstand",
+      "goal": "Den Luftwiderstand berechnen und verinnerlichen, dass er mit dem Quadrat der Geschwindigkeit wächst.",
+      "kind": "lernen",
+      "canvas": 2,
+      "estMinutes": 7,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["luftwiderstand"],
+          "uses": ["schub", "kraft"],
+          "layers": {
+            "intuitive": "Halte die Hand bei Tempo 30 aus dem Fenster: Die Luft drückt spürbar. Bei Tempo 60 drückt sie nicht doppelt, sondern viermal so stark. Luft ist zäh — und sie wird umso zäher, je schneller du bist. Deine Rakete ist bei über 300 km/h unterwegs; da wird die Luft zum echten Gegner.",
+            "practical": "F_w = ½·ρ·v²·c_w·A. Merk dir vor allem das v²: doppelte Geschwindigkeit, vierfacher Widerstand. Dagegen hilft: kleine Stirnfläche (schlankes Rohr), spitze Nase (kleiner c_w-Wert, hier ≈ 0,75) und nicht schwerer bauen als nötig.",
+            "rigorous": "ρ ist die Luftdichte (≈ 1,225 kg/m³ auf Meereshöhe), A die angeströmte Stirnfläche A = π·(d/2)² — bei d = 24 mm rund 0,000452 m². Der c_w-Wert bündelt die Formgüte. In der Flugsimulation wirkt F_w stets der Bewegung entgegen: bremst beim Steigen, bremst auch beim Fallen."
+          }
+        },
+        { "type": "formula", "formulaId": "drag" },
+        {
+          "type": "interactive",
+          "componentId": "value-slider",
+          "params": {
+            "formulaId": "drag",
+            "var": "v",
+            "min": 0,
+            "max": 150,
+            "step": 5,
+            "fixed": { "rho": 1.225, "cw": 0.75, "A": 0.000452 }
+          },
+          "caption": "Deine Rakete: Ø 24 mm → A ≈ 0,000452 m², c_w ≈ 0,75. Schieb v hoch und achte darauf, wie die Kraft anzieht."
+        },
+        {
+          "type": "calc",
+          "formulaId": "drag",
+          "inputs": { "rho": 1.225, "v": 50, "cw": 0.75, "A": 0.000452 },
+          "expected": { "value": 0.51909375, "unit": "N" },
+          "narrative": "Bei v = 50 m/s bremst die Luft deine Rakete schon mit rund einem halben Newton — mehr als die halbe Gewichtskraft, ständig, in Gegenrichtung."
+        },
+        {
+          "type": "task",
+          "kind": "estimate",
+          "question": "Bei 50 m/s bremst die Luft mit rund 0,52 N. Wie stark bremst sie bei doppeltem Tempo, also 100 m/s — dein Bauchgefühl?",
+          "concepts": ["luftwiderstand"],
+          "source": {
+            "formulaId": "drag",
+            "inputs": { "rho": 1.225, "v": 100, "cw": 0.75, "A": 0.000452 }
+          },
+          "scale": { "min": 0.2, "max": 20, "log": true, "bands": [1.5, 4] },
+          "hint": "Im Gesetz steckt v zum Quadrat — was macht Verdoppeln daraus?",
+          "explanation": "Viermal so stark: F_w wächst mit v². Aus rund 0,52 N werden gut 2 N. Wer „doppelt so schnell = doppelt so stark“ schätzt, sitzt in der klassischen v²-Falle — ab jetzt nicht mehr."
+        }
+      ]
+    },
+    {
+      "id": "die-schubkurve",
+      "requires": ["luftwiderstand"],
+      "title": "Die Schubkurve",
+      "goal": "Den Gesamtimpuls als Fläche unter der Schubkurve lesen und die Flugphasen ordnen.",
+      "kind": "lernen",
+      "estMinutes": 8,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["gesamtimpuls", "flugphasen"],
+          "uses": ["schub"],
+          "layers": {
+            "intuitive": "Dein C6 brennt keine zwei Sekunden. Erst ein kräftiger Tritt (gut 14 N Spitze), dann ein langes, gleichmäßiges Schieben um die 4 bis 5 N. Alles, was der Motor dir insgesamt mitgibt, steckt in der Fläche unter dieser Schubkurve — dem Gesamtimpuls. Und der Flug? Der ist nach dem Brennen noch lange nicht vorbei. Er hat Phasen.",
+            "practical": "Gesamtimpuls I ≈ mittlerer Schub × Brenndauer — die Fläche unter der Schubkurve. Die Motorklasse verrät ihn: Klasse C heißt 5–10 N·s, der C6 liegt mit ≈ 8,8 N·s fast am oberen Rand. Der Flug danach: Boost (Motor brennt) → Coast (Ausrollen) → Apogäum (höchster Punkt) → Sinken.",
+            "rigorous": "Exakt ist I = ∫F dt; die Engine summiert die Schubkurve des offenen .eng-Datensatzes diskret als Trapezsumme. Zur Nomenklatur: Das „C“ kodiert das Impulsband, die „6“ ist der mittlere Schub in Newton, und die Zahl hinterm Bindestrich (C6-5) die Verzögerung in Sekunden bis zur Ausstoßladung."
+          }
+        },
+        { "type": "formula", "formulaId": "impulse" },
+        {
+          "type": "calc",
+          "formulaId": "impulse",
+          "inputs": { "F": 4.74, "t": 1.86 },
+          "expected": { "value": 8.8164, "unit": "N*s" },
+          "narrative": "Mittlerer Schub 4,74 N mal 1,86 s Brenndauer: rund 8,8 N·s. Klasse C reicht von 5 bis 10 N·s — der C6 schöpft sie fast aus."
+        },
+        {
+          "type": "task",
+          "kind": "order",
+          "question": "Bring die Phasen deines Raketenflugs in die richtige Reihenfolge — vom Start bis zum Boden.",
+          "concepts": ["flugphasen", "gesamtimpuls"],
+          "items": [
+            "Boost: Der Motor brennt und beschleunigt die Rakete",
+            "Coast: Der Motor ist aus — die Rakete rollt gegen Schwerkraft und Luft aus",
+            "Apogäum: Der höchste Punkt, für einen Augenblick steht alles still",
+            "Sinken: Zurück Richtung Boden"
+          ],
+          "correctOrder": [0, 1, 2, 3],
+          "hint": "Der Motor brennt zuerst — und keine zwei Sekunden. Was danach noch steigt, steigt mit Schwung.",
+          "explanation": "Boost → Coast → Apogäum → Sinken. Das Überraschende: Die meiste Höhe gewinnt die Rakete NACH dem Brennschluss — der Gesamtimpuls steckt dann als Schwung in ihr und wird im Coast gegen Schwerkraft und Luft eingetauscht."
+        }
+      ]
+    },
+    {
+      "id": "finnen-und-nase-bauen",
+      "requires": ["das-stabilitaetsmass"],
+      "title": "Finnen & Nase bauen",
+      "goal": "Die Raketengeometrie so auslegen, dass sie stabil ist und der Motor passt — dann drucken.",
+      "kind": "bauen",
+      "canvas": 1,
+      "estMinutes": 10,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["stabilitaetsmass", "schwerpunkt", "druckpunkt"],
+          "layers": {
+            "intuitive": "Jetzt wird's ernst: deine Finnen, deine Nase, dein Ballast. Die Regler formen das Modell, die Engine rechnet live nach, ob es stabil fliegt — und erst wenn alle Anforderungen grün sind, rückt sie das STL raus. Scheitern ausdrücklich erlaubt: Jede rote Zeile zeigt dir, an welchem Regler es hängt.",
+            "practical": "Stell die Geometrie so ein, dass das Stabilitätsmaß zwischen 1 und 2 Kalibern liegt und der 18-mm-Motor ins Rohr passt (Innendurchmesser ≥ 19 mm). Gedruckt werden zwei Teile: der Rumpf mit Finnen und Motorschacht, und die Nase, die mit ihrer Schulter ins Rohr steckt. Der Ballast kommt später als Knete in die Nasenspitze.",
+            "rigorous": "Die Anforderungen rechnen exakt die Modelle der vorigen Schritte: Barrowman-Druckpunkt und Massen-Schwerpunkt (PLA 1,24 g/cm³, Wand 1,2 mm, Finnen 2 mm, voller Motor 24 g im Heck) zu S = (x_CP − x_CG)/d. Vorschau und Download entstehen aus demselben parametrischen Modell — was du siehst, druckst du."
+          }
+        },
+        {
+          "type": "build",
+          "cadModel": "rakete",
+          "parameters": {
+            "d": { "min": 21, "max": 32, "default": 24, "unit": "mm", "label": "Rohrdurchmesser" },
+            "tubeLen": { "min": 140, "max": 320, "default": 220, "unit": "mm", "label": "Rohrlänge" },
+            "noseLen": { "min": 40, "max": 120, "default": 80, "unit": "mm", "label": "Nasenlänge" },
+            "finRoot": { "min": 30, "max": 90, "default": 60, "unit": "mm", "label": "Wurzeltiefe der Finnen" },
+            "finTip": { "min": 10, "max": 60, "default": 30, "unit": "mm", "label": "Spitzentiefe der Finnen" },
+            "finSpan": { "min": 20, "max": 60, "default": 40, "unit": "mm", "label": "Spannweite der Finnen" },
+            "finCount": { "min": 3, "max": 6, "default": 4, "unit": "-", "label": "Finnenzahl" },
+            "ballast": { "min": 0, "max": 20, "default": 8, "unit": "g", "label": "Ballast in der Nase" }
+          },
+          "constraints": [
+            {
+              "expr": "(((2 * (2/3 * noseLen) + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))) * ((noseLen + tubeLen - finRoot) + ((finRoot - finTip)/3) * ((finRoot + 2*finTip)/(finRoot + finTip)) + ((finRoot + finTip) - (finRoot*finTip)/(finRoot + finTip))/6)) / (2 + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))))) - (((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) * (2/3 * noseLen) + ballast * (noseLen/2) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) * (noseLen + tubeLen/2) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) * (noseLen + tubeLen - finRoot/2) + 24 * (noseLen + tubeLen - 35)) / ((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) + ballast + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) + 24))) / d >= 1",
+              "label": "Stabil: Der Druckpunkt liegt mindestens 1 Kaliber hinter dem Schwerpunkt",
+              "proof": {
+                "pass": { "d": 24, "tubeLen": 220, "noseLen": 80, "finRoot": 60, "finTip": 30, "finSpan": 40, "finCount": 4, "ballast": 8 },
+                "fail": { "d": 24, "tubeLen": 220, "noseLen": 80, "finRoot": 30, "finTip": 10, "finSpan": 20, "finCount": 3, "ballast": 0 }
+              }
+            },
+            {
+              "expr": "(((2 * (2/3 * noseLen) + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))) * ((noseLen + tubeLen - finRoot) + ((finRoot - finTip)/3) * ((finRoot + 2*finTip)/(finRoot + finTip)) + ((finRoot + finTip) - (finRoot*finTip)/(finRoot + finTip))/6)) / (2 + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))))) - (((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) * (2/3 * noseLen) + ballast * (noseLen/2) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) * (noseLen + tubeLen/2) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) * (noseLen + tubeLen - finRoot/2) + 24 * (noseLen + tubeLen - 35)) / ((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) + ballast + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) + 24))) / d <= 2",
+              "label": "Nicht überstabil: höchstens 2 Kaliber — sonst dreht sie sich in den Seitenwind",
+              "proof": {
+                "pass": { "d": 24, "tubeLen": 220, "noseLen": 80, "finRoot": 60, "finTip": 30, "finSpan": 40, "finCount": 4, "ballast": 8 },
+                "fail": { "d": 24, "tubeLen": 320, "noseLen": 60, "finRoot": 40, "finTip": 20, "finSpan": 55, "finCount": 6, "ballast": 20 }
+              }
+            },
+            {
+              "expr": "d - 2.4 >= 19",
+              "label": "Der 18-mm-Motor (C6) passt ins Rohr: Innendurchmesser mindestens 19 mm",
+              "proof": {
+                "pass": { "d": 24, "tubeLen": 220, "noseLen": 80, "finRoot": 60, "finTip": 30, "finSpan": 40, "finCount": 4, "ballast": 8 },
+                "fail": { "d": 21, "tubeLen": 220, "noseLen": 80, "finRoot": 60, "finTip": 30, "finSpan": 40, "finCount": 4, "ballast": 8 }
+              }
+            }
+          ],
+          "exports": ["stl"],
+          "bom": [
+            "1× Rumpf mit Finnen und Motorschacht (gedruckt)",
+            "1× Nase mit Steckschulter (gedruckt)",
+            "≈ 8 g Knete als Ballast in der Nasenspitze",
+            "1× Motor Estes C6-5 + Zünder (Zukauf, Fachhandel)",
+            "Startrampe mit Führungsstab (Zukauf) — nie freihändig starten"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flug-simulieren",
+      "requires": ["die-schubkurve", "das-stabilitaetsmass"],
+      "title": "Flug simulieren",
+      "goal": "Die Flugbahn deuten und den Zusammenhang von Impuls, Masse und Gipfelhöhe abschätzen.",
+      "kind": "lernen",
+      "canvas": 1,
+      "estMinutes": 8,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["gesamtimpuls", "flugphasen", "luftwiderstand", "stabilitaetsmass"],
+          "layers": {
+            "intuitive": "Bevor irgendetwas wirklich fliegt, fliegt es hier. Die Engine wirft deine Rakete virtuell in die Luft — mit der echten C6-Schubkurve, deiner Masse und der bremsenden Luft. Die spannende Linie liegt bei 100 m: Schafft dein Entwurf die Challenge?",
+            "practical": "Der Masse-Regler zeigt dir den wichtigsten Hebel: Jedes Gramm kostet Höhe. Der Referenzbau (rund 53 g leer) fliegt deutlich über die 100-m-Linie — genug Reserve für Lack, Aufkleber und eine nicht ganz perfekte Druckqualität. Lies auch v_max ab und vergleich es mit deiner groben Impuls-Abschätzung.",
+            "rigorous": "Die Simulation integriert F = m·a mit Runge-Kutta 4. Ordnung (fester Schritt 10 ms): Schub linear aus der .eng-Kurve interpoliert, Massenabnahme proportional zum verbrauchten Impuls, Luftwiderstand ½ρc_wAv² stets gegen die Bewegung. Deterministisch: gleiche Eingaben, gleiche Kurve — genau so wird das Apogäum der Challenge verifiziert."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "flight-sim",
+          "params": {
+            "motorClass": "C6",
+            "massG": 53,
+            "d": 24,
+            "cw": 0.75,
+            "showGoal": 100,
+            "massRange": [40, 120]
+          },
+          "caption": "Jedes Gramm zählt: Ab welcher Leermasse reißt dein Entwurf die 100-m-Marke?"
+        },
+        {
+          "type": "task",
+          "kind": "steps",
+          "question": "Schätze die Brennschluss-Geschwindigkeit in zwei Stufen — erst der Impuls, dann das Tempo.",
+          "concepts": ["gesamtimpuls", "schub"],
+          "tolerance": 0.01,
+          "steps": [
+            {
+              "prompt": "Der C6 schiebt im Mittel mit F̄ = 4,74 N über t_b = 1,86 s. Berechne den Gesamtimpuls I.",
+              "formulaId": "impulse",
+              "inputs": { "F": 4.74, "t": 1.86 }
+            },
+            {
+              "prompt": "Startklar wiegt deine Rakete m ≈ 0,077 kg. Wie schnell wäre sie damit grob bei Brennschluss (v_b ≈ I/m)?",
+              "formulaId": "burnout_v",
+              "inputs": { "I": "$prev", "m": 0.077 }
+            }
+          ],
+          "hint": "Stufe 1: Schub mal Zeit. Stufe 2: dein Ergebnis durch die Masse teilen.",
+          "explanation": "I = 4,74 · 1,86 ≈ 8,82 N·s, dann v_b ≈ 8,82/0,077 ≈ 115 m/s. Das ist die grobe Obergrenze nach dem Impulssatz — im Diagramm siehst du das ehrliche v_max darunter, denn Schwerkraft und Luft bremsen schon während des Brennens mit."
+        }
+      ]
+    },
+    {
+      "id": "meilenstein",
+      "requires": ["finnen-und-nase-bauen", "flug-simulieren"],
+      "title": "Startfreigabe",
+      "goal": "Das Gesamtergebnis prüfen: stabile Geometrie, Apogäum über 100 m, sicherer Start.",
+      "kind": "meilenstein",
+      "canvas": 2,
+      "estMinutes": 7,
+      "finaleParts": ["Motor C6 (Zukauf)", "Finnen", "Rumpfrohr", "Nase mit Ballast"],
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["stabilitaetsmass", "flugphasen"],
+          "layers": {
+            "intuitive": "Startfreigabe! Deine Rakete ist gerechnet, geprüft und druckbar: Stabilität im grünen Bereich, Gipfelhöhe über der 100-m-Marke. Was jetzt kommt, passiert draußen — auf einem freien Feld, mit Respekt und Rückenwind.",
+            "practical": "Drucke Rumpf und Nase, Knete in die Spitze, Motor bis zum Anschlagring einschieben, Zünder setzen, Rakete auf die Rampe. Check vor jedem Start: Sitzt die Nase stramm, aber abnehmbar? Wackelt keine Finne? Dann Countdown.",
+            "rigorous": "Die Engine hat beides verifiziert: S = (x_CP − x_CG)/d ∈ [1, 2] über die Bau-Anforderungen (Barrowman + Massenmodell, mit vollem Motor) und Apogäum ≥ 100 m über die RK4-Flugbahn mit der zertifizierten C6-Schubkurve. Golden Tests decken jede Formel und die Simulation ab."
+          }
+        },
+        {
+          "type": "calc",
+          "formulaId": "stability",
+          "inputs": { "xcp": 248.06303393505132, "xcg": 209.06002793806408, "d": 24 },
+          "expected": { "value": 1.6251252498744684, "unit": "Kaliber" },
+          "narrative": "Der Referenzbau, von der Engine durchgerechnet: Druckpunkt 248 mm, Schwerpunkt 209 mm (mit Motor und 8 g Ballast) — S ≈ 1,63 Kaliber, mitten im grünen Bereich."
+        },
+        {
+          "type": "interactive",
+          "componentId": "flight-sim",
+          "params": {
+            "motorClass": "C6",
+            "massG": 53,
+            "d": 24,
+            "cw": 0.75,
+            "showGoal": 100,
+            "showMassSlider": false
+          },
+          "caption": "Der Beleg: Das Apogäum liegt deutlich über der 100-m-Linie — Challenge erfüllt."
+        },
+        {
+          "type": "text",
+          "variant": "hinweis",
+          "layers": {
+            "intuitive": "Sicherheit zuerst: Starte nur auf freiem Feld ohne Bebauung und trockenes Gras, mindestens 5 m Abstand für alle, Start nur senkrecht von einer Rampe mit Führungsstab. Motor (Estes C6-5) und Zünder sind Zukaufteile — halte dich an die Anleitung des Herstellers und die örtlichen Regeln. Bei Wind über 20 km/h: Der Himmel läuft nicht weg."
+          }
+        }
+      ]
+    }
+  ]
+}

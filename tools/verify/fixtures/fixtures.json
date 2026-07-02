@@ -130,7 +130,7 @@
         "buildResult": "-", "challenge": "-",
         "steps": [
           { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
-            { "type": "interactive", "componentId": "flight-sim" },
+            { "type": "interactive", "componentId": "vector-drag" },
             { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
               "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
           ] },

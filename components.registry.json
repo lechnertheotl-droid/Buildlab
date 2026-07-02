@@ -65,16 +65,16 @@
     },
     {
       "id": "rocket-stability",
-      "status": "geplant",
-      "purpose": "Raketen-Seitenriss mit Schwerpunkt (CG), Druckpunkt (CP) und Stabilitätsmaß; Massen-/Finnen-Slider.",
-      "params": { "finRoot": "number", "finTip": "number", "finCount": "number" },
+      "status": "implementiert",
+      "purpose": "Raketen-Seitenriss mit Schwerpunkt (CG), Druckpunkt (CP) und Stabilitätsmaß; Ballast-/Finnen-Slider; optionale Ziel-Marke für target-Aufgaben (publiziert die rocket_cg-Variablen).",
+      "params": { "d": "number", "tubeLen": "number", "noseLen": "number", "finRoot": "number", "finTip": "number", "finSpan": "number", "finCount": "number", "ballast": "number", "show": "array", "highlight": "string", "goalX": "number", "ballastRange": "array", "finRootRange": "array", "finTipRange": "array", "finSpanRange": "array", "finCountRange": "array" },
       "computedBy": "engine"
     },
     {
       "id": "flight-sim",
-      "status": "geplant",
-      "purpose": "Flugbahn-Diagramm (Höhe über Zeit) mit Apogäum und v_max aus der Flug-ODE (RK4).",
-      "params": { "motorClass": "string" },
+      "status": "implementiert",
+      "purpose": "Flugbahn-Diagramm (Höhe über Zeit) mit Apogäum, v_max und Flugphasen aus der Flug-ODE (RK4, packages/engine); optionale Ziellinie und Leermasse-Slider.",
+      "params": { "motorClass": "string", "massG": "number", "massRange": "array", "d": "number", "cw": "number", "showGoal": "number", "showMassSlider": "boolean" },
       "computedBy": "engine"
     }
   ]

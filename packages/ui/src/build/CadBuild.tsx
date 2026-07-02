@@ -13,14 +13,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   compileGear,
   compilePulley,
+  compileRakete,
   parseStl,
   validateStl,
   meshToIso,
   type Triangle,
   type GearParams,
   type PulleyParams,
+  type RaketeParams,
 } from '@buildlab/cad';
-import { evaluateExpr, evaluateFormula } from '@buildlab/engine';
+import { computeRocket, evaluateExpr, evaluateFormula } from '@buildlab/engine';
 import { Latex } from '../Latex';
 import { Slider } from '../Slider';
 import { useContent } from '../content-context';
@@ -62,6 +64,17 @@ const ROLLE_DEFAULTS: Record<string, ParamConfig> = {
   d_seil: { min: 2, max: 6, default: 4, unit: 'mm', label: 'Dein Seildurchmesser', step: 0.5 },
 };
 
+const RAKETE_DEFAULTS: Record<string, ParamConfig> = {
+  d: { min: 21, max: 32, default: 24, unit: 'mm', label: 'Rohrdurchmesser', step: 1 },
+  tubeLen: { min: 140, max: 320, default: 220, unit: 'mm', label: 'Rohrlänge', step: 5 },
+  noseLen: { min: 40, max: 120, default: 80, unit: 'mm', label: 'Nasenlänge', step: 5 },
+  finRoot: { min: 30, max: 90, default: 60, unit: 'mm', label: 'Wurzeltiefe der Finnen', step: 2 },
+  finTip: { min: 10, max: 60, default: 30, unit: 'mm', label: 'Spitzentiefe der Finnen', step: 2 },
+  finSpan: { min: 20, max: 60, default: 40, unit: 'mm', label: 'Spannweite der Finnen', step: 2 },
+  finCount: { min: 3, max: 6, default: 4, unit: '-', label: 'Finnenzahl', step: 1 },
+  ballast: { min: 0, max: 20, default: 8, unit: 'g', label: 'Ballast in der Nase', step: 1 },
+};
+
 function mergeConfig(key: string, raw: unknown, defaults: Record<string, ParamConfig> = GEAR_DEFAULTS): ParamConfig {
   const base = defaults[key] ?? { min: 0, max: 1, default: 0, unit: '-', label: key, step: 1 };
   if (!raw || typeof raw !== 'object') return base;
@@ -85,6 +98,7 @@ export interface CadBuildProps {
 export function CadBuild({ block, onExport }: CadBuildProps) {
   if (block.cadModel === 'gear') return <GearBuild block={block} onExport={onExport} />;
   if (block.cadModel === 'rolle') return <RolleBuild block={block} onExport={onExport} />;
+  if (block.cadModel === 'rakete') return <RaketeBuild block={block} onExport={onExport} />;
   return (
     <p className="rounded border border-dashed border-black/15 px-3 py-2 font-mono text-xs uppercase tracking-wide text-ink-faint">
       ▸ CAD-Modell „{block.cadModel}" · folgt in einer späteren Phase
@@ -568,6 +582,272 @@ function RolleBuild({ block, onExport }: CadBuildProps) {
         </button>
         <p className="mt-1.5 text-xs text-ink-faint">
           Für den Flaschenzug brauchst du zwei Rollen — druck die Datei einfach zweimal.
+        </p>
+      </div>
+    </figure>
+  );
+}
+
+// ── Modellrakete: dasselbe Muster, ein Modell (cad/rakete.scad), zwei druckbare
+//    Teile (Rumpf mit Finnen + Motorschacht, Nase mit Steckschulter). Der
+//    Ballast ist kein Geometrie-Parameter — er geht ins Massenmodell der Engine
+//    und in die Stabilitäts-Constraints, löst aber kein Neu-Kompilieren aus.
+
+function RaketeBuild({ block, onExport }: CadBuildProps) {
+  const setActive = useWorkspaceStore((s) => s.setActive);
+  const clearActive = useWorkspaceStore((s) => s.clearActive);
+  const setCanvasInputs = useWorkspaceStore((s) => s.setCanvasInputs);
+  const setBuildOk = useWorkspaceStore((s) => s.setBuildOk);
+
+  const paramKeys = useMemo(() => Object.keys(block.parameters), [block.parameters]);
+  const configs = useMemo(
+    () => paramKeys.map((k) => [k, mergeConfig(k, block.parameters[k], RAKETE_DEFAULTS)] as const),
+    [paramKeys, block.parameters],
+  );
+
+  const [values, setValues] = useState<Record<string, number>>(() =>
+    Object.fromEntries(configs.map(([k, c]) => [k, c.default])),
+  );
+  const [part, setPart] = useState<'rumpf' | 'nase'>('rumpf');
+  const [rotation, setRotation] = useState(0);
+  const [triangles, setTriangles] = useState<Triangle[]>([]);
+  const [stl, setStl] = useState<string | null>(null);
+  const [computing, setComputing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const reqRef = useRef(0);
+
+  const params: RaketeParams = {
+    part,
+    d: values.d,
+    tubeLen: values.tubeLen,
+    noseLen: values.noseLen,
+    finRoot: values.finRoot,
+    finTip: values.finTip,
+    finSpan: values.finSpan,
+    finCount: values.finCount,
+    fn: 32,
+  };
+
+  // Eiserne Regel 1: Stabilitätsmaß aus dem Engine-Massenmodell (computeRocket),
+  // dieselbe Mathematik wie die Constraint-Ausdrücke (Paritätstest in der Engine).
+  const stability = useMemo(() => {
+    try {
+      return computeRocket({
+        d: values.d,
+        tubeLen: values.tubeLen,
+        noseLen: values.noseLen,
+        finRoot: values.finRoot,
+        finTip: values.finTip,
+        finSpan: values.finSpan,
+        finCount: values.finCount,
+        ballast: values.ballast ?? 0,
+      }).stability;
+    } catch {
+      return null;
+    }
+  }, [values]);
+
+  // Constraints live prüfen (Engine-Auswertung über die aktuellen Parameter).
+  const constraints = useMemo(
+    () =>
+      (block.constraints ?? []).map((c) => {
+        try {
+          return { label: c.label, ok: evaluateExpr(c.expr, values) === true };
+        } catch {
+          return { label: c.label, ok: false };
+        }
+      }),
+    [block.constraints, values],
+  );
+  const allConstraintsOk = constraints.every((c) => c.ok);
+
+  // Vorschau aus DEMSELBEN STL: kompilieren (debounced), validieren, parsen.
+  // Der Ballast fehlt bewusst in den Deps — er ändert die Geometrie nicht.
+  useEffect(() => {
+    const id = ++reqRef.current;
+    setComputing(true);
+    const timer = setTimeout(() => {
+      compileRakete(params)
+        .then((out) => {
+          if (id !== reqRef.current) return; // veraltet
+          const check = validateStl(out);
+          if (!check.ok) {
+            setError(check.reason ?? 'ungültiges STL');
+            setComputing(false);
+            return;
+          }
+          setTriangles(parseStl(out));
+          setStl(out);
+          setError(null);
+          setComputing(false);
+        })
+        .catch((e: unknown) => {
+          if (id !== reqRef.current) return;
+          setError(e instanceof Error ? e.message : String(e));
+          setComputing(false);
+        });
+    }, 250);
+    return () => clearTimeout(timer);
+    // params ist aus values abgeleitet — die Einzelfelder sind die echten Deps.
+  }, [params.part, params.d, params.tubeLen, params.noseLen, params.finRoot, params.finTip, params.finSpan, params.finCount]);
+
+  const iso = useMemo(
+    () => meshToIso(triangles, { width: VIEW_W, height: VIEW_H, rotation }),
+    [triangles, rotation],
+  );
+
+  // Kontext für Rechner + target-Aufgaben bereitstellen.
+  const valuesKey = JSON.stringify(values);
+  useEffect(() => {
+    const r = computeRocket({
+      d: values.d,
+      tubeLen: values.tubeLen,
+      noseLen: values.noseLen,
+      finRoot: values.finRoot,
+      finTip: values.finTip,
+      finSpan: values.finSpan,
+      finCount: values.finCount,
+      ballast: values.ballast ?? 0,
+    });
+    setActive({
+      formulaId: 'stability',
+      label: 'Stabilitätsmaß',
+      values: { xcp: r.xcp, xcg: r.xcg, d: values.d },
+    });
+    setCanvasInputs(values);
+    return () => clearActive('stability');
+    // valuesKey repräsentiert values inhaltlich.
+  }, [setActive, clearActive, setCanvasInputs, valuesKey]);
+
+  // Constraint-Stand fürs Schritt-Gating publizieren (wie beim GearBuild).
+  useEffect(() => {
+    setBuildOk(allConstraintsOk);
+    return () => setBuildOk(null);
+  }, [setBuildOk, allConstraintsOk]);
+
+  const exportable = stl !== null && validateStl(stl).ok && allConstraintsOk;
+
+  const download = () => {
+    if (!stl) return;
+    const blob = new Blob([stl], { type: 'model/stl' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const name = `rakete_${part}_d${fmt(values.d, 0)}_l${fmt(values.noseLen + values.tubeLen, 0)}`;
+    a.href = url;
+    a.download = `${name}.stl`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    onExport?.({ ...values }, part === 'rumpf' ? 'Raketen-Rumpf mit Finnen' : 'Raketen-Nase');
+  };
+
+  return (
+    <figure className="rounded border border-black/10 bg-paper-2 p-4 shadow">
+      <div className="mb-3 inline-flex rounded border border-black/10" role="radiogroup" aria-label="Welches Teil anzeigen?">
+        {(['rumpf', 'nase'] as const).map((p) => (
+          <button
+            key={p}
+            type="button"
+            role="radio"
+            aria-checked={part === p}
+            onClick={() => setPart(p)}
+            className={`min-h-11 px-4 font-mono text-sm outline-none first:rounded-l last:rounded-r focus-visible:ring-2 focus-visible:ring-accent ${
+              part === p ? 'bg-accent text-paper' : 'bg-paper-sink/40 text-ink-2 hover:text-ink'
+            }`}
+          >
+            {p === 'rumpf' ? 'Rumpf' : 'Nase'}
+          </button>
+        ))}
+      </div>
+
+      <MeshPreview
+        polygons={iso.polygons}
+        width={VIEW_W}
+        height={VIEW_H}
+        computing={computing}
+        empty={triangles.length === 0}
+      />
+
+      {/* Engine-Maß: Stabilitätsmaß über das ganze Design (nicht nur das Teil) */}
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-sm" aria-live="polite">
+        <span className="flex items-baseline gap-2">
+          <Latex className="text-ink" src="S" />
+          <span className="text-ink">=</span>
+          {stability === null ? (
+            <span className="text-fehl">—</span>
+          ) : (
+            <span className="text-accent-ink">{fmt(stability, 2)} Kaliber</span>
+          )}
+          <span className="ml-1 text-xs text-ink-faint">aus der Engine</span>
+        </span>
+        {error && <span className="text-xs text-fehl">⚠ Das Modell mag diese Werte nicht — stell einen Parameter zurück.</span>}
+      </div>
+
+      {/* Parameter-Slider */}
+      <div className="mt-4 flex flex-col gap-4">
+        {configs.map(([key, c]) => (
+          <Slider
+            key={key}
+            label={c.label}
+            value={values[key]}
+            min={c.min}
+            max={c.max}
+            step={c.step}
+            unit={c.unit}
+            onChange={(v) => setValues((prev) => ({ ...prev, [key]: v }))}
+          />
+        ))}
+        <Slider
+          label="Ansicht drehen"
+          value={Math.round((rotation * 180) / Math.PI)}
+          min={0}
+          max={360}
+          step={5}
+          unit="°"
+          onChange={(v) => setRotation((v * Math.PI) / 180)}
+        />
+      </div>
+
+      {/* Anforderungen (build.constraints) — jede Zeile engine-geprüft */}
+      {constraints.length > 0 && (
+        <ul className="mt-4 space-y-1 border-t border-black/10 pt-3" aria-label="Anforderungen">
+          {constraints.map((c, idx) => (
+            <li key={idx} className={`flex items-center gap-2 font-mono text-sm ${c.ok ? 'text-ok' : 'text-fehl'}`}>
+              <span aria-hidden>{c.ok ? '✓' : '✗'}</span>
+              <span className="text-ink-2">{c.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Stückliste zugeklappt (SCREENS.md §6.2) */}
+      {(block.bom?.length ?? 0) > 0 && (
+        <details className="mt-3 text-sm text-ink-2">
+          <summary className="cursor-pointer font-mono text-xs uppercase tracking-wider text-ink-faint outline-none focus-visible:ring-2 focus-visible:ring-accent">
+            ▸ Stückliste
+          </summary>
+          <ul className="mt-1 list-inside list-disc">
+            {block.bom!.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {/* Export — erst wenn alle Anforderungen erfüllt sind */}
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={download}
+          disabled={!exportable}
+          title={allConstraintsOk ? undefined : 'Erst alle Anforderungen erfüllen — die Liste oben zeigt, wo es hakt.'}
+          className="min-h-11 rounded border border-black/10 bg-accent px-4 text-sm text-paper outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ⤓ STL herunterladen
+        </button>
+        <p className="mt-1.5 text-xs text-ink-faint">
+          Du brauchst beide Teile — wechsle oben auf {part === 'rumpf' ? '„Nase"' : '„Rumpf"'} und lade nochmal.
         </p>
       </div>
     </figure>

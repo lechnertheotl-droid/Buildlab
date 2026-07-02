@@ -13,6 +13,8 @@ import { LeverSlider, type LeverSliderParams } from './LeverSlider';
 import { ValueSlider, type ValueSliderParams } from './ValueSlider';
 import { GearPair, type GearPairParams } from './GearPair';
 import { PulleySystem, type PulleySystemParams } from './PulleySystem';
+import { RocketStability, type RocketStabilityParams } from './RocketStability';
+import { FlightSim, type FlightSimParams } from './FlightSim';
 
 // Implementierte Komponenten (Registry: status "implementiert"). Einträge mit
 // status "geplant" erscheinen als ruhiger Platzhalter — und sind per Verifier
@@ -29,6 +31,12 @@ const IMPLEMENTED: Record<string, (block: InteractiveBlock) => ReactNode> = {
   ),
   'pulley-system': (block) => (
     <PulleySystem params={(block.params ?? {}) as PulleySystemParams} caption={block.caption} />
+  ),
+  'rocket-stability': (block) => (
+    <RocketStability params={(block.params ?? {}) as RocketStabilityParams} caption={block.caption} />
+  ),
+  'flight-sim': (block) => (
+    <FlightSim params={(block.params ?? {}) as unknown as FlightSimParams} caption={block.caption} />
   ),
 };
 

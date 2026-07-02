@@ -352,7 +352,7 @@
     "unit": "kg/m^3",
     "explanation": "Dichte der Luft; auf Meereshöhe ca. 1,225.",
     "typicalRange": [
-     1.0,
+     1,
      1.3
     ]
    },
@@ -468,6 +468,302 @@
     "typicalRange": [
      0.1,
      1
+    ]
+   }
+  ]
+ },
+ {
+  "id": "newton",
+  "latex": "F = m \\cdot a",
+  "expr": "m * a",
+  "conceptId": "kraft",
+  "result": {
+   "symbol": "F",
+   "name": "Kraft",
+   "unit": "N"
+  },
+  "variables": [
+   {
+    "var": "m",
+    "symbol": "m",
+    "name": "Masse",
+    "unit": "kg",
+    "explanation": "Alles, was mitfliegt: Rakete, Motor, Ballast. In Kilogramm.",
+    "typicalRange": [
+     0.01,
+     5
+    ]
+   },
+   {
+    "var": "a",
+    "symbol": "a",
+    "name": "Beschleunigung",
+    "unit": "m/s^2",
+    "explanation": "Wie schnell die Geschwindigkeit wächst. Die Erde zieht mit 9,81 m/s² nach unten.",
+    "typicalRange": [
+     0,
+     100
+    ]
+   }
+  ]
+ },
+ {
+  "id": "impulse",
+  "latex": "I = \\int F\\,\\mathrm{d}t \\approx \\bar{F} \\cdot t_b",
+  "expr": "F * t",
+  "conceptId": "gesamtimpuls",
+  "result": {
+   "symbol": "I",
+   "name": "Gesamtimpuls",
+   "unit": "N*s"
+  },
+  "variables": [
+   {
+    "var": "F",
+    "symbol": "\\bar{F}",
+    "name": "Mittlerer Schub",
+    "unit": "N",
+    "explanation": "Der über die Brenndauer gemittelte Schub — die Fläche unter der Schubkurve, gleichmäßig verteilt.",
+    "typicalRange": [
+     0.1,
+     50
+    ]
+   },
+   {
+    "var": "t",
+    "symbol": "t_b",
+    "name": "Brenndauer",
+    "unit": "s",
+    "explanation": "Wie lange der Motor Schub liefert.",
+    "typicalRange": [
+     0.1,
+     10
+    ]
+   }
+  ]
+ },
+ {
+  "id": "burnout_v",
+  "latex": "v_b \\approx \\dfrac{I}{m}",
+  "expr": "I / m",
+  "conceptId": "gesamtimpuls",
+  "result": {
+   "symbol": "v_b",
+   "name": "Brennschluss-Geschwindigkeit",
+   "unit": "m/s"
+  },
+  "variables": [
+   {
+    "var": "I",
+    "symbol": "I",
+    "name": "Gesamtimpuls",
+    "unit": "N*s",
+    "explanation": "Der gesamte Kraftstoß des Motors — bei einem C-Motor rund 9 Newtonsekunden.",
+    "typicalRange": [
+     1,
+     40
+    ]
+   },
+   {
+    "var": "m",
+    "symbol": "m",
+    "name": "Masse",
+    "unit": "kg",
+    "explanation": "Die Masse der Rakete — hier grob als konstant angenommen, deshalb ist das eine Abschätzung.",
+    "typicalRange": [
+     0.02,
+     0.5
+    ]
+   }
+  ]
+ },
+ {
+  "id": "rocket_cg",
+  "latex": "x_{CG} = \\dfrac{\\sum_i m_i\\,x_i}{\\sum_i m_i}",
+  "expr": "(mNase * xNase + mRohr * xRohr + mFin * xFin + mMotor * xMotor) / (mNase + mRohr + mFin + mMotor)",
+  "conceptId": "schwerpunkt",
+  "result": {
+   "symbol": "x_{CG}",
+   "name": "Lage des Schwerpunkts",
+   "unit": "mm"
+  },
+  "variables": [
+   {
+    "var": "mNase",
+    "symbol": "m_{Nase}",
+    "name": "Masse der Nase",
+    "unit": "g",
+    "explanation": "Nase samt Ballast — vorn zählt jedes Gramm fürs Gleichgewicht.",
+    "typicalRange": [
+     1,
+     100
+    ]
+   },
+   {
+    "var": "xNase",
+    "symbol": "x_{Nase}",
+    "name": "Schwerpunktlage der Nase",
+    "unit": "mm",
+    "explanation": "Abstand des Nasen-Schwerpunkts von der Spitze aus gemessen.",
+    "typicalRange": [
+     0,
+     600
+    ]
+   },
+   {
+    "var": "mRohr",
+    "symbol": "m_{Rohr}",
+    "name": "Masse des Rohrs",
+    "unit": "g",
+    "explanation": "Das leere Körperrohr.",
+    "typicalRange": [
+     1,
+     100
+    ]
+   },
+   {
+    "var": "xRohr",
+    "symbol": "x_{Rohr}",
+    "name": "Schwerpunktlage des Rohrs",
+    "unit": "mm",
+    "explanation": "Abstand des Rohr-Schwerpunkts von der Spitze — beim gleichmäßigen Rohr die halbe Rohrlänge hinter der Nase.",
+    "typicalRange": [
+     0,
+     600
+    ]
+   },
+   {
+    "var": "mFin",
+    "symbol": "m_{Fin}",
+    "name": "Masse der Finnen",
+    "unit": "g",
+    "explanation": "Alle Finnen zusammen.",
+    "typicalRange": [
+     1,
+     100
+    ]
+   },
+   {
+    "var": "xFin",
+    "symbol": "x_{Fin}",
+    "name": "Schwerpunktlage der Finnen",
+    "unit": "mm",
+    "explanation": "Abstand des Finnen-Schwerpunkts von der Spitze — die Finnen sitzen weit hinten.",
+    "typicalRange": [
+     0,
+     600
+    ]
+   },
+   {
+    "var": "mMotor",
+    "symbol": "m_{Motor}",
+    "name": "Masse des Motors",
+    "unit": "g",
+    "explanation": "Der eingesetzte Motor — er zieht den Schwerpunkt nach hinten.",
+    "typicalRange": [
+     1,
+     100
+    ]
+   },
+   {
+    "var": "xMotor",
+    "symbol": "x_{Motor}",
+    "name": "Schwerpunktlage des Motors",
+    "unit": "mm",
+    "explanation": "Abstand des Motor-Schwerpunkts von der Spitze — der Motor steckt ganz im Heck.",
+    "typicalRange": [
+     0,
+     600
+    ]
+   }
+  ]
+ },
+ {
+  "id": "rocket_cp",
+  "latex": "x_{CP} = \\dfrac{C_{N,n}\\,x_n + C_{N,f}\\,x_f}{C_{N,n} + C_{N,f}}",
+  "expr": "(2 * (2/3 * noseLen) + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))) * ((noseLen + tubeLen - finRoot) + ((finRoot - finTip)/3) * ((finRoot + 2*finTip)/(finRoot + finTip)) + ((finRoot + finTip) - (finRoot*finTip)/(finRoot + finTip))/6)) / (2 + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))))",
+  "conceptId": "druckpunkt",
+  "result": {
+   "symbol": "x_{CP}",
+   "name": "Lage des Druckpunkts",
+   "unit": "mm"
+  },
+  "variables": [
+   {
+    "var": "d",
+    "symbol": "d",
+    "name": "Rohrdurchmesser",
+    "unit": "mm",
+    "explanation": "Außendurchmesser des Rohrs — das Kaliber der Rakete.",
+    "typicalRange": [
+     10,
+     200
+    ]
+   },
+   {
+    "var": "noseLen",
+    "symbol": "L_n",
+    "name": "Nasenlänge",
+    "unit": "mm",
+    "explanation": "Länge der Nasenspitze von der Spitze bis zum Rohransatz.",
+    "typicalRange": [
+     30,
+     200
+    ]
+   },
+   {
+    "var": "tubeLen",
+    "symbol": "L_r",
+    "name": "Rohrlänge",
+    "unit": "mm",
+    "explanation": "Länge des Körperrohrs vom Nasenansatz bis zum Heck.",
+    "typicalRange": [
+     100,
+     500
+    ]
+   },
+   {
+    "var": "finRoot",
+    "symbol": "C_R",
+    "name": "Wurzeltiefe",
+    "unit": "mm",
+    "explanation": "Tiefe der Finne dort, wo sie am Rohr sitzt — in Flugrichtung gemessen.",
+    "typicalRange": [
+     20,
+     100
+    ]
+   },
+   {
+    "var": "finTip",
+    "symbol": "C_T",
+    "name": "Spitzentiefe",
+    "unit": "mm",
+    "explanation": "Tiefe der Finne an ihrer Außenkante.",
+    "typicalRange": [
+     5,
+     80
+    ]
+   },
+   {
+    "var": "finSpan",
+    "symbol": "s",
+    "name": "Spannweite",
+    "unit": "mm",
+    "explanation": "Wie weit die Finne vom Rohr absteht.",
+    "typicalRange": [
+     15,
+     80
+    ]
+   },
+   {
+    "var": "finCount",
+    "symbol": "N",
+    "name": "Finnenzahl",
+    "unit": "-",
+    "explanation": "Wie viele Finnen rundherum sitzen — üblich sind 3 oder 4.",
+    "typicalRange": [
+     3,
+     6
     ]
    }
   ]

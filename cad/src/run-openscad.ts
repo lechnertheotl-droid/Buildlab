@@ -8,6 +8,7 @@
 import { createOpenSCAD, type OpenSCADInstance } from 'openscad-wasm';
 import gearScad from '../gear.scad?raw';
 import rolleScad from '../rolle.scad?raw';
+import raketeScad from '../rakete.scad?raw';
 
 export interface GearParams {
   /** Modul m [mm] */
@@ -78,4 +79,42 @@ export function pulleyScadSource(p: PulleyParams): string {
 export async function renderPulleyStl(p: PulleyParams): Promise<string> {
   const oscad = await newInstance();
   return oscad.renderToStl(pulleyScadSource(p));
+}
+
+export interface RaketeParams {
+  /** Welches druckbare Teil: Rumpf (Rohr + Finnen + Motorschacht) oder Nase. */
+  part: 'rumpf' | 'nase';
+  /** Rohr-Außendurchmesser [mm] */
+  d: number;
+  /** Rohrlänge [mm] */
+  tubeLen: number;
+  /** Nasenlänge [mm] */
+  noseLen: number;
+  /** Wurzeltiefe der Finne [mm] */
+  finRoot: number;
+  /** Spitzentiefe der Finne [mm] */
+  finTip: number;
+  /** Spannweite der Finne [mm] */
+  finSpan: number;
+  /** Anzahl der Finnen [-] */
+  finCount: number;
+  /** Vorschau-Qualität ($fn); modest halten, damit die Facet-Zahl klein bleibt. */
+  fn?: number;
+}
+
+/** Baut den vollständigen .scad-Quelltext der Rakete (Teil per part gewählt). */
+export function raketeScadSource(p: RaketeParams): string {
+  const fn = p.fn ?? 32;
+  return (
+    `$fn=${fn};\n` +
+    `${raketeScad}\n` +
+    `rakete(part="${p.part}", d=${p.d}, tubeLen=${p.tubeLen}, noseLen=${p.noseLen}, ` +
+    `finRoot=${p.finRoot}, finTip=${p.finTip}, finSpan=${p.finSpan}, finCount=${p.finCount});\n`
+  );
+}
+
+/** Rendert ein Raketen-Teil zu ASCII-STL (Text). Wirft bei OpenSCAD-Fehlern. */
+export async function renderRaketeStl(p: RaketeParams): Promise<string> {
+  const oscad = await newInstance();
+  return oscad.renderToStl(raketeScadSource(p));
 }
