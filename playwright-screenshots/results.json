@@ -1,0 +1,144 @@
+{
+  "pass": [
+    "Title: \"Buildlab — Maschinenbau zum Anfassen\"",
+    "Stirnradgetriebe-Projekt sichtbar",
+    "Zweites Projekt sichtbar (Hebel/Flaschenzug)",
+    "Workspace-Inhalt geladen",
+    "Tiefen-Button \"verspielt\" klickbar",
+    "Tiefen-Button \"praxis\" klickbar",
+    "Tiefen-Button \"genau\" klickbar",
+    "Schritt 1: 3 Radio-Optionen (single-choice Task)",
+    "Submit-Button vorhanden (wartet auf alle Task-Antworten)",
+    "Schritt 1: Schieber/Slider gefunden",
+    "Schritt 5: SVG Rendering sichtbar",
+    "Schritt 6: SVG Rendering sichtbar",
+    "Schritt 7: SVG Rendering sichtbar",
+    "Schritt 8: SVG Rendering sichtbar",
+    "Konzept-Seite lädt",
+    "Einstellungen-Screen geladen",
+    "Seite nach Reload geladen",
+    "DOM Ready: 1361ms",
+    "Page Load: 1365ms",
+    "Projekte auf Mobile sichtbar",
+    "Projekt-Baum auf Mobile geladen",
+    "Kein horizontaler Overflow – Layout ok",
+    "Schriftgröße ok: 16px",
+    "Task auf Mobile Schritt 1 sichtbar",
+    "Tablet-Ansicht getestet"
+  ],
+  "fail": [
+    "1 Konsolen-Fehler: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "warn": [
+    "URL nach Klick: http://localhost:5173/",
+    "Keine Formel-Elemente (mathml/katex)"
+  ],
+  "screenshots": [
+    {
+      "name": "01-homepage-desktop",
+      "desc": "Startseite – Projektkarte",
+      "file": "/home/user/Buildlab/playwright-screenshots/01-homepage-desktop.png"
+    },
+    {
+      "name": "02-project-tree-desktop",
+      "desc": "Projekt-Baum mit DAG",
+      "file": "/home/user/Buildlab/playwright-screenshots/02-project-tree-desktop.png"
+    },
+    {
+      "name": "03-workspace-step1-desktop",
+      "desc": "Workspace Schritt 1 – Text & Blöcke",
+      "file": "/home/user/Buildlab/playwright-screenshots/03-workspace-step1-desktop.png"
+    },
+    {
+      "name": "04-workspace-depths-desktop",
+      "desc": "Tiefen-Umschalter getestet",
+      "file": "/home/user/Buildlab/playwright-screenshots/04-workspace-depths-desktop.png"
+    },
+    {
+      "name": "05-formulas-desktop",
+      "desc": "Formeln und Einheiten",
+      "file": "/home/user/Buildlab/playwright-screenshots/05-formulas-desktop.png"
+    },
+    {
+      "name": "06-task-single-choice-step1",
+      "desc": "Single-Choice Task Schritt 1",
+      "file": "/home/user/Buildlab/playwright-screenshots/06-task-single-choice-step1.png"
+    },
+    {
+      "name": "06b-task-selected-step1",
+      "desc": "Task Option ausgewählt",
+      "file": "/home/user/Buildlab/playwright-screenshots/06b-task-selected-step1.png"
+    },
+    {
+      "name": "08-interactive-slider-step1",
+      "desc": "Slider/Interactive Schritt 1",
+      "file": "/home/user/Buildlab/playwright-screenshots/08-interactive-slider-step1.png"
+    },
+    {
+      "name": "09-svg-rendering-step5",
+      "desc": "SVG Rendering Schritt 5",
+      "file": "/home/user/Buildlab/playwright-screenshots/09-svg-rendering-step5.png"
+    },
+    {
+      "name": "09-svg-rendering-step6",
+      "desc": "SVG Rendering Schritt 6",
+      "file": "/home/user/Buildlab/playwright-screenshots/09-svg-rendering-step6.png"
+    },
+    {
+      "name": "09-svg-rendering-step7",
+      "desc": "SVG Rendering Schritt 7",
+      "file": "/home/user/Buildlab/playwright-screenshots/09-svg-rendering-step7.png"
+    },
+    {
+      "name": "09-svg-rendering-step8",
+      "desc": "SVG Rendering Schritt 8",
+      "file": "/home/user/Buildlab/playwright-screenshots/09-svg-rendering-step8.png"
+    },
+    {
+      "name": "10-concept-page-desktop",
+      "desc": "Konzept-Detail Seite",
+      "file": "/home/user/Buildlab/playwright-screenshots/10-concept-page-desktop.png"
+    },
+    {
+      "name": "11-settings-desktop",
+      "desc": "Einstellungen Screen",
+      "file": "/home/user/Buildlab/playwright-screenshots/11-settings-desktop.png"
+    },
+    {
+      "name": "12-after-reload-desktop",
+      "desc": "Nach Reload – IndexedDB Persistenz",
+      "file": "/home/user/Buildlab/playwright-screenshots/12-after-reload-desktop.png"
+    },
+    {
+      "name": "20-homepage-mobile",
+      "desc": "Startseite auf Mobile",
+      "file": "/home/user/Buildlab/playwright-screenshots/20-homepage-mobile.png"
+    },
+    {
+      "name": "21-project-tree-mobile",
+      "desc": "Projekt-Baum auf Mobile",
+      "file": "/home/user/Buildlab/playwright-screenshots/21-project-tree-mobile.png"
+    },
+    {
+      "name": "22-workspace-mobile",
+      "desc": "Workspace auf Mobile",
+      "file": "/home/user/Buildlab/playwright-screenshots/22-workspace-mobile.png"
+    },
+    {
+      "name": "23-formulas-mobile",
+      "desc": "Formeln auf Mobile",
+      "file": "/home/user/Buildlab/playwright-screenshots/23-formulas-mobile.png"
+    },
+    {
+      "name": "24-task-mobile-step1",
+      "desc": "Aufgabe auf Mobile – Schritt 1",
+      "file": "/home/user/Buildlab/playwright-screenshots/24-task-mobile-step1.png"
+    },
+    {
+      "name": "25-homepage-tablet",
+      "desc": "Homepage auf Tablet 768×1024",
+      "file": "/home/user/Buildlab/playwright-screenshots/25-homepage-tablet.png"
+    }
+  ],
+  "date": "2026-06-11T21:06:18.216Z"
+}
