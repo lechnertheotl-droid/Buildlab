@@ -142,7 +142,9 @@ export function RocketStability({ params, caption }: { params: RocketStabilityPa
             )}
           </g>
         ))}
-        <text x={x0} y={H - 8} fontSize="9" textAnchor="end" className="fill-[color:var(--ink-faint)] font-mono">
+        {/* Achsenname links NEBEN die Null, nicht darauf — sonst las sich das
+            Lineal als „Kaliber0". */}
+        <text x={x0 - 9} y={H - 8} fontSize="9" textAnchor="end" className="fill-[color:var(--ink-faint)] font-mono">
           Kaliber
         </text>
 

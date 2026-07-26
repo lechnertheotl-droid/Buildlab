@@ -141,7 +141,7 @@
             "xMotor": 265
           },
           "expected": { "value": 214.04489012409513, "unit": "mm" },
-          "narrative": "Vier Posten, gewichtet gemittelt: (20·60 + 30·230 + 15·330 + 24·345) geteilt durch 89 g ergibt rund 239,7 mm hinter der Spitze. Der schwere Motor ganz hinten zieht kräftig mit."
+          "narrative": "Vier Posten, gewichtet gemittelt: Nase mit Ballast (12,05 g bei 66,5 mm), Rohr (23,45 g bei 190 mm), Finnen (17,86 g bei 276,7 mm) und Motor (24 g bei 265 mm) — zusammen 77,4 g, Schwerpunkt bei rund 214 mm hinter der Spitze. Der schwere Motor ganz hinten zieht kräftig mit."
         },
         {
           "type": "task",
@@ -229,7 +229,7 @@
             "finCount": 4
           },
           "expected": { "value": 248.06303393505132, "unit": "mm" },
-          "narrative": "Rechteckflossen (40 mm vorn wie hinten) machen Barrowman handrechenbar: Die Nase liefert C_N = 2 bei 40 mm, die drei Finnen ihren großen Beitrag weit hinten — zusammen landet der Druckpunkt bei rund 234 mm."
+          "narrative": "Barrowman addiert zwei Beiträge: Die Kegelnase liefert C_N = 2 bei ⅔·80 mm = 53,3 mm, die vier Trapezfinnen ihren weit größeren Anteil ganz hinten am Heck — gewichtet gemittelt landet der Druckpunkt bei 248,1 mm."
         },
         {
           "type": "task",
@@ -274,11 +274,30 @@
         },
         { "type": "formula", "formulaId": "stability" },
         {
+          "type": "interactive",
+          "componentId": "rocket-stability",
+          "params": {
+            "d": 24,
+            "tubeLen": 220,
+            "noseLen": 80,
+            "finRoot": 60,
+            "finTip": 30,
+            "finSpan": 40,
+            "finCount": 4,
+            "ballast": 8,
+            "show": ["ballast", "finSpan"],
+            "highlight": "s",
+            "ballastRange": [0, 25],
+            "finSpanRange": [20, 60]
+          },
+          "caption": "Die Maßlinie zwischen ⊕ und ⊗ ist das Stabilitätsmaß, das grüne Band dahinter die 1–2-Kaliber-Regel. Zwei Wege hinein: Ballast schiebt den Schwerpunkt nach vorn, größere Finnen den Druckpunkt nach hinten. Dreh beide ganz herunter und die Rakete wird negativ stabil — dann fliegt der Druckpunkt vor dem Schwerpunkt und sie schlägt Purzelbäume."
+        },
+        {
           "type": "calc",
           "formulaId": "stability",
           "inputs": { "xcp": 248.06303393505132, "xcg": 214.04489012409513, "d": 24 },
           "expected": { "value": 1.4174226587898413, "unit": "Kaliber" },
-          "narrative": "(520 − 480)/24 = 40/24 ≈ 1,67 Kaliber — mitten im grünen Bereich."
+          "narrative": "(248,1 − 214,0)/24 = 34,1/24 ≈ 1,42 Kaliber — mitten im grünen Band zwischen 1 und 2."
         },
         {
           "type": "text",
@@ -379,6 +398,19 @@
           }
         },
         { "type": "formula", "formulaId": "impulse" },
+        {
+          "type": "interactive",
+          "componentId": "value-slider",
+          "params": {
+            "formulaId": "impulse",
+            "var": "t",
+            "min": 0.4,
+            "max": 3,
+            "step": 0.01,
+            "fixed": { "F": 4.74 }
+          },
+          "caption": "Der mittlere Schub bleibt der deines C6 (4,74 N) — nur die Brenndauer wandert. Bei 1,06 s stehen 5 N·s auf der Uhr, die Untergrenze der Klasse C; bei 2,11 s sind es 10 N·s und der Motor hieße D. Länger schieben zählt also genauso viel wie stärker schieben: Beides vergrößert dieselbe Fläche unter der Schubkurve."
+        },
         {
           "type": "calc",
           "formulaId": "impulse",

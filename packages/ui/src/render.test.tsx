@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ContentProvider } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
+import { rasterMitte } from './interactive/ValueSlider';
 import { BlockRenderer } from './blocks';
 import { Calculator } from './Calculator';
 import { TaskView } from './task/TaskView';
@@ -24,10 +25,13 @@ import registry from '../../../components.registry.json';
 import getriebe from '../../../content/stirnradgetriebe.json';
 import flaschenzug from '../../../content/hebel-flaschenzug.json';
 import bruecke from '../../../content/fachwerkbruecke.json';
+import modellrakete from '../../../content/modellrakete.json';
 
 const componentIds = registry.components.map((c) => c.id);
 const project = getriebe as unknown as Project;
 const hebel = flaschenzug as unknown as Project;
+const rakete = modellrakete as unknown as Project;
+const fachwerk = bruecke as unknown as Project;
 
 function wrap(node: React.ReactNode): string {
   return renderToStaticMarkup(
@@ -79,6 +83,42 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     expect(html).toContain('aria-live');
     // Die Komponente hatte lange gar kein Bild; jetzt zeigt sie die Kennlinie.
     expect(html).toContain('<polyline');
+  });
+
+  it('ValueSlider startet auf dem Raster seines Reglers, nie dazwischen', () => {
+    // Der Startwert war die rohe Mitte des Wegs — bei „tragende Seilstränge"
+    // (1…8, Schritt 1) also n = 4,5, ein Wert, den es nicht gibt und den der
+    // Regler selbst nie wieder anfährt.
+    expect(rasterMitte({ min: 1, max: 7, step: 1 })).toBe(4);
+    expect(rasterMitte({ min: 0.85, max: 1, step: 0.01 })).toBe(0.93);
+    expect(rasterMitte({ min: 0.05, max: 0.55, step: 0.05 })).toBe(0.3);
+    expect(rasterMitte({ min: 1, max: 5, step: 0.25 })).toBe(3);
+    // Jeder Startwert liegt exakt auf min + k·step und im Regelbereich.
+    for (const r of [
+      { min: 0.4, max: 3, step: 0.01 },
+      { min: 60, max: 170, step: 2.5 },
+      { min: 0.02, max: 0.2, step: 0.005 },
+    ]) {
+      const v = rasterMitte(r);
+      expect(v).toBeGreaterThanOrEqual(r.min);
+      expect(v).toBeLessThanOrEqual(r.max);
+      expect(Math.abs((v - r.min) / r.step - Math.round((v - r.min) / r.step))).toBeLessThan(1e-9);
+    }
+  });
+
+  it('jeder value-slider im Content startet auf einem Rasterwert', () => {
+    const slider = [project, hebel, rakete, fachwerk]
+      .flatMap((p) => p.steps)
+      .flatMap((s) => s.blocks)
+      .filter(
+        (b): b is InteractiveBlock => b.type === 'interactive' && b.componentId === 'value-slider',
+      );
+    expect(slider.length).toBeGreaterThan(4);
+    for (const b of slider) {
+      const p = b.params as unknown as { min: number; max: number; step: number };
+      const k = (rasterMitte(p) - p.min) / p.step;
+      expect(Math.abs(k - Math.round(k))).toBeLessThan(1e-9);
+    }
   });
 
   it('ValueSlider macht die Nichtlinearität sichtbar (Luftwiderstand ∝ v²)', () => {
@@ -323,11 +363,21 @@ describe('Feedback-Heuristiken (ENGINE_SPEC.md §4)', () => {
 });
 
 describe('TaskView (9 Aufgabenarten)', () => {
-  const numericTask = project.steps[1].blocks[4] as TaskBlock; // numeric (i = 3)
-  const errorFindTask = project.steps[2].blocks[4] as TaskBlock;
-  const targetTask = project.steps[3].blocks[4] as TaskBlock;
-  const stepsTask = project.steps[4].blocks[4] as TaskBlock;
-  const singleTask = project.steps[5].blocks[3] as TaskBlock;
+  // Aufgaben über Schritt-ID und Art holen, nicht über den Block-Index: Ein
+  // zusätzlicher Interactive-Block im Content hat diese Fixtures sonst still
+  // verschoben — der Test war dann rot, ohne dass am Renderer etwas fehlte.
+  const task = (stepId: string, kind: TaskBlock['kind']) => {
+    const step = project.steps.find((s) => s.id === stepId);
+    const found = step?.blocks.find((b) => b.type === 'task' && b.kind === kind);
+    if (!found) throw new Error(`Keine ${kind}-Aufgabe in Schritt „${stepId}"`);
+    return found as TaskBlock;
+  };
+
+  const numericTask = task('uebersetzung', 'numeric'); // i = 3
+  const errorFindTask = task('modul-teilkreis', 'error-find');
+  const targetTask = task('achsabstand', 'target');
+  const stepsTask = task('drehzahl-drehmoment', 'steps');
+  const singleTask = task('wirkungsgrad', 'single');
 
   it('rendert numeric mit Eingabefeld und Prüfen-Knopf', () => {
     const html = wrap(<TaskView block={numericTask} />);
@@ -342,8 +392,7 @@ describe('TaskView (9 Aufgabenarten)', () => {
   });
 
   it('multi rendert Checkboxen und verlangt die richtige Options-Menge (B-19)', () => {
-    const multiTask = project.steps[1].blocks[5] as TaskBlock; // i=4-Aussagen
-    expect(multiTask.kind).toBe('multi');
+    const multiTask = task('uebersetzung', 'multi'); // i=4-Aussagen
     const html = wrap(<TaskView block={multiTask} />);
     expect(html).toContain(multiTask.question);
     expect(html).toContain('role="checkbox"');
@@ -365,10 +414,7 @@ describe('TaskView (9 Aufgabenarten)', () => {
   });
 
   it('match rendert je Paar ein Auswahlfeld mit allen rechten Seiten', () => {
-    const matchTask = project.steps[5].blocks.find(
-      (b) => (b as TaskBlock).kind === 'match',
-    ) as TaskBlock;
-    expect(matchTask).toBeDefined();
+    const matchTask = task('wirkungsgrad', 'match');
     const html = wrap(<TaskView block={matchTask} />);
     expect((html.match(/<select/g) ?? []).length).toBe(matchTask.pairs!.length);
     for (const p of matchTask.pairs!) expect(html).toContain(p.left);
@@ -498,8 +544,10 @@ describe('Projekt hebel-flaschenzug (R7-Content)', () => {
   });
 
   it('die target-Aufgabe der Auslegung koppelt an die pulley-Canvas', () => {
-    const targetTask = hebel.steps[5].blocks[3] as TaskBlock;
-    expect(targetTask.kind).toBe('target');
+    const targetTask = hebel.steps
+      .find((s) => s.id === 'auslegung')!
+      .blocks.find((b) => b.type === 'task' && b.kind === 'target') as TaskBlock;
+    expect(targetTask).toBeDefined();
     const html = wrap(<TaskView block={targetTask} />);
     expect(html).toContain('Ziel:');
     // Große Toleranz (±50 %) wird als Korridor angezeigt (Befund B-15).
@@ -527,7 +575,9 @@ describe('CadBuild (build-Block)', () => {
   });
 
   it('Radpaar-Build (z1+z2): Umschalter + Constraints + gesperrter Export', () => {
-    const block = project.steps[6].blocks[1] as BuildBlock;
+    const block = project.steps
+      .flatMap((s) => s.blocks)
+      .find((b) => b.type === 'build') as BuildBlock;
     const html = wrap(<BlockRenderer block={block} />);
     expect(html).toContain('Rad 1');
     expect(html).toContain('Rad 2');
@@ -544,14 +594,19 @@ describe('CadBuild (build-Block)', () => {
 
 describe('Text-Varianten (LERNMODELL.md §2.2)', () => {
   it('hook rendert als Frage-Karte, merksatz mit Akzent-Strich', () => {
-    const hook = project.steps[0].blocks[0];
+    const textBlock = (stepId: string, variant?: string) =>
+      project.steps
+        .find((s) => s.id === stepId)!
+        .blocks.find((b) => b.type === 'text' && b.variant === variant)!;
+
+    const hook = textBlock('warum-zahnraeder', 'hook');
     expect(wrap(<BlockRenderer block={hook} />)).toContain('font-display');
-    const merksatz = project.steps[5].blocks[1];
+    const merksatz = textBlock('wirkungsgrad', 'merksatz');
     expect(wrap(<BlockRenderer block={merksatz} />)).toContain('border-accent');
   });
 
   it('globale Tiefe wählt die Ebene; lokaler Umschalter ist vorhanden', () => {
-    const text = project.steps[1].blocks[0];
+    const text = project.steps.find((s) => s.id === 'uebersetzung')!.blocks[0];
     const html = wrap(<BlockRenderer block={text} depth="rigorous" />);
     expect(html).toContain('Wälzpunkt'); // rigoroser Text (nur dort gilt v gleich)
     expect(html).toContain('Erklärtiefe für diesen Text');

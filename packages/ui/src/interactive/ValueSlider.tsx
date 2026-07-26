@@ -34,12 +34,25 @@ const W = 440;
 const H = 150;
 const M = { left: 52, right: 16, top: 26, bottom: 30 };
 
+/**
+ * Startwert: die Mitte des Reglerwegs, aber auf DESSEN Raster eingerastet.
+ * Ohne das Einrasten stand der Regler auf einem Wert, den er selbst nie wieder
+ * erreicht — bei „Anzahl tragender Seilstränge" (1…8, Schritt 1) begrüßte er
+ * den Lernenden mit n = 4,5, was es nicht gibt.
+ */
+export function rasterMitte({ min, max, step }: { min: number; max: number; step: number }): number {
+  const mitte = (min + max) / 2;
+  if (!(step > 0)) return Math.min(max, Math.max(min, mitte));
+  const stufen = Math.round((mitte - min) / step);
+  const nachkomma = (String(step).split('.')[1] ?? '').length;
+  const wert = Number((min + stufen * step).toFixed(nachkomma + 3));
+  return Math.min(max, Math.max(min, wert));
+}
+
 export function ValueSlider({ params, caption }: { params: ValueSliderParams; caption?: string }) {
   const { formulas } = useContent();
   const formula = formulas.get(params.formulaId);
-  const [value, setValue] = useState(() =>
-    Math.min(params.max, Math.max(params.min, (params.min + params.max) / 2)),
-  );
+  const [value, setValue] = useState(() => rasterMitte(params));
 
   const inputs = { ...(params.fixed ?? {}), [params.var]: value };
   const engine = useEngineValue(params.formulaId, inputs, formula?.result.name ?? params.formulaId);
