@@ -19,7 +19,7 @@
       "id": "gear-pair",
       "status": "implementiert",
       "purpose": "Zwei kämmende Zahnräder, isometrisch, drehen im echten Drehzahlverhältnis; Slider für z1, z2, Modul; zeigt i, d1/d2 und Achsabstand live.",
-      "params": { "z1": "number", "z2": "number", "m": "number", "z1Range": "array", "z2Range": "array", "mRange": "array", "vars": "object" },
+      "params": { "z1": "number", "z2": "number", "m": "number", "show": "array", "highlight": "string", "z1Range": "array", "z2Range": "array", "mRange": "array" },
       "computedBy": "engine"
     },
     {

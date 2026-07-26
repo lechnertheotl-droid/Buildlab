@@ -29,7 +29,52 @@ export function makeContext({ formulas, concepts, registry }) {
     componentStatus: new Map(
       registry.components.map((c) => [c.id, c.status ?? 'implementiert']),
     ),
+    componentParams: new Map(registry.components.map((c) => [c.id, c.params ?? {}])),
   };
+}
+
+/** Prüft einen Wert gegen den in der Registry deklarierten Typ. */
+function typeOk(value, typ) {
+  switch (typ) {
+    case 'number':
+      return typeof value === 'number' && Number.isFinite(value);
+    case 'string':
+      return typeof value === 'string';
+    case 'boolean':
+      return typeof value === 'boolean';
+    case 'array':
+      return Array.isArray(value);
+    case 'object':
+      return typeof value === 'object' && value !== null && !Array.isArray(value);
+    default:
+      return true; // unbekannter Typ in der Registry — nicht hier melden
+  }
+}
+
+/**
+ * Regel 22: Jeder Schlüssel in `interactive.params` muss in der Registry
+ * deklariert sein und den dort genannten Typ haben. Unbekannte Schlüssel sind
+ * ein Fehler, keine Warnung: Sie sehen im Content richtig aus, tun aber nichts.
+ */
+export function checkInteractiveParams(block, ctx, report, where) {
+  const erlaubt = ctx.componentParams.get(block.componentId) ?? {};
+  for (const [key, value] of Object.entries(block.params ?? {})) {
+    if (!(key in erlaubt)) {
+      const bekannt = Object.keys(erlaubt).join(', ');
+      report.err(
+        where,
+        `params-Schlüssel '${key}' kennt '${block.componentId}' nicht` +
+          (bekannt ? ` — erlaubt: ${bekannt}` : ''),
+      );
+      continue;
+    }
+    if (!typeOk(value, erlaubt[key])) {
+      report.err(
+        where,
+        `params.${key} muss '${erlaubt[key]}' sein (ist: ${Array.isArray(value) ? 'array' : typeof value})`,
+      );
+    }
+  }
 }
 
 const within = (value, expected, relTol) =>
@@ -359,6 +404,10 @@ export function checkProject(project, ctx, report, file = project.id) {
         } else if (status === 'geplant' && !project.draft) {
           report.err(where, `Komponente '${block.componentId}' ist 'geplant' — nur in draft-Projekten erlaubt`);
         }
+        // Regel 22: params gegen die Registry prüfen. Vorher war das Feld
+        // vollkommen frei — ein Tippfehler (`nrange` statt `nRange`) fiel still
+        // auf den Default zurück und war nur im Browser zu bemerken.
+        if (status !== undefined) checkInteractiveParams(block, ctx, report, where);
       }
 
       if (block.type === 'calc') {
