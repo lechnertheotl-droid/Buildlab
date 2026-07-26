@@ -642,12 +642,14 @@ describe('Meilenstein (SCREENS.md §6.3)', () => {
 describe('ChallengeCheck — der Meilenstein rechnet mit den eigenen Bauwerten', () => {
   const projekt = bruecke as unknown as Project;
 
-  it('rechnet ohne gespeicherten Bau mit der Referenz und sagt das auch', () => {
+  it('zeigt ohne eigenen Bau nur an, WAS geprüft wird — ohne Urteil', () => {
+    // Die Parameter-Defaults sind in manchen Projekten bewusst noch nicht die
+    // Lösung; ein ✓/✗ dagegen wäre irreführend.
     const html = wrap(<ChallengeCheck project={projekt} buildParams={null} />);
-    expect(html).toContain('Referenz');
-    expect(html).toContain('Du hast noch nichts gebaut');
-    // Die Referenz-Auslegung erfüllt alle drei Anforderungen.
+    expect(html).toContain('Sobald du im Bau-Schritt ein STL herunterlädst');
     expect(html).not.toContain('✗');
+    expect(html).not.toContain('✓');
+    expect(html).not.toContain('deine Werte');
   });
 
   it('nimmt die echten Bauwerte, sobald einer gespeichert ist', () => {
@@ -668,8 +670,9 @@ describe('ChallengeCheck — der Meilenstein rechnet mit den eigenen Bauwerten',
     expect(html).toContain('Eine Anforderung ist noch offen');
   });
 
-  it('fällt auf die Referenz zurück, wenn ein alter Bau Felder vermissen lässt', () => {
+  it('urteilt nicht, wenn ein alter Bau Felder vermissen lässt', () => {
     const html = wrap(<ChallengeCheck project={projekt} buildParams={{ h: 130 }} />);
-    expect(html).toContain('Referenz');
+    expect(html).toContain('Sobald du im Bau-Schritt');
+    expect(html).not.toContain('deine Werte');
   });
 });
