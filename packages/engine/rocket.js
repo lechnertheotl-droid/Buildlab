@@ -85,6 +85,32 @@ const PLA_G_PRO_MM3 = 0.00124;
 const WAND_MM = 1.2;
 const FINNEN_DICKE_MM = 2;
 
+/** Dichte der Knete (Plastilin) in g/mm³ — für die Ballast-Lage in der Nase. */
+const KNETE_G_PRO_MM3 = 0.0017;
+
+/**
+ * Schwerpunkt des Ballasts in der kegelförmigen Nasenkavität (mm ab Spitze).
+ *
+ * Die Kavität ist ein Kegel der Höhe U = noseLen·di/d mit Basisradius di/2 an
+ * der Nasenbasis. Knete wird von der Basis her eingedrückt und füllt einen
+ * Kegelstumpf; dessen Schwerpunkt folgt aus zwei ähnlichen Kegeln.
+ */
+function ballastSchwerpunkt(d, di, noseLen, ballastG) {
+  if (ballastG <= 0) return noseLen / 2;
+  const U = noseLen * (di / d); // Höhe der Kavität, Spitze bei x = noseLen − U
+  const vGesamt = (Math.PI / 3) * (di / 2) ** 2 * U;
+  const vBallast = ballastG / KNETE_G_PRO_MM3;
+  if (vGesamt <= 0) return noseLen / 2;
+  // Rest-Kegel (ungefüllt, an der Spitze): Höhe u_f aus dem Volumenverhältnis.
+  const anteilLeer = Math.max(0, 1 - Math.min(1, vBallast / vGesamt));
+  const uf = U * Math.cbrt(anteilLeer);
+  // Schwerpunkt des Kegelstumpfs, gemessen ab der Kegelspitze der Kavität:
+  //   x̄ = ¾·(U⁴ − u_f⁴)/(U³ − u_f³)
+  const nenner = U ** 3 - uf ** 3;
+  const xAbSpitze = nenner > 0 ? 0.75 * ((U ** 4 - uf ** 4) / nenner) : 0.75 * U;
+  return noseLen - U + xAbSpitze;
+}
+
 /**
  * Leitet aus der Bau-Geometrie Massen, Schwerpunkt (mit Motor), Druckpunkt
  * (Barrowman) und Stabilitätsmaß ab. Alle Längen in mm, Massen in g.
@@ -97,12 +123,34 @@ export function computeRocket({ d, tubeLen, noseLen, finRoot, finTip, finSpan, f
   const mFin = PLA_G_PRO_MM3 * finCount * ((finRoot + finTip) / 2) * finSpan * FINNEN_DICKE_MM;
   const mMotor = motor.totalMassKg * 1000;
 
-  // Nase + Ballast zusammengelegt (gewichtete Lage), damit die vier
-  // Massenpaare exakt den Variablen der Formel rocket_cg entsprechen.
+  // Schwerpunkt der Kegelschale: Differenz zweier Kegel, nicht ⅔·L des
+  // Vollkegels — die Schale liegt weiter hinten als der massive Kegel.
+  //   x = (V_a·¾L − V_i·L·(1 − ¼·di/d)) / (V_a − V_i)
+  const vAussen = (Math.PI / 12) * d * d * noseLen;
+  const vInnen = (Math.PI / 12) * ((di * di * di) / d) * noseLen;
+  const xNaseSchale =
+    vAussen - vInnen > 0
+      ? (vAussen * 0.75 * noseLen - vInnen * noseLen * (1 - 0.25 * (di / d))) / (vAussen - vInnen)
+      : (2 / 3) * noseLen;
+
+  // Ballast-Schwerpunkt: Knete wird von der BASIS her in die Nasenkavität
+  // gedrückt und füllt den Kegelstumpf von hinten. Sie sitzt deshalb nicht in
+  // der Spitze (dort ist der Innenradius nur wenige Zehntel), sondern deutlich
+  // weiter hinten. Vorher war noseLen/2 angesetzt — der größte Einzelfehler
+  // des Massenmodells und der Grund, warum das Stabilitätsmaß zu optimistisch
+  // ausfiel (die Bau-Constraint S ≥ 1 gab damit zu knappe Entwürfe frei).
+  const xBallast = ballastSchwerpunkt(d, di, noseLen, ballast);
+
   const mNase = mNaseSchale + ballast;
-  const xNase = (mNaseSchale * (2 / 3) * noseLen + ballast * (noseLen / 2)) / mNase;
+  const xNase = mNase > 0 ? (mNaseSchale * xNaseSchale + ballast * xBallast) / mNase : xNaseSchale;
   const xRohr = noseLen + tubeLen / 2;
-  const xFin = noseLen + tubeLen - finRoot / 2;
+  // Flächenschwerpunkt des Trapezes, von der Hinterkante aus gemessen:
+  //   ξ = (C_R² + C_R·C_T + C_T²) / (3·(C_R + C_T))
+  const xiFin =
+    finRoot + finTip > 0
+      ? (finRoot * finRoot + finRoot * finTip + finTip * finTip) / (3 * (finRoot + finTip))
+      : finRoot / 2;
+  const xFin = noseLen + tubeLen - xiFin;
   const xMotor = noseLen + tubeLen - motor.lengthMm / 2;
 
   const masses = { mNase, xNase, mRohr, xRohr, mFin, xFin, mMotor, xMotor };

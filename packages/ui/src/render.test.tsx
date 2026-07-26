@@ -98,9 +98,12 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
       params: { ballast: 8, show: ['ballast'] },
     };
     const html = wrap(<InteractiveRenderer block={block} />);
-    expect(html).toContain('209 mm'); // CG aus rocket_cg
+    // CG aus dem korrigierten Massenmodell: der Ballast sitzt nicht in der
+    // Spitze, sondern dort, wo Knete in der Kegelkavität wirklich landet;
+    // Finnen- und Nasenschwerpunkt folgen den Flächenschwerpunkten.
+    expect(html).toContain('214 mm'); // CG aus rocket_cg
     expect(html).toContain('248 mm'); // CP aus rocket_cp (Barrowman)
-    expect(html).toContain('1,63 Kaliber'); // S aus stability
+    expect(html).toContain('1,42 Kaliber'); // S aus stability
     expect(html).toContain('stabil'); // Ampel-Urteil in Worten, nie nur Farbe
     expect(html).toContain('aus der Engine');
     expect(html).toContain('aria-live');
@@ -228,6 +231,34 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     expect(html).toContain('(D)');
     expect(html).toContain('24,5 N'); // Auflagerreaktionen aus dem Löser
     expect(html).toContain('aus der Engine');
+  });
+
+  it('PulleySystem: der Zugkraft-Pfeil zeigt nach unten', () => {
+    // Die AmpelArrow-Primitive zeigt bereits nach unten; eine zusätzliche
+    // Spiegelung ließ die Hand nach OBEN ziehen.
+    const html = wrap(
+      <InteractiveRenderer
+        block={{ type: 'interactive', componentId: 'pulley-system', params: { G: 19.62, n: 2 } }}
+      />,
+    );
+    // Kein scale(1 -1) mehr in der Szene.
+    expect(html).not.toContain('scale(1 -1)');
+    // Der Kraftpfeil ist das Polygon mit 7 Ecken: seine Spitze (größtes y)
+    // muss unterhalb des Schaftendes (kleinstes y) liegen.
+    const pfeile = [...html.matchAll(/points="([^"]+)"/g)]
+      .map((mm) => mm[1].trim().split(/\s+/))
+      .filter((pts) => pts.length === 7)
+      .map((pts) => pts.map((p) => p.split(',').map(Number)));
+    expect(pfeile.length).toBeGreaterThan(0);
+    for (const p of pfeile) {
+      const ys = p.map((q) => q[1]);
+      const xs = p.map((q) => q[0]);
+      // Die Spitze ist der Punkt mit dem extremsten y und mittigem x.
+      const spitzeY = Math.max(...ys);
+      const mitteX = (Math.min(...xs) + Math.max(...xs)) / 2;
+      const spitze = p.find((q) => q[1] === spitzeY);
+      expect(Math.abs((spitze?.[0] ?? 0) - mitteX)).toBeLessThan(1);
+    }
   });
 
   it('lehnt componentIds ab, die nicht in der Registry stehen', () => {

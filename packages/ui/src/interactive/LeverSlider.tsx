@@ -244,8 +244,12 @@ export function LeverSlider({
   const vecColor = ampelColor(forceFrac);
 
   // ── aktuelle Szene ───────────────────────────────────────────────────────────
-  const armX = ARM_MIN_X + armFrac * ARM_SPAN; // Kraftposition entlang des Balkens
-  const arrowLen = 0.3 + forceFrac * (ARROW_MAX - 0.3); // Vektorlänge ∝ Kraft
+  // Der Hebelarm ist MASSSTÄBLICH: x = (r/r_max)·Spanne. Vorher war die
+  // Abbildung affin (0,4 + …), sodass bei r = 0 ein Hebelarm von 0,4 bemaßt
+  // wurde, obwohl M = 0 ist — und die Maßlinie diese falsche Strecke maß.
+  const armX = armFrac * (ARM_MIN_X + ARM_SPAN);
+  // Die Pfeillänge codiert den Betrag: bei F = 0 bleibt kein Sockel stehen.
+  const arrowLen = forceFrac * ARROW_MAX;
 
   // Der Balken kippt an der Drehpunkt-Hinge; die Neigung wächst mit dem Drehmoment.
   const tilt = MAX_TILT * torqueFrac;

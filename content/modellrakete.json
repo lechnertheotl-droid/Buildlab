@@ -113,6 +113,13 @@
           "type": "interactive",
           "componentId": "rocket-stability",
           "params": {
+            "d": 24,
+            "tubeLen": 220,
+            "noseLen": 80,
+            "finRoot": 60,
+            "finTip": 30,
+            "finSpan": 40,
+            "finCount": 4,
             "ballast": 0,
             "show": ["ballast"],
             "highlight": "cg",
@@ -124,16 +131,16 @@
           "type": "calc",
           "formulaId": "rocket_cg",
           "inputs": {
-            "mNase": 20,
-            "xNase": 60,
-            "mRohr": 30,
-            "xRohr": 230,
-            "mFin": 15,
-            "xFin": 330,
+            "mNase": 12.05,
+            "xNase": 66.53,
+            "mRohr": 23.45,
+            "xRohr": 190,
+            "mFin": 17.86,
+            "xFin": 276.67,
             "mMotor": 24,
-            "xMotor": 345
+            "xMotor": 265
           },
-          "expected": { "value": 239.6629213483146, "unit": "mm" },
+          "expected": { "value": 214.04489012409513, "unit": "mm" },
           "narrative": "Vier Posten, gewichtet gemittelt: (20·60 + 30·230 + 15·330 + 24·345) geteilt durch 89 g ergibt rund 239,7 mm hinter der Spitze. Der schwere Motor ganz hinten zieht kräftig mit."
         },
         {
@@ -147,29 +154,29 @@
             "goal": { "value": 200, "tolerance": 0.02 },
             "proof": {
               "pass": {
-                "mNase": 16.053891053999283,
-                "xNase": 43.36690217581396,
+                "mNase": 19.353891053999284,
+                "xNase": 60.454160195735724,
                 "mRohr": 23.448244380604713,
                 "xRohr": 190,
                 "mFin": 17.856,
-                "xFin": 270,
+                "xFin": 276.6666666666667,
                 "mMotor": 24,
                 "xMotor": 265
               },
               "fail": {
                 "mNase": 4.053891053999284,
-                "xNase": 53.333333333333336,
+                "xNase": 54.61992619926196,
                 "mRohr": 23.448244380604713,
                 "xRohr": 190,
                 "mFin": 17.856,
-                "xFin": 270,
+                "xFin": 276.6666666666667,
                 "mMotor": 24,
                 "xMotor": 265
               }
             }
           },
           "hint": "Mehr Masse vorn zieht den Mittelwert Richtung Spitze. Taste dich in Gramm-Schritten heran — die Marke zeigt dir, wann du da bist.",
-          "explanation": "Mit rund 12 g Knete in der Nase liegt der Schwerpunkt bei etwa 201 mm. Ballast wirkt so stark, weil er weit vor dem alten Schwerpunkt sitzt — ein langer Hebel im gewichteten Mittel."
+          "explanation": "Mit rund 15 g Knete in der Nase liegt der Schwerpunkt bei etwa 200 mm. Ballast wirkt so stark, weil er weit vor dem alten Schwerpunkt sitzt — ein langer Hebel im gewichteten Mittel."
         }
       ]
     },
@@ -196,6 +203,13 @@
           "type": "interactive",
           "componentId": "rocket-stability",
           "params": {
+            "d": 24,
+            "tubeLen": 220,
+            "noseLen": 80,
+            "finRoot": 60,
+            "finTip": 30,
+            "finSpan": 40,
+            "finCount": 4,
             "ballast": 8,
             "show": ["finSpan", "finCount"],
             "highlight": "cp"
@@ -207,14 +221,14 @@
           "formulaId": "rocket_cp",
           "inputs": {
             "d": 24,
-            "noseLen": 60,
-            "tubeLen": 240,
-            "finRoot": 40,
-            "finTip": 40,
-            "finSpan": 30,
-            "finCount": 3
+            "noseLen": 80,
+            "tubeLen": 220,
+            "finRoot": 60,
+            "finTip": 30,
+            "finSpan": 40,
+            "finCount": 4
           },
-          "expected": { "value": 233.82022471910113, "unit": "mm" },
+          "expected": { "value": 248.06303393505132, "unit": "mm" },
           "narrative": "Rechteckflossen (40 mm vorn wie hinten) machen Barrowman handrechenbar: Die Nase liefert C_N = 2 bei 40 mm, die drei Finnen ihren großen Beitrag weit hinten — zusammen landet der Druckpunkt bei rund 234 mm."
         },
         {
@@ -262,8 +276,8 @@
         {
           "type": "calc",
           "formulaId": "stability",
-          "inputs": { "xcp": 520, "xcg": 480, "d": 24 },
-          "expected": { "value": 1.6666666666666667, "unit": "Kaliber" },
+          "inputs": { "xcp": 248.06303393505132, "xcg": 214.04489012409513, "d": 24 },
+          "expected": { "value": 1.4174226587898413, "unit": "Kaliber" },
           "narrative": "(520 − 480)/24 = 40/24 ≈ 1,67 Kaliber — mitten im grünen Bereich."
         },
         {
@@ -422,7 +436,7 @@
           },
           "constraints": [
             {
-              "expr": "(((2 * (2/3 * noseLen) + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))) * ((noseLen + tubeLen - finRoot) + ((finRoot - finTip)/3) * ((finRoot + 2*finTip)/(finRoot + finTip)) + ((finRoot + finTip) - (finRoot*finTip)/(finRoot + finTip))/6)) / (2 + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))))) - (((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) * (2/3 * noseLen) + ballast * (noseLen/2) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) * (noseLen + tubeLen/2) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) * (noseLen + tubeLen - finRoot/2) + 24 * (noseLen + tubeLen - 35)) / ((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) + ballast + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) + 24))) / d >= 1",
+              "expr": "((((2 * (2/3 * noseLen) + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))) * ((noseLen + tubeLen - finRoot) + ((finRoot - finTip)/3) * ((finRoot + 2*finTip)/(finRoot + finTip)) + ((finRoot + finTip) - (finRoot*finTip)/(finRoot + finTip))/6)) / (2 + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))))) - ((((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) + ballast)*(((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) * ((((pi/12) * d^2 * noseLen) * 0.75 * noseLen - ((pi/12) * ((d - 2.4)^3/d) * noseLen) * noseLen * (1 - 0.25 * ((d - 2.4)/d))) / (((pi/12) * d^2 * noseLen) - ((pi/12) * ((d - 2.4)^3/d) * noseLen))) + ballast * (noseLen - (noseLen * ((d - 2.4)/d)) + (ballast > 0 ? (0.75 * (((noseLen * ((d - 2.4)/d))^4 - ((noseLen * ((d - 2.4)/d)) * nthRoot((max(0, 1 - min(1, (ballast / 0.0017) / ((pi/3) * ((d - 2.4)/2)^2 * (noseLen * ((d - 2.4)/d)))))), 3))^4) / ((noseLen * ((d - 2.4)/d))^3 - ((noseLen * ((d - 2.4)/d)) * nthRoot((max(0, 1 - min(1, (ballast / 0.0017) / ((pi/3) * ((d - 2.4)/2)^2 * (noseLen * ((d - 2.4)/d)))))), 3))^3))) : 0))) / ((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) + ballast)) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen)*(noseLen + tubeLen/2) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2)*(noseLen + tubeLen - ((finRoot^2 + finRoot*finTip + finTip^2) / (3*(finRoot + finTip)))) + 24*(noseLen + tubeLen - 35)) / (((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) + ballast) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) + 24))) / d) >= 1",
               "label": "Stabil: Der Druckpunkt liegt mindestens 1 Kaliber hinter dem Schwerpunkt",
               "proof": {
                 "pass": { "d": 24, "tubeLen": 220, "noseLen": 80, "finRoot": 60, "finTip": 30, "finSpan": 40, "finCount": 4, "ballast": 8 },
@@ -430,7 +444,7 @@
               }
             },
             {
-              "expr": "(((2 * (2/3 * noseLen) + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))) * ((noseLen + tubeLen - finRoot) + ((finRoot - finTip)/3) * ((finRoot + 2*finTip)/(finRoot + finTip)) + ((finRoot + finTip) - (finRoot*finTip)/(finRoot + finTip))/6)) / (2 + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))))) - (((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) * (2/3 * noseLen) + ballast * (noseLen/2) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) * (noseLen + tubeLen/2) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) * (noseLen + tubeLen - finRoot/2) + 24 * (noseLen + tubeLen - 35)) / ((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3 / d)) + ballast + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) + 24))) / d <= 2",
+              "expr": "((((2 * (2/3 * noseLen) + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))) * ((noseLen + tubeLen - finRoot) + ((finRoot - finTip)/3) * ((finRoot + 2*finTip)/(finRoot + finTip)) + ((finRoot + finTip) - (finRoot*finTip)/(finRoot + finTip))/6)) / (2 + (1 + (d/2) / (finSpan + d/2)) * ((4 * finCount * (finSpan/d)^2) / (1 + sqrt(1 + (2 * sqrt(finSpan^2 + ((finRoot - finTip)/2)^2) / (finRoot + finTip))^2))))) - ((((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) + ballast)*(((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) * ((((pi/12) * d^2 * noseLen) * 0.75 * noseLen - ((pi/12) * ((d - 2.4)^3/d) * noseLen) * noseLen * (1 - 0.25 * ((d - 2.4)/d))) / (((pi/12) * d^2 * noseLen) - ((pi/12) * ((d - 2.4)^3/d) * noseLen))) + ballast * (noseLen - (noseLen * ((d - 2.4)/d)) + (ballast > 0 ? (0.75 * (((noseLen * ((d - 2.4)/d))^4 - ((noseLen * ((d - 2.4)/d)) * nthRoot((max(0, 1 - min(1, (ballast / 0.0017) / ((pi/3) * ((d - 2.4)/2)^2 * (noseLen * ((d - 2.4)/d)))))), 3))^4) / ((noseLen * ((d - 2.4)/d))^3 - ((noseLen * ((d - 2.4)/d)) * nthRoot((max(0, 1 - min(1, (ballast / 0.0017) / ((pi/3) * ((d - 2.4)/2)^2 * (noseLen * ((d - 2.4)/d)))))), 3))^3))) : 0))) / ((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) + ballast)) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen)*(noseLen + tubeLen/2) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2)*(noseLen + tubeLen - ((finRoot^2 + finRoot*finTip + finTip^2) / (3*(finRoot + finTip)))) + 24*(noseLen + tubeLen - 35)) / (((0.00124 * (pi/12) * noseLen * (d^2 - (d - 2.4)^3/d)) + ballast) + (0.00124 * (pi/4) * (d^2 - (d - 2.4)^2) * tubeLen) + (0.00124 * finCount * ((finRoot + finTip)/2) * finSpan * 2) + 24))) / d) <= 2",
               "label": "Nicht überstabil: höchstens 2 Kaliber — sonst dreht sie sich in den Seitenwind",
               "proof": {
                 "pass": { "d": 24, "tubeLen": 220, "noseLen": 80, "finRoot": 60, "finTip": 30, "finSpan": 40, "finCount": 4, "ballast": 8 },
@@ -533,9 +547,9 @@
         {
           "type": "calc",
           "formulaId": "stability",
-          "inputs": { "xcp": 248.06303393505132, "xcg": 209.06002793806408, "d": 24 },
-          "expected": { "value": 1.6251252498744684, "unit": "Kaliber" },
-          "narrative": "Der Referenzbau, von der Engine durchgerechnet: Druckpunkt 248 mm, Schwerpunkt 209 mm (mit Motor und 8 g Ballast) — S ≈ 1,63 Kaliber, mitten im grünen Bereich."
+          "inputs": { "xcp": 248.06303393505132, "xcg": 214.04489012409513, "d": 24 },
+          "expected": { "value": 1.4174226587898413, "unit": "Kaliber" },
+          "narrative": "Der Referenzbau, von der Engine durchgerechnet: Druckpunkt 248 mm, Schwerpunkt 214 mm (mit Motor und 8 g Ballast) — S ≈ 1,42 Kaliber, mitten im grünen Bereich."
         },
         {
           "type": "interactive",
