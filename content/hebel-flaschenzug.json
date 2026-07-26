@@ -8,7 +8,7 @@
   "difficulty": 1,
   "buildResult": "Ein fertig ausgelegter Mini-Flaschenzug mit vier tragenden Strängen — samt Bauanleitung für Schnur, Karabiner und Haken.",
   "challenge": "Hebe eine Last von 2 kg (G = 19,62 N) mit höchstens 8 N Zugkraft — und erkläre, woher der Kraft-Rabatt kommt.",
-  "conceptsIntroduced": ["kraft", "hebelarm", "drehmoment", "gleichgewicht", "rolle_fest_lose", "kraftuebersetzung"],
+  "conceptsIntroduced": ["kraft", "hebelarm", "drehmoment", "gleichgewicht", "rolle_fest_lose", "kraftuebersetzung", "wirkungsgrad"],
   "steps": [
     {
       "id": "was-ist-kraft",
@@ -208,7 +208,8 @@
       "blocks": [
         {
           "type": "text",
-          "uses": ["wirkungsgrad", "kraftuebersetzung"],
+          "introduces": ["wirkungsgrad"],
+          "uses": ["kraftuebersetzung"],
           "layers": {
             "intuitive": "F = G/n ist die Rechnung für die Traumwelt: Rollen ohne Reibung, Seile so geschmeidig wie Seide. In echt knirscht es ein bisschen — jede Rolle kassiert eine kleine Gebühr. Du ziehst also immer etwas mehr als die Theorie verspricht. Wie viel mehr, das beschreibt der Wirkungsgrad.",
             "practical": "Drei Verlustquellen solltest du kennen: die Lagerreibung jeder Rolle, die Seilsteifigkeit (das Seil will sich nicht um die Rolle biegen) und schlicht die Zahl der Umlenkungen — die Verluste stapeln sich Rolle für Rolle. Faustregel: Pro Umlenkung ein paar Prozent Aufschlag auf die Zugkraft einplanen. Deshalb lohnt es sich nicht, n beliebig hochzutreiben.",
@@ -246,7 +247,7 @@
     },
     {
       "id": "auslegung",
-      "requires": ["rollen-fest-lose"],
+      "requires": ["wirkungsgrad-in-echt"],
       "title": "Deine Auslegung",
       "goal": "Die Strangzahl n so wählen, dass die Challenge-Zugkraft erreicht wird.",
       "kind": "lernen",

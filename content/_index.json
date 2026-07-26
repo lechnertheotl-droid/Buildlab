@@ -302,14 +302,10 @@
     },
     "wirkungsgrad": {
       "introducedIn": {
-        "project": "stirnradgetriebe",
-        "step": "wirkungsgrad"
+        "project": "hebel-flaschenzug",
+        "step": "wirkungsgrad-in-echt"
       },
       "usedIn": [
-        {
-          "project": "hebel-flaschenzug",
-          "step": "wirkungsgrad-in-echt"
-        },
         {
           "project": "hebel-flaschenzug",
           "step": "auslegung"
@@ -321,6 +317,10 @@
         {
           "project": "hebel-flaschenzug",
           "step": "meilenstein"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "wirkungsgrad"
         },
         {
           "project": "stirnradgetriebe",

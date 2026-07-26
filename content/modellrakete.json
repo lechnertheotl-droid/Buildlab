@@ -375,7 +375,7 @@
           "layers": {
             "intuitive": "Dein C6 brennt keine zwei Sekunden. Erst ein kräftiger Tritt (gut 14 N Spitze), dann ein langes, gleichmäßiges Schieben um die 4 bis 5 N. Alles, was der Motor dir insgesamt mitgibt, steckt in der Fläche unter dieser Schubkurve — dem Gesamtimpuls. Und der Flug? Der ist nach dem Brennen noch lange nicht vorbei. Er hat Phasen.",
             "practical": "Gesamtimpuls I ≈ mittlerer Schub × Brenndauer — die Fläche unter der Schubkurve. Die Motorklasse verrät ihn: Klasse C heißt 5–10 N·s, der C6 liegt mit ≈ 8,8 N·s fast am oberen Rand. Der Flug danach: Boost (Motor brennt) → Coast (Ausrollen) → Apogäum (höchster Punkt) → Sinken.",
-            "rigorous": "Exakt ist I = ∫F dt; die Engine summiert die Schubkurve des offenen .eng-Datensatzes diskret als Trapezsumme. Zur Nomenklatur: Das „C“ kodiert das Impulsband, die „6“ ist der mittlere Schub in Newton, und die Zahl hinterm Bindestrich (C6-5) die Verzögerung in Sekunden bis zur Ausstoßladung."
+            "rigorous": "Exakt ist I = ∫F dt; die Engine summiert die Schubkurve des offenen .eng-Datensatzes diskret als Trapezsumme. Zur Nomenklatur: Das „C“ kodiert das Impulsband, die „6“ nennt den nominellen mittleren Schub in Newton — gemessen liefert der C6 4,74 N, die Nennzahl ist gerundet, und die Zahl hinterm Bindestrich (C6-5) die Verzögerung in Sekunden bis zur Ausstoßladung."
           }
         },
         { "type": "formula", "formulaId": "impulse" },

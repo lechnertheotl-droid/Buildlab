@@ -17,8 +17,7 @@
     "uebersetzung",
     "modul",
     "teilkreisdurchmesser",
-    "achsabstand",
-    "wirkungsgrad"
+    "achsabstand"
   ],
   "steps": [
     {
@@ -122,7 +121,7 @@
           "layers": {
             "intuitive": "Zwei Zahnräder, ein Tauschgeschäft: Tempo gegen Kraft. Dreht das kleine flink zehnmal, schafft das große vielleicht nur dreimal. Klingt nach einem schlechten Deal? Ist es nicht: Dafür drückt das große mit viel mehr Kraft. Wie viel getauscht wird, verraten dir die Zähnezahlen.",
             "practical": "Die Übersetzung i sagt dir, um welchen Faktor sich Drehzahl und Drehmoment ändern. Du liest sie direkt aus den Zähnezahlen ab: i = z₂/z₁. Ist i = 3, dreht das Abtriebsrad dreimal langsamer und liefert (fast) das dreifache Drehmoment.",
-            "rigorous": "Am Eingriffspunkt haben beide Räder dieselbe Umfangsgeschwindigkeit, also z₁·n₁ = z₂·n₂. Daraus folgt i = n₁/n₂ = z₂/z₁. Weil Leistung (bis auf Verluste) erhalten bleibt und P = M·ω gilt, wächst das Drehmoment im selben Verhältnis: M₂ = M₁·i·η. Das Übersetzungsverhältnis i ist dimensionslos."
+            "rigorous": "Am Wälzpunkt haben beide Räder dieselbe Umfangsgeschwindigkeit, also z₁·n₁ = z₂·n₂. (Nur dort — entlang der Eingriffslinie wandert der Berührpunkt, und es tritt zusätzlich Gleiten auf.) Daraus folgt i = n₁/n₂ = z₂/z₁. Weil Leistung (bis auf Verluste) erhalten bleibt und P = M·ω gilt, wächst das Drehmoment im selben Verhältnis: M₂ = M₁·i·η. Das Übersetzungsverhältnis i ist dimensionslos."
           }
         },
         {
@@ -343,7 +342,7 @@
           "layers": {
             "intuitive": "Jetzt prüfen wir, ob die beiden Räder überhaupt zusammenpassen. Ihre Achsen brauchen genau den richtigen Abstand: zu eng – es klemmt, zu weit – es klappert. Der richtige Abstand ist einfach die halbe Summe der beiden Teilkreise.",
             "practical": "Der Achsabstand a = m·(z₁+z₂)/2 ist das Einbaumaß deines Getriebes. Er entscheidet, ob die Konstruktion ins Gehäuse passt – und er muss zur Bohrungslage deiner Grundplatte passen.",
-            "rigorous": "Für die Null-Achsabstand-Verzahnung gilt a = (d₁+d₂)/2 = m·(z₁+z₂)/2. Abweichungen vom Nennachsabstand erfordern Profilverschiebung – für dieses Projekt bleiben wir bei der Nennlage."
+            "rigorous": "Für die Nullverzahnung (Nennachsabstand) gilt a = (d₁+d₂)/2 = m·(z₁+z₂)/2. Abweichungen vom Nennachsabstand erfordern Profilverschiebung – für dieses Projekt bleiben wir bei der Nennlage."
           }
         },
         {
@@ -534,7 +533,7 @@
       "blocks": [
         {
           "type": "text",
-          "introduces": [
+          "uses": [
             "wirkungsgrad"
           ],
           "layers": {
@@ -599,6 +598,7 @@
             "modul",
             "drehmoment"
           ],
+          "hint": "Geh von der Definition aus: Was wird womit multipliziert oder geteilt? Zwei der vier Größen sind Längen bzw. Kräfte mal Längen — eine ist ein reines Verhältnis und hat deshalb gar keine Einheit.",
           "pairs": [
             {
               "left": "Drehmoment M",

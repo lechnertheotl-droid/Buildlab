@@ -528,7 +528,7 @@ describe('Text-Varianten (LERNMODELL.md §2.2)', () => {
   it('globale Tiefe wählt die Ebene; lokaler Umschalter ist vorhanden', () => {
     const text = project.steps[1].blocks[0];
     const html = wrap(<BlockRenderer block={text} depth="rigorous" />);
-    expect(html).toContain('Eingriffspunkt'); // rigoroser Text
+    expect(html).toContain('Wälzpunkt'); // rigoroser Text (nur dort gilt v gleich)
     expect(html).toContain('Erklärtiefe für diesen Text');
   });
 });
