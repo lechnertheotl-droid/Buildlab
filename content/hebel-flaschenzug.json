@@ -330,6 +330,22 @@
           },
           "constraints": [
             {
+              "expr": "thickness >= 2 * groove + 2",
+              "label": "Die Rille zerschneidet die Rolle nicht (Bordscheiben bleiben stehen)",
+              "proof": {
+                "pass": { "d": 40, "groove": 1.5, "bore": 8, "thickness": 12, "d_seil": 2 },
+                "fail": { "d": 40, "groove": 4, "bore": 8, "thickness": 8, "d_seil": 6 }
+              }
+            },
+            {
+              "expr": "d / 2 - groove >= bore / 2 + 2",
+              "label": "Zwischen Rillengrund und Bohrung bleibt Material stehen",
+              "proof": {
+                "pass": { "d": 40, "groove": 1.5, "bore": 8, "thickness": 12, "d_seil": 2 },
+                "fail": { "d": 20, "groove": 4, "bore": 12, "thickness": 12, "d_seil": 6 }
+              }
+            },
+            {
               "expr": "groove >= d_seil / 2 + 0.3",
               "label": "Rille passt zum Seil (r ≥ d_Seil/2 + 0,3 mm Spiel)",
               "proof": {
