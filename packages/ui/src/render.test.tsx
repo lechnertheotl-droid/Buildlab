@@ -137,6 +137,44 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     expect(discs(four)).toBeGreaterThan(discs(one));
   });
 
+  it('GearPair: der Modul verändert das Bild wirklich', () => {
+    // Vorher kürzte sich m aus dem normierten Maßstab heraus — das SVG war für
+    // m=1 und m=4 pixelgleich, der Schritt „Modul & Teilkreis" ohne Bild.
+    const render = (m: number) =>
+      wrap(
+        <InteractiveRenderer
+          block={{ type: 'interactive', componentId: 'gear-pair', params: { z1: 20, z2: 60, m } }}
+        />,
+      );
+    const spannweite = (html: string) => {
+      const xs = [...html.matchAll(/points="([^"]+)"/g)]
+        .flatMap((mm) => mm[1].split(' '))
+        .map((p) => Number.parseFloat(p.split(',')[0]))
+        .filter(Number.isFinite);
+      return Math.max(...xs) - Math.min(...xs);
+    };
+    expect(spannweite(render(4))).toBeGreaterThan(spannweite(render(1)) * 1.5);
+  });
+
+  it('GearPair: die Zähne greifen ineinander statt sich zu durchdringen', () => {
+    // Die Grundstellung muss die Eingriffsphase tragen — auch ohne Animation
+    // (reduzierte Bewegung setzt nie ein Transform).
+    const html = wrap(
+      <InteractiveRenderer
+        block={{ type: 'interactive', componentId: 'gear-pair', params: { z1: 20, z2: 60, m: 2 } }}
+      />,
+    );
+    // z2 = 60 ist gerade → Phase π/60 ≠ 0 → Rad 2 trägt eine Drehmatrix.
+    const matrizen = [...html.matchAll(/matrix\(([^)]+)\)/g)].map((mm) => mm[1]);
+    expect(matrizen.length).toBeGreaterThanOrEqual(2);
+    // Mindestens eine Matrix ist keine Identität (Rad 2 ist um die halbe Teilung versetzt).
+    const identisch = matrizen.filter((s) => {
+      const v = s.split(' ').map(Number);
+      return Math.abs(v[0] - 1) < 1e-9 && Math.abs(v[1]) < 1e-9;
+    });
+    expect(identisch.length).toBeLessThan(matrizen.length);
+  });
+
   it('VectorDrag rechnet die Komponenten Fx/Fy über die Engine', () => {
     const block: InteractiveBlock = {
       type: 'interactive',

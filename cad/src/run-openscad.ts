@@ -6,6 +6,7 @@
 // angezeigten Maße kommen aus packages/engine; hier entsteht nur die Geometrie.
 
 import { createOpenSCAD, type OpenSCADInstance } from 'openscad-wasm';
+import { gearProfile } from '@buildlab/iso';
 import gearScad from '../gear.scad?raw';
 import rolleScad from '../rolle.scad?raw';
 import raketeScad from '../rakete.scad?raw';
@@ -19,6 +20,12 @@ export interface GearParams {
   thickness: number;
   /** Bohrungsdurchmesser [mm] */
   bore: number;
+  /** Flankenspiel [mm] — gedruckte Zahnräder brauchen 0,1–0,2 mm, sonst klemmen sie. */
+  backlash?: number;
+  /** Nabendurchmesser [mm]; 0 = keine Nabe. */
+  hub?: number;
+  /** Nabenüberstand je Seite [mm]. */
+  hubHeight?: number;
   /** Vorschau-Qualität ($fn); modest halten, damit die Facet-Zahl klein bleibt. */
   fn?: number;
 }
@@ -47,13 +54,26 @@ export interface PulleyParams {
   fn?: number;
 }
 
-/** Baut den vollständigen .scad-Quelltext: $fn + Modell + parametrisierter Aufruf. */
+/**
+ * Baut den vollständigen .scad-Quelltext: $fn + Modell + Evolventen-Kontur.
+ *
+ * Die Zahnkontur kommt aus gearProfile() — derselben Funktion, aus der die
+ * Simulation zeichnet. Bild und gedrucktes Teil können damit nicht mehr
+ * auseinanderlaufen; die Flankenzahl (steps) ist im CAD höher als im Bild,
+ * die Geometrie aber identisch.
+ */
 export function gearScadSource(p: GearParams): string {
   const fn = p.fn ?? 24;
+  const profile = gearProfile({ z: p.z, m: p.m, steps: 12, backlash: p.backlash ?? 0.15 });
+  const pts = profile.points.map((q) => `[${q.x.toFixed(4)},${q.y.toFixed(4)}]`).join(',');
+  // Nabe nur, wenn sie über die Bohrung hinausragt und im Fußkreis Platz hat.
+  const hub = p.hub ?? Math.min(p.bore + 6, Math.max(0, (profile.rf - 1) * 2));
+  const hubHeight = p.hubHeight ?? (hub > p.bore + 1 ? 3 : 0);
   return (
     `$fn=${fn};\n` +
     `${gearScad}\n` +
-    `gear(m=${p.m}, z=${p.z}, thickness=${p.thickness}, bore=${p.bore});\n`
+    `gear(profile=[${pts}], thickness=${p.thickness}, bore=${p.bore}, ` +
+    `hub=${hub.toFixed(3)}, hubHeight=${hubHeight});\n`
   );
 }
 

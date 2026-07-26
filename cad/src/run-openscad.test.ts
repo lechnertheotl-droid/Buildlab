@@ -46,6 +46,51 @@ describe('OpenSCAD-WASM (echtes STL, DoD Phase 3)', () => {
   );
 });
 
+describe('Zahnrad-Geometrie am gedruckten Teil (nicht nur im Bild)', () => {
+  /** Größter Radius über alle STL-Ecken — der tatsächliche Kopfkreis des Teils. */
+  const maxRadius = (stl: string): number => {
+    let r = 0;
+    for (const t of parseStl(stl)) {
+      for (const v of t.v) r = Math.max(r, Math.hypot(v.x, v.y));
+    }
+    return r;
+  };
+
+  it(
+    'hält den Kopfkreis d_a = d + 2m — der Content verspricht genau das',
+    async () => {
+      // Die alte, handgerechnete Evolvente setzte den Abrollwinkel gleich dem
+      // Eingriffswinkel und lieferte d_a = 42,84 statt 44 mm (Addendum −29 %).
+      const stl = await renderGearStl({ m: 2, z: 20, thickness: 8, bore: 5, fn: 16 });
+      expect(maxRadius(stl)).toBeCloseTo(22, 1);
+    },
+    60_000,
+  );
+
+  it(
+    'bleibt bei großen Rädern zusammenhängend (Zähne reißen nicht ab)',
+    async () => {
+      // m=4, z=33 erfüllt die Bau-Constraint, ließ die Zähne früher aber vom
+      // Körper abklaffen: circle(r_root) erbte $fn=24, der Inkreis lag unter
+      // der Zahnwurzel. Ergebnis war ein nicht-manifestes STL.
+      const stl = await renderGearStl({ m: 4, z: 33, thickness: 8, bore: 5, fn: 24 });
+      expect(validateStl(stl).ok).toBe(true);
+      expect(maxRadius(stl)).toBeCloseTo(70, 0); // d_a = 4·33/2 + 4 = 70
+    },
+    60_000,
+  );
+
+  it(
+    'skaliert mit dem Modul (m ist im Teil sichtbar, nicht nur im Text)',
+    async () => {
+      const m2 = await renderGearStl({ m: 2, z: 20, thickness: 8, bore: 5, fn: 16 });
+      const m4 = await renderGearStl({ m: 4, z: 20, thickness: 8, bore: 5, fn: 16 });
+      expect(maxRadius(m4)).toBeCloseTo(2 * maxRadius(m2), 0);
+    },
+    60_000,
+  );
+});
+
 describe('OpenSCAD-WASM Umlenkrolle (rolle.scad, Testbefund B-20)', () => {
   it(
     'rendert rolle.scad zu validem STL und lässt es isometrisch darstellen',
