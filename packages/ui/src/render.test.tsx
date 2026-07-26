@@ -13,6 +13,7 @@ import { TaskView } from './task/TaskView';
 import { WorkspaceStep } from './workspace/WorkspaceStep';
 import { classifyMiss, isWithin, parseGermanNumber } from './task/feedback';
 import { AmpelArrow, IsoStage, ampelColor } from './iso-scene';
+import { ChallengeCheck } from './workspace/ChallengeCheck';
 import { useWorkspaceStore } from './store';
 import type {
   BuildBlock, Concept, Formula, InteractiveBlock, Project, TaskBlock,
@@ -22,6 +23,7 @@ import concepts from '../../../content/concepts.json';
 import registry from '../../../components.registry.json';
 import getriebe from '../../../content/stirnradgetriebe.json';
 import flaschenzug from '../../../content/hebel-flaschenzug.json';
+import bruecke from '../../../content/fachwerkbruecke.json';
 
 const componentIds = registry.components.map((c) => c.id);
 const project = getriebe as unknown as Project;
@@ -634,5 +636,40 @@ describe('Meilenstein (SCREENS.md §6.3)', () => {
     expect(project.steps[msIndex].finaleParts?.length).toBeGreaterThan(0);
     // Projekt mit build-Block → Bauteil-Satz; ohne → Abschluss-Satz.
     expect(html).toContain('Dein Bauteil wartet oben auf deiner Projektkarte.');
+  });
+});
+
+describe('ChallengeCheck — der Meilenstein rechnet mit den eigenen Bauwerten', () => {
+  const projekt = bruecke as unknown as Project;
+
+  it('rechnet ohne gespeicherten Bau mit der Referenz und sagt das auch', () => {
+    const html = wrap(<ChallengeCheck project={projekt} buildParams={null} />);
+    expect(html).toContain('Referenz');
+    expect(html).toContain('Du hast noch nichts gebaut');
+    // Die Referenz-Auslegung erfüllt alle drei Anforderungen.
+    expect(html).not.toContain('✗');
+  });
+
+  it('nimmt die echten Bauwerte, sobald einer gespeichert ist', () => {
+    const html = wrap(
+      <ChallengeCheck project={projekt} buildParams={{ preset: 2, h: 130, b: 8, tiefe: 8 }} />,
+    );
+    expect(html).toContain('deine Werte');
+    expect(html).toContain('130'); // die selbst gewählte Fachwerkhöhe
+    expect(html).not.toContain('Du hast noch nichts gebaut');
+  });
+
+  it('meldet eine verfehlte Anforderung, statt sie schönzurechnen', () => {
+    // Zu dünne Stäbe: der Druckstab knickt.
+    const html = wrap(
+      <ChallengeCheck project={projekt} buildParams={{ preset: 1, h: 112.5, b: 4, tiefe: 8 }} />,
+    );
+    expect(html).toContain('✗');
+    expect(html).toContain('Eine Anforderung ist noch offen');
+  });
+
+  it('fällt auf die Referenz zurück, wenn ein alter Bau Felder vermissen lässt', () => {
+    const html = wrap(<ChallengeCheck project={projekt} buildParams={{ h: 130 }} />);
+    expect(html).toContain('Referenz');
   });
 });

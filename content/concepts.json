@@ -89,5 +89,17 @@
 
   { "id": "barrowman", "name": "Barrowman-Methode", "unit": "-", "group": "stroemung",
     "short": "Das Rechenrezept für den Druckpunkt: Nase und Finnen liefern je einen Beitrag, gewichtet nach ihrer aerodynamischen Wirkung.",
-    "prerequisites": ["druckpunkt"], "relatedFormulas": ["rocket_cp"] }
+    "prerequisites": ["druckpunkt"], "relatedFormulas": ["rocket_cp"] },
+  { "id": "kraftvektor", "name": "Kraftvektor", "symbol": "\\vec{F}", "unit": "N", "group": "statik",
+    "short": "Eine Kraft mit Betrag UND Richtung. Erst beides zusammen sagt, was sie bewirkt — dieselbe Zahl zieht je nach Richtung ganz anders.",
+    "prerequisites": ["kraft"],
+    "relatedFormulas": ["sum_f"] },
+  { "id": "knotenpunktverfahren", "name": "Knotenpunktverfahren", "group": "statik",
+    "short": "Rezept für Stabkräfte: Man schneidet einen Knoten frei und stellt dort das Kräftegleichgewicht auf — ein Knoten nach dem anderen.",
+    "prerequisites": ["gleichgewicht", "zugdruckstab", "auflagerreaktion"],
+    "relatedFormulas": ["joint_strut", "joint_chord"] },
+  { "id": "statische_bestimmtheit", "name": "Statische Bestimmtheit", "symbol": "f", "unit": "-", "group": "statik",
+    "short": "Ein Fachwerk ist statisch bestimmt, wenn f = 2k − (s + r) null ist: genug Stäbe, um zu stehen, und keiner zu viel.",
+    "prerequisites": ["zugdruckstab"],
+    "relatedFormulas": ["det_truss"] }
 ]

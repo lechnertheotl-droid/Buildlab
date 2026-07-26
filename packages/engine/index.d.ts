@@ -212,3 +212,26 @@ export function trussResiduals(
   problem: TrussProblem,
   solution: Pick<TrussSolution, 'barForces' | 'reactions'>,
 ): { fx: number; fy: number }[];
+
+// ── Brücken-Presets: eine Quelle für Löser, Bau-Panel und CAD ────────────────
+
+/** Spannweite aller Brücken-Presets in mm. */
+export declare const BRIDGE_SPAN: number;
+
+export interface BridgeGeometry extends TrussTopology {
+  label: string;
+  /** Knoten, an dem die Last angreift (Mitte des Untergurts). */
+  loadNode: number;
+}
+
+/** Waagerechter Abstand Auflager → erster Obergurt-/Firstknoten. */
+export function bridgeDiagonalRun(preset: number): number;
+
+/** Topologie und Geometrie einer Bauart (1 = Dreieck, 2 = Trapez). */
+export function bridgePreset(preset: number, h: number): BridgeGeometry;
+
+/** Preset unter mittiger Last F lösen. */
+export function solveBridge(preset: number, h: number, F: number): BridgeGeometry & TrussSolution;
+
+/** Gesamte Stablänge der Bauart (mm) — Grundlage des Material-Budgets. */
+export function bridgeBarLength(preset: number, h: number): number;

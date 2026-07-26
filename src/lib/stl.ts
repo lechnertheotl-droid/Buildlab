@@ -3,7 +3,7 @@
 // das STL entsteht bei Bedarf frisch aus dem parametrischen Modell.
 // Genutzt vom Produkt-Knoten der Projektkarte (früher: Werkstatt-Screen).
 
-import { compileGear, compilePulley } from '@buildlab/cad';
+import { compileBruecke, compileGear, compilePulley, compileRakete } from '@buildlab/cad';
 import type { BuildEntry } from '../db/types';
 
 export async function recompileBuild(build: BuildEntry): Promise<string> {
@@ -14,6 +14,20 @@ export async function recompileBuild(build: BuildEntry): Promise<string> {
   if (build.cadModel === 'rolle') {
     const { d, groove, bore, thickness } = build.params;
     return compilePulley({ d, groove, bore, thickness });
+  }
+  if (build.cadModel === 'rakete') {
+    // Gespeichert werden nur die Geometrie-Parameter; welches der beiden Teile
+    // beim Download gewählt war, hält das Datenmodell nicht fest. Der
+    // Produkt-Knoten zeigt deshalb den Rumpf — das Hauptteil.
+    const { d, tubeLen, noseLen, finRoot, finTip, finSpan, finCount } = build.params;
+    return compileRakete({
+      part: 'rumpf',
+      d, tubeLen, noseLen, finRoot, finTip, finSpan, finCount,
+    });
+  }
+  if (build.cadModel === 'bruecke') {
+    const { preset, h, b, tiefe } = build.params;
+    return compileBruecke({ preset, h, b, tiefe });
   }
   throw new Error(`Unbekanntes Modell '${build.cadModel}'`);
 }

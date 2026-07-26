@@ -14,6 +14,7 @@ import { useCountUp } from '../useCountUp';
 import { useWorkspaceStore } from '../store';
 import { formatUnit } from '../units';
 import { CadBuild } from '../build/CadBuild';
+import { ChallengeCheck } from './ChallengeCheck';
 import { buttonClass } from '../primitives/Button';
 import { focusRing } from '../primitives/focus';
 import { reducedMotionActive } from '../primitives/motion';
@@ -39,6 +40,8 @@ export interface WorkspaceStepProps {
   onExit: () => void;
   onStepComplete: (stepIndex: number) => void;
   onMilestone?: () => void;
+  /** Parameter des jüngsten gespeicherten Baus — der Meilenstein rechnet damit. */
+  lastBuildParams?: Record<string, number> | null;
   onOpenConcept?: (conceptId: string) => void;
   onRefreshShown?: (conceptId: string) => void;
   onExport?: (params: Record<string, number>, label: string) => void;
@@ -261,6 +264,7 @@ export function WorkspaceStep({
   onOpenConcept,
   onRefreshShown,
   onExport,
+  lastBuildParams,
 }: WorkspaceStepProps) {
   const step = project.steps[stepIndex];
   const clearCanvasInputs = useWorkspaceStore((s) => s.clearCanvasInputs);
@@ -482,6 +486,9 @@ export function WorkspaceStep({
 
           <div key={stepIndex} className="bl-wechsel mt-5 space-y-6">
             {lessonBlocks.map(({ b, i }) => renderBlock(b, i))}
+            {step.kind === 'meilenstein' && (
+              <ChallengeCheck project={project} buildParams={lastBuildParams} />
+            )}
             {step.kind === 'meilenstein' && stepDone && canvasBlock !== null && (
               <MilestoneFinale project={project} />
             )}

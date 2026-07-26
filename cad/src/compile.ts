@@ -5,7 +5,7 @@
 // bei Bedarf geladen) und SSR berührt es nicht. Ergebnisse werden nach Parameter-Hash
 // gecacht: gleiche Parameter → identisches STL (Determinismus, Vorschau == Export).
 
-import type { GearParams, PulleyParams, RaketeParams } from './run-openscad';
+import type { BrueckeParams, GearParams, PulleyParams, RaketeParams } from './run-openscad';
 
 interface ResponseMsg {
   id: number;
@@ -33,6 +33,13 @@ function raketeKey(p: RaketeParams): string {
   return (
     `rakete|${p.part}|${round3(p.d)}|${round3(p.tubeLen)}|${round3(p.noseLen)}|` +
     `${round3(p.finRoot)}|${round3(p.finTip)}|${round3(p.finSpan)}|${round3(p.finCount)}|${round3(p.fn ?? 32)}`
+  );
+}
+
+function brueckeKey(p: BrueckeParams): string {
+  return (
+    `bruecke|${round3(p.preset)}|${round3(p.h)}|${round3(p.b)}|` +
+    `${round3(p.tiefe)}|${round3(p.fn ?? 32)}`
   );
 }
 
@@ -105,5 +112,24 @@ export function compileRakete(params: RaketeParams): Promise<string> {
       reject,
     });
     getWorker().postMessage({ id, model: 'rakete', params });
+  });
+}
+
+/** Kompiliert die Fachwerkbrücke im Worker (gecacht über brueckeKey). */
+export function compileBruecke(params: BrueckeParams): Promise<string> {
+  const key = brueckeKey(params);
+  const hit = cache.get(key);
+  if (hit !== undefined) return Promise.resolve(hit);
+
+  const id = nextId++;
+  return new Promise<string>((resolve, reject) => {
+    pending.set(id, {
+      resolve: (stl) => {
+        cache.set(key, stl);
+        resolve(stl);
+      },
+      reject,
+    });
+    getWorker().postMessage({ id, model: 'bruecke', params });
   });
 }

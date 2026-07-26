@@ -6,9 +6,15 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
+  BRIDGE_SPAN,
+  bridgeBarLength,
+  bridgeDiagonalRun,
+  bridgePreset,
   checkDeterminacy,
+  solveBridge,
   solveTruss,
   trussResiduals,
+  evaluateExpr,
   evaluateFormula,
   type Formula,
   type TrussProblem,
@@ -115,6 +121,83 @@ describe('Dreiecksbrücke (Referenz-Topologie des Projekts)', () => {
   });
 });
 
+describe('Brücken-Presets (die eine Quelle für Löser, Bau-Panel und CAD)', () => {
+  const F = F_LAST;
+
+  it('beide Bauarten sind statisch bestimmt und im Gleichgewicht', () => {
+    for (const preset of [1, 2]) {
+      for (const h of [70, 112.5, 160]) {
+        const geo = bridgePreset(preset, h);
+        expect(checkDeterminacy(geo).f, `Preset ${preset}, h=${h}`).toBe(0);
+        const sol = solveBridge(preset, h, F);
+        const res = trussResiduals({ ...geo, loads: [{ node: geo.loadNode, fy: -F }] }, sol);
+        for (const r of res) {
+          expect(Math.abs(r.fx)).toBeLessThan(1e-9);
+          expect(Math.abs(r.fy)).toBeLessThan(1e-9);
+        }
+      }
+    }
+  });
+
+  it('überspannt in jeder Bauart 300 mm und trägt mittig', () => {
+    for (const preset of [1, 2]) {
+      const geo = bridgePreset(preset, 112.5);
+      const xs = geo.nodes.map((n) => n.x);
+      expect(Math.min(...xs)).toBe(0);
+      expect(Math.max(...xs)).toBe(BRIDGE_SPAN);
+      expect(geo.nodes[geo.loadNode].x).toBe(BRIDGE_SPAN / 2);
+      expect(geo.nodes[geo.loadNode].y).toBe(0);
+    }
+  });
+
+  // Die Bau-Constraints tragen die Statik als geschlossene mathjs-Ausdrücke
+  // (der Verifier kann nur exprs nachrechnen). Diese Tests halten die
+  // geschlossene Form deckungsgleich mit dem Löser — wer eines ändert, muss
+  // beides ändern. Beim Trapez regiert unterhalb h ≈ 130 mm der Obergurt,
+  // beim Dreieck unterhalb h = 75 mm der Untergurt: beide Wechsel sind drin.
+  const geschlossen = (preset: number, h: number) => {
+    const a = bridgeDiagonalRun(preset);
+    const l = Math.hypot(a, h);
+    const sDiag = (F / 2) * (l / h);
+    const sGurt = preset === 1 ? 0 : (75 * F) / h;
+    return {
+      // maßgebend fürs Knicken ist das größte S·l_k² (F_k ∝ 1/l_k²)
+      knick: Math.max(sDiag * l * l, sGurt * 150 * 150),
+      zug: preset === 1 ? Math.max(F, (75 * F) / h) : sDiag,
+      laenge: preset === 1 ? 300 + 2 * l + h : 450 + 4 * l,
+    };
+  };
+
+  it('geschlossene Form trifft den Löser über den ganzen Reglerbereich', () => {
+    for (const preset of [1, 2]) {
+      for (let h = 50; h <= 180; h += 2.5) {
+        const sol = solveBridge(preset, h, F);
+        const g = geschlossen(preset, h);
+
+        const knickLoeser = Math.max(
+          ...sol.barForces.map((f, i) => {
+            if (f >= 0) return 0;
+            const a = sol.nodes[sol.bars[i].from];
+            const b = sol.nodes[sol.bars[i].to];
+            return -f * Math.hypot(b.x - a.x, b.y - a.y) ** 2;
+          }),
+        );
+        const zugLoeser = Math.max(...sol.barForces.filter((f) => f > 0));
+
+        expect(Math.abs(g.knick - knickLoeser) / knickLoeser, `knick p${preset} h=${h}`).toBeLessThan(1e-9);
+        expect(Math.abs(g.zug - zugLoeser) / zugLoeser, `zug p${preset} h=${h}`).toBeLessThan(1e-9);
+        expect(Math.abs(g.laenge - bridgeBarLength(preset, h)), `länge p${preset} h=${h}`).toBeLessThan(1e-6);
+      }
+    }
+  });
+
+  it('höher gebaut heißt kleinere Diagonalkraft — der Lernsatz des Projekts', () => {
+    const flach = solveBridge(1, 70, F);
+    const hoch = solveBridge(1, 160, F);
+    expect(hoch.maxAbs).toBeLessThan(flach.maxAbs);
+  });
+});
+
 describe('Warren-Träger (7 Knoten, 11 Stäbe)', () => {
   // Untergurt 0-1-2-3 auf y=0, Obergurt 4-5-6 auf y=75; Last mittig oben.
   const WARREN: TrussProblem = {
@@ -152,5 +235,76 @@ describe('Warren-Träger (7 Knoten, 11 Stäbe)', () => {
     expect(s[7]).toBeCloseTo(s[8], 9);
     expect(s[3]).toBeLessThan(0); // Obergurt: Druck
     expect(s[0]).toBeGreaterThan(0); // Untergurt: Zug
+  });
+});
+
+describe('Anti-Drift: Bau-Constraints ⇔ Fachwerk-Löser', () => {
+  // Die Constraints in content/fachwerkbruecke.json tragen die Statik als
+  // Inline-mathjs-Ausdrücke (der Verifier kann nur exprs nachrechnen). Dieser
+  // Test erzwingt, dass Ausdruck und Löser dieselbe Mathematik bleiben — bei
+  // der Rakete hat genau dieser Test die Drift sofort gemeldet.
+  interface BuildConstraint {
+    expr: string;
+    label: string;
+  }
+  const projekt = JSON.parse(
+    readFileSync(new URL('../../content/fachwerkbruecke.json', import.meta.url), 'utf8'),
+  ) as { steps: { blocks: { type: string; constraints?: BuildConstraint[] }[] }[] };
+  const build = projekt.steps.flatMap((s) => s.blocks).find((b) => b.type === 'build');
+  const exprs = (build?.constraints ?? []).map((c) => c.expr);
+
+  const saetze = [
+    { preset: 1, h: 112.5, b: 7, tiefe: 8 },
+    { preset: 1, h: 60, b: 4, tiefe: 6 },
+    { preset: 1, h: 170, b: 10, tiefe: 10 },
+    { preset: 2, h: 112.5, b: 7, tiefe: 8 },
+    { preset: 2, h: 75, b: 5, tiefe: 7 },
+    { preset: 2, h: 160, b: 9, tiefe: 9 },
+  ];
+
+  it('das Projekt trägt genau drei Bau-Anforderungen', () => {
+    expect(exprs).toHaveLength(3);
+  });
+
+  it('der Knick-Nachweis urteilt wie der Löser', () => {
+    const E = 3500;
+    const NU = 2;
+    for (const p of saetze) {
+      const sol = solveBridge(p.preset, p.h, F_LAST);
+      // Maßgebend ist der Druckstab mit dem größten S·l_k² (F_k ∝ 1/l_k²).
+      const maxgabe = Math.max(
+        ...sol.barForces.map((f, i) => {
+          if (f >= 0) return 0;
+          const a = sol.nodes[sol.bars[i].from];
+          const b = sol.nodes[sol.bars[i].to];
+          return -f * Math.hypot(b.x - a.x, b.y - a.y) ** 2;
+        }),
+      );
+      // Schwache Achse: die kleinere Querschnittsseite knickt zuerst.
+      const grenze = ((Math.PI ** 2 * E * Math.min(p.b, p.tiefe) ** 4) / 12) / NU;
+      expect(evaluateExpr(exprs[0], p), `Knick ${JSON.stringify(p)}`).toBe(maxgabe <= grenze);
+    }
+  });
+
+  it('der Zug-Nachweis urteilt wie der Löser', () => {
+    const SIGMA = 20;
+    for (const p of saetze) {
+      const sol = solveBridge(p.preset, p.h, F_LAST);
+      const zug = Math.max(...sol.barForces.filter((f) => f > 0));
+      expect(evaluateExpr(exprs[1], p), `Zug ${JSON.stringify(p)}`).toBe(zug <= SIGMA * p.b * p.tiefe);
+    }
+  });
+
+  it('das Materialbudget urteilt wie die Stablängen des Presets', () => {
+    const BUDGET = 60000;
+    for (const p of saetze) {
+      const volumen = bridgeBarLength(p.preset, p.h) * p.b * p.tiefe;
+      expect(evaluateExpr(exprs[2], p), `Budget ${JSON.stringify(p)}`).toBe(volumen <= BUDGET);
+    }
+  });
+
+  it('die Referenz-Auslegung erfüllt alle drei Anforderungen', () => {
+    const referenz = { preset: 1, h: 112.5, b: 7, tiefe: 8 };
+    for (const e of exprs) expect(evaluateExpr(e, referenz)).toBe(true);
   });
 });

@@ -9,6 +9,7 @@ export { Latex } from './Latex';
 export { Slider } from './Slider';
 export { Calculator } from './Calculator';
 export { CalculatorDrawer } from './CalculatorDrawer';
+export { ChallengeCheck } from './workspace/ChallengeCheck';
 export { InteractiveRenderer } from './interactive/InteractiveRenderer';
 export { LeverSlider } from './interactive/LeverSlider';
 export { ValueSlider } from './interactive/ValueSlider';

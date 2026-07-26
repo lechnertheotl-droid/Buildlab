@@ -1,0 +1,518 @@
+{
+  "id": "fachwerkbruecke",
+  "title": "Fachwerkbrücke",
+  "version": 2,
+  "level": 1,
+  "icon": "⛁",
+  "durationMin": 50,
+  "difficulty": 2,
+  "buildResult": "Eine gedruckte Fachwerkscheibe über 30 cm Spannweite, die 5 kg in der Mitte trägt — mit ausgerechneten Stabkräften statt Bauchgefühl.",
+  "challenge": "Baue eine Brücke über 30 cm Spannweite, die 5 kg mittig trägt (F = 49,05 N) — mit möglichst wenig Material.",
+  "conceptsIntroduced": [
+    "kraftvektor",
+    "auflagerreaktion",
+    "zugdruckstab",
+    "knotenpunktverfahren",
+    "statische_bestimmtheit"
+  ],
+  "steps": [
+    {
+      "id": "kraefte-haben-richtung",
+      "requires": [],
+      "title": "Kräfte haben eine Richtung",
+      "goal": "Verstehen, dass eine Kraft erst mit Betrag UND Richtung vollständig beschrieben ist.",
+      "kind": "lernen",
+      "canvas": 2,
+      "estMinutes": 6,
+      "blocks": [
+        {
+          "type": "text",
+          "variant": "hook",
+          "layers": {
+            "intuitive": "Ein Blatt Papier trägt keine Tasse. Falte es einmal zickzack — plötzlich schon. Nicht mehr Material, nur andere Richtungen."
+          }
+        },
+        {
+          "type": "text",
+          "introduces": ["kraftvektor"],
+          "uses": ["kraft"],
+          "layers": {
+            "intuitive": "Eine Kraft ist wie ein Pfeil: Wie lang er ist, sagt wie stark. Wohin er zeigt, sagt was passiert. Zieh am Pfeil und schau, wie sich die beiden Hilfslinien verändern — das ist dieselbe Kraft, nur anders zerlegt.",
+            "practical": "Eine Kraft ist ein Vektor: Betrag und Richtung gehören untrennbar zusammen. Für die Rechnung zerlegt man sie in Komponenten — waagerecht und senkrecht. Fx = F·cos φ, Fy = F·sin φ. Die Komponenten sind kein Ersatz für die Kraft, sondern eine Schreibweise, mit der man rechnen kann.",
+            "rigorous": "Kräfte sind gebundene Vektoren: Sie haben Betrag, Richtung und einen Angriffspunkt bzw. eine Wirkungslinie. Zwei Kräfte addieren sich nach der Parallelogrammregel, nicht als Zahlen. Die Zerlegung in ein kartesisches System ist frei wählbar; man legt die Achsen so, dass möglichst viele Komponenten null werden — genau das macht das Knotenpunktverfahren später systematisch."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "vector-drag",
+          "params": { "maxN": 100, "initN": 49, "initDeg": 35 },
+          "caption": "Zieh am Pfeilkopf — oder nimm die Regler. Die gestrichelten Linien zeigen, wie sich dieselbe Kraft in waagerecht und senkrecht aufteilt."
+        },
+        {
+          "type": "task",
+          "kind": "estimate",
+          "question": "Deine Brücke soll 5 kg tragen. Mit welcher Kraft zieht diese Last nach unten?",
+          "concepts": ["kraftvektor"],
+          "source": { "formulaId": "newton", "inputs": { "m": 5, "a": 9.81 } },
+          "scale": { "min": 1, "max": 1000, "log": true, "bands": [2, 5, 20] },
+          "hint": "Gewichtskraft ist Masse mal Erdbeschleunigung. Für g rechnet man mit rund 9,81 m/s².",
+          "explanation": "F = m·a = 5 kg · 9,81 m/s² = 49,05 N. Diese knapp 50 N tauchen ab jetzt in jedem Schritt wieder auf — sie sind die Last, gegen die deine Brücke antritt."
+        }
+      ]
+    },
+    {
+      "id": "gleichgewicht-herstellen",
+      "requires": ["kraefte-haben-richtung"],
+      "title": "Gleichgewicht: nichts bewegt sich",
+      "goal": "Erleben, dass Ruhe bedeutet: die Summe aller Kräfte ist null.",
+      "kind": "lernen",
+      "canvas": 3,
+      "estMinutes": 6,
+      "blocks": [
+        {
+          "type": "text",
+          "uses": ["kraft", "gleichgewicht", "kraftvektor"],
+          "layers": {
+            "intuitive": "Solange die Kiste kriecht, ziehen die Kräfte ungleich. Stell die dritte Kraft so ein, dass alles still steht — dann heben sich alle gegenseitig auf.",
+            "practical": "Ein Körper ist im Gleichgewicht, wenn die Summe aller angreifenden Kräfte null ist: ΣF = 0. Bei Kräften auf einer gemeinsamen Wirkungslinie genügt die vorzeichenbehaftete Summe; Richtung steckt im Vorzeichen.",
+            "rigorous": "Statisches Gleichgewicht eines starren Körpers verlangt zwei Bedingungen: ΣF = 0 (keine Beschleunigung des Schwerpunkts) und ΣM = 0 (keine Winkelbeschleunigung). In der Ebene sind das drei skalare Gleichungen: ΣFx = 0, ΣFy = 0, ΣM = 0. Genau diese drei liefern später die beiden Auflagerreaktionen — und sie sind der Grund, warum ein Fachwerk mit r = 3 Auflagerwertigkeiten gerade richtig gelagert ist."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "sum_f",
+          "note": "Die Vorzeichen tragen die Richtung: was nach links zieht, zählt negativ."
+        },
+        {
+          "type": "text",
+          "variant": "merksatz",
+          "layers": {
+            "intuitive": "Gleichgewicht heißt nicht „keine Kräfte“ — es heißt „Kräfte, die sich aufheben“."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "force-balance",
+          "params": {
+            "forces": [
+              { "label": "Seilzug", "value": 30 },
+              { "label": "Wind", "value": 19 }
+            ],
+            "tolerance": 0.5,
+            "range": [-60, 0],
+            "init": -30
+          },
+          "caption": "Zwei Kräfte ziehen nach rechts. Stell die dritte so ein, dass die Kiste zur Ruhe kommt."
+        },
+        {
+          "type": "task",
+          "kind": "target",
+          "question": "Bring die Kiste zur Ruhe: Stell die dritte Kraft so ein, dass die Kräftesumme null wird.",
+          "concepts": ["kraftvektor"],
+          "target": {
+            "formulaId": "sum_f",
+            "vars": ["F3"],
+            "goal": { "value": 0, "tolerance": 0.02 },
+            "proof": {
+              "pass": { "F1": 30, "F2": 19, "F3": -49 },
+              "fail": { "F1": 30, "F2": 19, "F3": -30 }
+            }
+          },
+          "hint": "Die beiden gegebenen Kräfte ziehen in dieselbe Richtung. Zusammen sind das 49 N — die dritte muss genau dagegenhalten.",
+          "explanation": "30 N + 19 N − 49 N = 0. Die dritte Kraft muss genauso groß sein wie die Summe der beiden anderen, aber entgegengesetzt gerichtet. Das ist ΣF = 0 in seiner einfachsten Form."
+        }
+      ]
+    },
+    {
+      "id": "auflagerreaktionen",
+      "requires": ["gleichgewicht-herstellen"],
+      "title": "Was die Auflager zurückdrücken",
+      "goal": "Die Kräfte bestimmen, mit denen die beiden Lager die Last auffangen.",
+      "kind": "lernen",
+      "canvas": 3,
+      "estMinutes": 6,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["auflagerreaktion"],
+          "uses": ["gleichgewicht"],
+          "layers": {
+            "intuitive": "Die Brücke fällt nicht durch, also muss etwas dagegenhalten: die zwei Auflager. Weil die Last genau in der Mitte hängt, teilen sie sich brüderlich — jedes trägt die Hälfte.",
+            "practical": "Auflager antworten auf die Belastung mit Reaktionskräften. Für einen symmetrisch gelagerten Träger mit mittiger Einzellast gilt F_A = F_B = F/2. Das folgt direkt aus ΣM = 0 um ein Lager und ΣF = 0 in senkrechter Richtung.",
+            "rigorous": "Ein Festlager sperrt zwei Richtungen (r = 2), ein Loslager eine (r = 1) — zusammen r = 3, gerade so viel, wie die Ebene Gleichgewichtsbedingungen hat. Momentengleichgewicht um A: F_B·l − F·(l/2) = 0 ⇒ F_B = F/2; aus ΣFy = 0 folgt F_A = F/2. Wandert die Last aus der Mitte, verteilt sie sich im umgekehrten Verhältnis der Abstände — die Symmetrie hier ist ein Sonderfall, kein Naturgesetz."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "beam_reaction",
+          "note": "Gilt so nur bei mittiger Last und symmetrischer Lagerung."
+        },
+        {
+          "type": "calc",
+          "formulaId": "beam_reaction",
+          "inputs": { "F": 49.05 },
+          "expected": { "value": 24.525, "unit": "N" },
+          "narrative": "Deine 5 kg verteilen sich auf zwei Auflager: jedes hält 24,525 N."
+        },
+        {
+          "type": "interactive",
+          "componentId": "truss-load",
+          "params": {
+            "nodes": [[0, 0], [150, 0], [300, 0], [150, 112.5]],
+            "bars": [[0, 1], [1, 2], [0, 3], [3, 2], [1, 3]],
+            "supports": [
+              { "node": 0, "fx": true, "fy": true },
+              { "node": 2, "fy": true }
+            ],
+            "load": 49.05,
+            "loadNode": 1,
+            "loadRange": [0, 120],
+            "allowN": 98
+          },
+          "caption": "Die grünen Pfeile unten sind die Auflagerkräfte. Zieh am Last-Regler und sieh zu, wie sie mitwachsen."
+        },
+        {
+          "type": "task",
+          "kind": "numeric",
+          "question": "Wie groß ist die Kraft an EINEM Auflager, wenn 5 kg (49,05 N) mittig hängen?",
+          "concepts": ["auflagerreaktion"],
+          "source": { "formulaId": "beam_reaction", "inputs": { "F": 49.05 } },
+          "answer": 24.525,
+          "tolerance": 0.01,
+          "unit": "N",
+          "unitChoices": ["N", "kg", "N*m"],
+          "hint": "Mittige Last, zwei gleiche Auflager — mehr braucht es nicht. Und achte darauf, was hinten rauskommt: eine Kraft, keine Masse.",
+          "explanation": "F_A = F/2 = 49,05 N / 2 = 24,525 N. Die Einheit ist Newton: Auflager antworten mit einer Kraft, nicht mit einer Masse."
+        }
+      ]
+    },
+    {
+      "id": "zug-oder-druck",
+      "requires": ["auflagerreaktionen"],
+      "title": "Zug oder Druck?",
+      "goal": "Erkennen, dass jeder Stab entweder gezogen oder gedrückt wird — und was das für den Bau heißt.",
+      "kind": "lernen",
+      "canvas": 2,
+      "estMinutes": 7,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["zugdruckstab"],
+          "uses": ["kraftvektor"],
+          "layers": {
+            "intuitive": "Ein Fachwerkstab kann nur zwei Dinge tun: ziehen oder drücken. Blau heißt gezogen, rot heißt gedrückt. Schieb den Last-Regler und schau, welche Stäbe die Farbe halten — die Bauart entscheidet das, nicht die Größe der Last.",
+            "practical": "In einem idealen Fachwerk sind alle Stäbe gelenkig verbunden und nur an den Enden belastet. Deshalb überträgt jeder Stab ausschließlich eine Kraft entlang seiner Achse: Zug (positiv) oder Druck (negativ). Biegung gibt es nicht. Das ist der ganze Trick des Fachwerks — Material sitzt nur dort, wo es in seiner stärksten Beanspruchungsart arbeitet.",
+            "rigorous": "Die Idealisierung setzt voraus: reibungsfreie Gelenke, Stabachsen schneiden sich in den Knoten, Lasten greifen nur an Knoten an, Stabeigengewicht vernachlässigt. Dann ist jeder Stab ein Pendelstab mit reiner Normalkraft. Reale Knotenbleche sind biegesteif und erzeugen Nebenspannungen; solange die Stabachsen sich sauber im Knoten treffen, bleiben diese klein. Wichtig fürs Bauen: Zugstäbe versagen durch Bruch bei σ = S/A, Druckstäbe fast immer früher durch Knicken — die Länge entscheidet mit, nicht nur die Fläche."
+          }
+        },
+        {
+          "type": "interactive",
+          "componentId": "truss-load",
+          "params": {
+            "nodes": [[0, 0], [150, 0], [300, 0], [150, 112.5]],
+            "bars": [[0, 1], [1, 2], [0, 3], [3, 2], [1, 3]],
+            "supports": [
+              { "node": 0, "fx": true, "fy": true },
+              { "node": 2, "fy": true }
+            ],
+            "load": 49.05,
+            "loadNode": 1,
+            "loadRange": [0, 120],
+            "allowN": 98
+          },
+          "caption": "Fünf Stäbe, von links nach rechts nummeriert: S₁ und S₂ unten, S₃ und S₄ die Schrägen, S₅ die Senkrechte."
+        },
+        {
+          "type": "text",
+          "variant": "merksatz",
+          "layers": {
+            "intuitive": "Ein Seil kann nur ziehen. Ein Stab kann beides — aber beim Drücken knickt er irgendwann weg."
+          }
+        },
+        {
+          "type": "task",
+          "kind": "multi",
+          "question": "Welche Stäbe stehen unter Druck?",
+          "concepts": ["zugdruckstab"],
+          "options": [
+            { "text": "S₁ — Untergurt links", "why": "Der Untergurt wird auseinandergezogen: Die Auflager drücken schräg nach innen-oben, der Untergurt hält dagegen. Er steht unter Zug." },
+            { "text": "S₂ — Untergurt rechts", "why": "Spiegelbild von S₁ — ebenfalls Zug. Bei symmetrischer Last tragen beide Untergurthälften gleich." },
+            { "text": "S₃ — Schräge links" },
+            { "text": "S₄ — Schräge rechts" },
+            { "text": "S₅ — Senkrechte in der Mitte", "why": "Die Senkrechte hängt die Last an den First: Sie wird gezogen, und zwar mit genau der Lastgröße 49,05 N." }
+          ],
+          "answer": [2, 3],
+          "hint": "Denk daran, wohin die Last die Knoten schiebt. Die Schrägen laufen vom Auflager zum First hinauf — was macht die Last mit ihnen?",
+          "explanation": "Die beiden Schrägen S₃ und S₄ leiten die Last vom First hinunter zu den Auflagern und werden dabei zusammengedrückt (je −40,875 N). Untergurt (je +32,7 N) und Senkrechte (+49,05 N) stehen unter Zug. Genau deshalb sind die Schrägen die kritischen Stäbe: Nur sie können knicken."
+        }
+      ]
+    },
+    {
+      "id": "knotenpunktverfahren",
+      "requires": ["zug-oder-druck"],
+      "title": "Ein Knoten nach dem anderen",
+      "goal": "Stabkräfte selbst ausrechnen — mit dem Rezept, das Ingenieure seit 150 Jahren benutzen.",
+      "kind": "lernen",
+      "canvas": 3,
+      "estMinutes": 9,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["knotenpunktverfahren"],
+          "uses": ["gleichgewicht", "auflagerreaktion", "zugdruckstab"],
+          "layers": {
+            "intuitive": "Statt die ganze Brücke auf einmal zu verstehen, schaust du dir einen Knoten allein an. Dort treffen sich nur zwei, drei Stäbe — und auch dieser kleine Punkt muss im Gleichgewicht sein. Das reicht schon, um die Kräfte auszurechnen.",
+            "practical": "Man schneidet einen Knoten frei und stellt dort ΣFx = 0 und ΣFy = 0 auf. Startet man an einem Auflager, sind höchstens zwei Stabkräfte unbekannt — genau so viele, wie es Gleichungen gibt. Hat man sie, geht man zum nächsten Knoten weiter. Praktischer Kniff: Das Kraftdreieck am Knoten ist dem Geometriedreieck des Stabes ähnlich, also verhalten sich die Kräfte wie die Seitenlängen.",
+            "rigorous": "Das Knotenpunktverfahren löst das lineare Gleichungssystem A·x = −P knotenweise, wobei die Reihenfolge so gewählt wird, dass nie mehr als zwei Unbekannte gleichzeitig auftreten. Es ist damit ein Vorwärtseinsetzen in einem geeignet permutierten System. Existiert keine solche Reihenfolge, ist das Fachwerk zwar eventuell statisch bestimmt, aber nur global lösbar (Rittersches Schnittverfahren oder das volle System). Die App löst intern immer das vollständige System — das Verfahren hier ist der Weg, den du von Hand gehen kannst."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "joint_strut",
+          "note": "Ähnliche Dreiecke: Die Diagonalkraft verhält sich zur Auflagerkraft wie die Stablänge zur Höhe."
+        },
+        {
+          "type": "calc",
+          "formulaId": "joint_strut",
+          "inputs": { "FA": 24.525, "lS": 187.5, "h": 112.5 },
+          "expected": { "value": 40.875, "unit": "N" },
+          "narrative": "Am Auflagerknoten: aus 24,525 N Auflagerkraft werden 40,875 N in der Schrägen — die Schräge trägt mehr als das Auflager, weil sie flach liegt."
+        },
+        {
+          "type": "interactive",
+          "componentId": "value-slider",
+          "params": {
+            "formulaId": "joint_strut",
+            "var": "h",
+            "min": 60,
+            "max": 170,
+            "step": 2.5,
+            "fixed": { "FA": 24.525, "lS": 187.5 }
+          },
+          "caption": "Zieh die Höhe klein: Die Diagonalkraft schießt nach oben. Flache Fachwerke müssen viel mehr Kraft schlucken — das ist der wichtigste Satz dieses Projekts."
+        },
+        {
+          "type": "task",
+          "kind": "steps",
+          "question": "Rechne dich vom Auflager bis in den Untergurt durch.",
+          "concepts": ["knotenpunktverfahren"],
+          "steps": [
+            {
+              "prompt": "Wie groß ist die Auflagerkraft bei 49,05 N mittiger Last?",
+              "formulaId": "beam_reaction",
+              "inputs": { "F": 49.05 },
+              "tolerance": 0.01
+            },
+            {
+              "prompt": "Wie groß ist damit die Kraft in der Schrägen (Stablänge 187,5 mm, Höhe 112,5 mm)?",
+              "formulaId": "joint_strut",
+              "inputs": { "FA": "$prev", "lS": 187.5, "h": 112.5 },
+              "tolerance": 0.01
+            },
+            {
+              "prompt": "Und wie groß ist die Kraft im Untergurt (waagerechter Anteil, a = 150 mm)?",
+              "formulaId": "joint_chord",
+              "inputs": { "SD": "$prev", "a": 150, "lS": 187.5 },
+              "tolerance": 0.01
+            }
+          ],
+          "hint": "Geh Knoten für Knoten: erst das Auflager, dann die Schräge, dann waagerecht weiter in den Untergurt. Jede Stufe baut auf der vorigen auf.",
+          "explanation": "24,525 N → 40,875 N → 32,7 N. Das sind genau die Beträge, die der Löser oben in der Ansicht anzeigt. Von Hand gerechnet und von der Engine bestätigt — dieselbe Brücke, zwei Wege."
+        }
+      ]
+    },
+    {
+      "id": "statisch-bestimmt",
+      "requires": ["zug-oder-druck"],
+      "title": "Genug Stäbe — und keiner zu viel",
+      "goal": "Abzählen können, ob ein Fachwerk überhaupt rechenbar und stabil ist.",
+      "kind": "lernen",
+      "canvas": 3,
+      "estMinutes": 7,
+      "blocks": [
+        {
+          "type": "text",
+          "introduces": ["statische_bestimmtheit"],
+          "uses": ["zugdruckstab", "gleichgewicht"],
+          "layers": {
+            "intuitive": "Zu wenige Stäbe und die Brücke klappt zusammen wie ein Scherengitter. Zu viele und sie steht zwar — aber niemand kann mehr sagen, welcher Stab wie viel trägt. Dazwischen liegt der Punkt, an dem es genau aufgeht.",
+            "practical": "Abzählkriterium: f = 2k − (s + r), mit k Knoten, s Stäben und r Auflagerwertigkeiten. Jeder Knoten liefert zwei Gleichungen, jeder Stab und jede Lagerwertigkeit bringt eine Unbekannte. f = 0 heißt statisch bestimmt, f > 0 beweglich (Mechanismus), f < 0 statisch überbestimmt.",
+            "rigorous": "Das Abzählkriterium ist notwendig, aber nicht hinreichend: Ein Fachwerk kann f = 0 erfüllen und trotzdem beweglich sein, wenn die Stäbe ungünstig liegen (z. B. drei Auflagerkräfte, die sich in einem Punkt schneiden, oder ein Knoten mit zwei kollinearen Stäben). Formal ist die Bedingung, dass die Gleichgewichtsmatrix regulär ist — genau das prüft der Löser, indem er das System zu lösen versucht und bei Singularität abbricht. Bei f < 0 ist das System nur unter Berücksichtigung der Stabdehnungen lösbar (Kraftgrößen- oder Weggrößenverfahren)."
+          }
+        },
+        {
+          "type": "formula",
+          "formulaId": "det_truss",
+          "note": "k zählt Knoten, s zählt Stäbe, r zählt gesperrte Richtungen: Festlager 2, Loslager 1."
+        },
+        {
+          "type": "calc",
+          "formulaId": "det_truss",
+          "inputs": { "k": 4, "s": 5, "r": 3 },
+          "expected": { "value": 0, "unit": "-" },
+          "narrative": "Deine Dreiecksbrücke: 4 Knoten, 5 Stäbe, Festlager + Loslager = 3. Es geht genau auf."
+        },
+        {
+          "type": "interactive",
+          "componentId": "truss-load",
+          "params": {
+            "nodes": [[0, 0], [150, 0], [300, 0], [150, 112.5]],
+            "bars": [[0, 1], [1, 2], [0, 3], [3, 2], [1, 3]],
+            "supports": [
+              { "node": 0, "fx": true, "fy": true },
+              { "node": 2, "fy": true }
+            ],
+            "load": 49.05,
+            "loadNode": 1,
+            "loadRange": [0, 120],
+            "allowN": 98
+          },
+          "caption": "Zähl selbst nach: 4 Knoten (zwei Auflager, die Lastmitte, der First), 5 Stäbe, ein Festlager und ein Loslager."
+        },
+        {
+          "type": "task",
+          "kind": "error-find",
+          "question": "In einer der Abzählungen steckt ein Rechenfehler. Welche Zeile stimmt nicht?",
+          "concepts": ["statische_bestimmtheit"],
+          "rows": [
+            {
+              "label": "Dreiecksbrücke: k = 4, s = 5, r = 3",
+              "formulaId": "det_truss",
+              "inputs": { "k": 4, "s": 5, "r": 3 },
+              "shown": 0
+            },
+            {
+              "label": "Trapezbrücke: k = 5, s = 7, r = 3",
+              "formulaId": "det_truss",
+              "inputs": { "k": 5, "s": 7, "r": 3 },
+              "shown": 0
+            },
+            {
+              "label": "Dreieck ohne Senkrechte: k = 4, s = 4, r = 3",
+              "formulaId": "det_truss",
+              "inputs": { "k": 4, "s": 4, "r": 3 },
+              "shown": 0
+            },
+            {
+              "label": "Dreieck mit Extra-Stab: k = 4, s = 6, r = 3",
+              "formulaId": "det_truss",
+              "inputs": { "k": 4, "s": 6, "r": 3 },
+              "shown": -1
+            }
+          ],
+          "hint": "Rechne jede Zeile stur nach: 2·k, dann s + r abziehen. Eine Zeile behauptet, sie sei statisch bestimmt, obwohl sie es nicht ist.",
+          "explanation": "Zeile 3 ist falsch: 2·4 − (4 + 3) = +1, nicht 0. Mit nur vier Stäben fehlt dem Dreieck die Senkrechte — es ist ein Mechanismus und klappt unter Last zusammen. Zeile 4 ist dagegen korrekt: −1 bedeutet einen Stab zu viel, das System ist überbestimmt (steht, aber ist nicht mehr von Hand rechenbar)."
+        }
+      ]
+    },
+    {
+      "id": "bruecke-bauen",
+      "requires": ["knotenpunktverfahren", "statisch-bestimmt"],
+      "title": "Deine Brücke",
+      "goal": "Eine Bauart wählen und so auslegen, dass sie 5 kg trägt — mit möglichst wenig Material.",
+      "kind": "bauen",
+      "canvas": 1,
+      "estMinutes": 10,
+      "blocks": [
+        {
+          "type": "text",
+          "variant": "hinweis",
+          "layers": {
+            "intuitive": "Jetzt entscheidest du. Das Dreieck ist sparsam, hat aber lange Schrägen — und lange Druckstäbe knicken gern. Das Trapez teilt die Schrägen auf, kostet dafür mehr Material. Der Löser rechnet jede Einstellung sofort durch."
+          }
+        },
+        {
+          "type": "build",
+          "cadModel": "bruecke",
+          "parameters": {
+            "preset": { "min": 1, "max": 2, "default": 1, "unit": "-", "label": "Bauart" },
+            "h": { "min": 60, "max": 170, "default": 112.5, "unit": "mm", "label": "Fachwerkhöhe" },
+            "b": { "min": 4, "max": 10, "default": 7, "unit": "mm", "label": "Stabbreite" },
+            "tiefe": { "min": 6, "max": 14, "default": 8, "unit": "mm", "label": "Bautiefe" }
+          },
+          "constraints": [
+            {
+              "expr": "max((49.05/2) * sqrt((preset == 1 ? 150 : 75)^2 + h^2) / h * ((preset == 1 ? 150 : 75)^2 + h^2), (preset == 1 ? 0 : 75*49.05/h) * 150^2) <= (pi^2 * 3500 * min(b, tiefe)^4 / 12) / 2",
+              "label": "Kein Druckstab knickt (Sicherheit 2 gegen Eulerknicken)",
+              "proof": {
+                "pass": { "preset": 1, "h": 112.5, "b": 7, "tiefe": 8 },
+                "fail": { "preset": 1, "h": 112.5, "b": 4, "tiefe": 8 }
+              }
+            },
+            {
+              "expr": "(preset == 1 ? max(49.05, 75*49.05/h) : (49.05/2) * sqrt((preset == 1 ? 150 : 75)^2 + h^2) / h) <= 20 * b * tiefe",
+              "label": "Kein Zugstab reißt (σ bleibt unter 20 N/mm²)",
+              "proof": {
+                "pass": { "preset": 1, "h": 112.5, "b": 7, "tiefe": 8 },
+                "fail": { "preset": 1, "h": 60, "b": 1, "tiefe": 1 }
+              }
+            },
+            {
+              "expr": "(preset == 1 ? (300 + 2*sqrt(150^2 + h^2) + h) : (450 + 4*sqrt(75^2 + h^2))) * b * tiefe <= 60000",
+              "label": "Materialbudget eingehalten (höchstens 60 cm³ Filament)",
+              "proof": {
+                "pass": { "preset": 1, "h": 112.5, "b": 7, "tiefe": 8 },
+                "fail": { "preset": 2, "h": 170, "b": 10, "tiefe": 14 }
+              }
+            }
+          ],
+          "exports": ["stl"],
+          "bom": [
+            "2× Fachwerkscheibe (dieselbe STL zweimal drucken)",
+            "4× Querstab 6 mm Rundmaterial, Länge = Abstand der Scheiben",
+            "1× Schlaufe oder Karabiner für die Lastöse",
+            "1× Prüfgewicht 5 kg (z. B. fünf 1-Liter-Flaschen im Netz)"
+          ]
+        },
+        {
+          "type": "task",
+          "kind": "order",
+          "question": "Bring den Zusammenbau in die richtige Reihenfolge.",
+          "concepts": ["zugdruckstab"],
+          "items": [
+            "Beide Scheiben drucken und die Stützstrukturen entfernen",
+            "Die Scheiben parallel stellen und mit den Querstäben verbinden",
+            "Die Brücke auf zwei Tische legen, die 30 cm auseinanderstehen",
+            "Die Schlaufe durch die Lastöse ziehen und das Gewicht anhängen"
+          ],
+          "correctOrder": [0, 1, 2, 3],
+          "hint": "Denk daran, was du in der Hand halten musst, bevor der nächste Schritt überhaupt geht — und dass die Last erst ganz zum Schluss drankommt.",
+          "explanation": "Erst die Teile, dann der Rahmen, dann die Auflager, zuletzt die Last. Das Auflegen VOR dem Anhängen ist wichtig: Eine frei gehaltene Brücke bekommt beim Anhängen Kräfte, für die sie nie ausgelegt wurde."
+        }
+      ]
+    },
+    {
+      "id": "meilenstein",
+      "requires": ["bruecke-bauen"],
+      "title": "Der Lasttest",
+      "goal": "Nachweisen, dass deine Brücke die 5 kg wirklich trägt.",
+      "kind": "meilenstein",
+      "estMinutes": 5,
+      "finaleParts": ["Untergurt", "Schrägen", "Knotenbleche", "Lastöse"],
+      "blocks": [
+        {
+          "type": "text",
+          "layers": {
+            "intuitive": "Zwei Tische, 30 cm Abstand, Brücke drauf. Schlaufe durch die Öse, fünf Wasserflaschen dran — und langsam loslassen. Wenn sie hält, hast du sie nicht geraten, sondern ausgerechnet.",
+            "practical": "Der Nachweis steht unten: Für deine gewählten Werte rechnet die Engine die Stabkräfte mit dem Knotenpunktverfahren aus und prüft sie gegen Knicken, Zugfestigkeit und Materialbudget. Beim echten Test langsam belasten — eine ruckartig aufgesetzte Last erzeugt ein Vielfaches der statischen Kraft.",
+            "rigorous": "Der Nachweis führt drei Grenzzustände: Stabilität der Druckstäbe (Eulerfall 2, F_k = π²·E·I/l_k² mit I = a⁴/12 für den quadratischen Querschnitt, Sicherheit ν = 2), Festigkeit der Zugstäbe (σ = S/A ≤ σ_zul) und die Materialvorgabe der Challenge. Für den Druckstab ist die schwache Achse maßgebend — deshalb geht die kleinere der beiden Querschnittsseiten in die Rechnung ein. Nicht geführt sind: Knotensteifigkeit, Schichthaftung des Drucks und dynamische Zuschläge; darum die Sicherheit 2 und das langsame Belasten."
+          }
+        },
+        {
+          "type": "calc",
+          "formulaId": "euler_knick",
+          "inputs": { "E": 3500, "b": 7, "lk": 187.5 },
+          "expected": { "value": 196.5966710152401, "unit": "N" },
+          "narrative": "Ein 7-mm-Stab von 187,5 mm Länge knickt rechnerisch bei 196,6 N. Mit Sicherheit 2 bleiben 98,3 N zulässig — die Schräge trägt 40,9 N. Reserve ist da."
+        },
+        {
+          "type": "text",
+          "variant": "merksatz",
+          "layers": {
+            "intuitive": "Der Zugstab war nie das Problem. Druckstäbe knicken lange bevor Zugstäbe reißen — deshalb rechnet man sie zuerst."
+          }
+        }
+      ]
+    }
+  ]
+}

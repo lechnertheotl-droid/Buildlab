@@ -105,3 +105,86 @@ export function parseStl(text: string): Triangle[] {
   }
   return triangles;
 }
+
+export interface ManifoldCheck {
+  ok: boolean;
+  reason?: string;
+  /** Materialvolumen in mm³ (positiv, wenn die Normalen nach außen zeigen). */
+  volume: number;
+  /** Kanten, die nicht genau zwei Nachbarflächen haben. */
+  openEdges: number;
+}
+
+/**
+ * Prüft, ob ein Mesh ein geschlossener, konsistent orientierter Körper ist.
+ *
+ * `validateStl` prüft nur die Syntax — ein Teil mit freischwebenden Stücken
+ * (beim Zahnrad real aufgetreten: die Zähne rissen bei m=4/z=33 vom Körper ab)
+ * passiert es anstandslos und landet als unbaubares STL beim Lernenden.
+ *
+ * Zwei Kriterien:
+ *   1. Kantenparität — jede ungerichtete Kante gehört zu genau zwei Dreiecken,
+ *      und die gerichteten Halbkanten kommen je genau einmal vor (konsistente
+ *      Orientierung, keine gespiegelten Nachbarn).
+ *   2. Signed Volume V = Σ v₀·(v₁×v₂)/6 > 0 — die Normalen zeigen nach außen.
+ */
+export function checkManifold(triangles: Triangle[]): ManifoldCheck {
+  if (triangles.length === 0) {
+    return { ok: false, reason: 'keine Dreiecke', volume: 0, openEdges: 0 };
+  }
+  // Ecken quantisieren, damit geteilte Kanten trotz Float-Rauschen zusammenfinden.
+  const Q = 1e4;
+  const key = (p: Vec3) =>
+    `${Math.round(p.x * Q)},${Math.round(p.y * Q)},${Math.round(p.z * Q)}`;
+
+  const halfEdges = new Map<string, number>();
+  let volume = 0;
+
+  for (const t of triangles) {
+    const [a, b, c] = t.v;
+    volume +=
+      (a.x * (b.y * c.z - b.z * c.y) +
+        a.y * (b.z * c.x - b.x * c.z) +
+        a.z * (b.x * c.y - b.y * c.x)) /
+      6;
+    const ks = [key(a), key(b), key(c)];
+    for (let i = 0; i < 3; i++) {
+      const id = `${ks[i]}>${ks[(i + 1) % 3]}`;
+      halfEdges.set(id, (halfEdges.get(id) ?? 0) + 1);
+    }
+  }
+
+  let openEdges = 0;
+  let doppelt = 0;
+  for (const [id, count] of halfEdges) {
+    if (count !== 1) doppelt++;
+    const [from, to] = id.split('>');
+    if (!halfEdges.has(`${to}>${from}`)) openEdges++;
+  }
+
+  if (openEdges > 0) {
+    return {
+      ok: false,
+      reason: `${openEdges} offene Kante(n) — der Körper ist nicht geschlossen`,
+      volume,
+      openEdges,
+    };
+  }
+  if (doppelt > 0) {
+    return {
+      ok: false,
+      reason: `${doppelt} Kante(n) mehrfach gleich orientiert — Orientierung inkonsistent`,
+      volume,
+      openEdges,
+    };
+  }
+  if (!(volume > 0)) {
+    return {
+      ok: false,
+      reason: `Signed Volume ${volume.toFixed(3)} mm³ ist nicht positiv — Normalen zeigen nach innen`,
+      volume,
+      openEdges,
+    };
+  }
+  return { ok: true, volume, openEdges };
+}

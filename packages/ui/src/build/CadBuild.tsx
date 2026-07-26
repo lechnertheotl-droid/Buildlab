@@ -14,6 +14,7 @@ import {
   compileGear,
   compilePulley,
   compileRakete,
+  compileBruecke,
   parseStl,
   validateStl,
   meshToIso,
@@ -21,8 +22,14 @@ import {
   type GearParams,
   type PulleyParams,
   type RaketeParams,
+  type BrueckeParams,
 } from '@buildlab/cad';
-import { computeRocket, evaluateExpr, evaluateFormula } from '@buildlab/engine';
+import {
+  computeRocket,
+  evaluateExpr,
+  evaluateFormula,
+  solveBridge,
+} from '@buildlab/engine';
 import { Latex } from '../Latex';
 import { Slider } from '../Slider';
 import { useContent } from '../content-context';
@@ -64,6 +71,13 @@ const ROLLE_DEFAULTS: Record<string, ParamConfig> = {
   d_seil: { min: 2, max: 6, default: 4, unit: 'mm', label: 'Dein Seildurchmesser', step: 0.5 },
 };
 
+const BRUECKE_DEFAULTS: Record<string, ParamConfig> = {
+  preset: { min: 1, max: 2, default: 1, unit: '-', label: 'Bauart', step: 1 },
+  h: { min: 60, max: 170, default: 112.5, unit: 'mm', label: 'Fachwerkhöhe', step: 2.5 },
+  b: { min: 4, max: 10, default: 7, unit: 'mm', label: 'Stabbreite', step: 0.5 },
+  tiefe: { min: 6, max: 14, default: 8, unit: 'mm', label: 'Bautiefe', step: 1 },
+};
+
 const RAKETE_DEFAULTS: Record<string, ParamConfig> = {
   d: { min: 21, max: 32, default: 24, unit: 'mm', label: 'Rohrdurchmesser', step: 1 },
   tubeLen: { min: 140, max: 320, default: 220, unit: 'mm', label: 'Rohrlänge', step: 5 },
@@ -99,6 +113,7 @@ export function CadBuild({ block, onExport }: CadBuildProps) {
   if (block.cadModel === 'gear') return <GearBuild block={block} onExport={onExport} />;
   if (block.cadModel === 'rolle') return <RolleBuild block={block} onExport={onExport} />;
   if (block.cadModel === 'rakete') return <RaketeBuild block={block} onExport={onExport} />;
+  if (block.cadModel === 'bruecke') return <BrueckeBuild block={block} onExport={onExport} />;
   return (
     <p className="rounded border border-dashed border-black/15 px-3 py-2 font-mono text-xs uppercase tracking-wide text-ink-faint">
       ▸ CAD-Modell „{block.cadModel}" · folgt in einer späteren Phase
@@ -851,6 +866,274 @@ function RaketeBuild({ block, onExport }: CadBuildProps) {
         </button>
         <p className="mt-1.5 text-xs text-ink-faint">
           Du brauchst beide Teile — wechsle oben auf {part === 'rumpf' ? '„Nase"' : '„Rumpf"'} und lade nochmal.
+        </p>
+      </div>
+    </figure>
+  );
+}
+
+// ── Fachwerkbrücke: zwei Bauarten (Dreieck, Trapez) aus bridgePreset, dazu
+//    Fachwerkhöhe, Stabbreite und Bautiefe. Anders als bei den anderen Modellen
+//    zeigt die Engine-Zeile hier die ECHTEN Stabkräfte aus dem Löser — nicht
+//    nur ein abgeleitetes Maß. Die Constraints tragen dieselbe Statik als
+//    geschlossene Ausdrücke; ein Anti-Drift-Test hält beides deckungsgleich.
+
+/** Prüflast der Challenge: 5 kg mittig. */
+const BRUECKE_LAST = 49.05;
+
+function BrueckeBuild({ block, onExport }: CadBuildProps) {
+  const setActive = useWorkspaceStore((s) => s.setActive);
+  const clearActive = useWorkspaceStore((s) => s.clearActive);
+  const setCanvasInputs = useWorkspaceStore((s) => s.setCanvasInputs);
+  const setBuildOk = useWorkspaceStore((s) => s.setBuildOk);
+
+  const paramKeys = useMemo(() => Object.keys(block.parameters), [block.parameters]);
+  const configs = useMemo(
+    () => paramKeys.map((k) => [k, mergeConfig(k, block.parameters[k], BRUECKE_DEFAULTS)] as const),
+    [paramKeys, block.parameters],
+  );
+
+  const [values, setValues] = useState<Record<string, number>>(() =>
+    Object.fromEntries(configs.map(([k, c]) => [k, c.default])),
+  );
+  const [rotation, setRotation] = useState(0);
+  const [triangles, setTriangles] = useState<Triangle[]>([]);
+  const [stl, setStl] = useState<string | null>(null);
+  const [computing, setComputing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const reqRef = useRef(0);
+
+  const params: BrueckeParams = {
+    preset: values.preset,
+    h: values.h,
+    b: values.b,
+    tiefe: values.tiefe,
+    fn: 32,
+  };
+
+  // Eiserne Regel 1: die Stabkräfte kommen aus dem Löser, nicht aus dem Markup.
+  const statik = useMemo(() => {
+    try {
+      const sol = solveBridge(values.preset, values.h, BRUECKE_LAST);
+      const druck = Math.min(...sol.barForces);
+      const zug = Math.max(...sol.barForces);
+      return { maxAbs: sol.maxAbs, druck: Math.abs(druck), zug, label: sol.label };
+    } catch {
+      return null;
+    }
+  }, [values.preset, values.h]);
+
+  const constraints = useMemo(
+    () =>
+      (block.constraints ?? []).map((c) => {
+        try {
+          return { label: c.label, ok: evaluateExpr(c.expr, values) === true };
+        } catch {
+          return { label: c.label, ok: false };
+        }
+      }),
+    [block.constraints, values],
+  );
+  const allConstraintsOk = constraints.every((c) => c.ok);
+
+  // Vorschau aus DEMSELBEN STL: kompilieren (debounced), validieren, parsen.
+  useEffect(() => {
+    const id = ++reqRef.current;
+    setComputing(true);
+    const timer = setTimeout(() => {
+      compileBruecke(params)
+        .then((out) => {
+          if (id !== reqRef.current) return; // veraltet
+          const check = validateStl(out);
+          if (!check.ok) {
+            setError(check.reason ?? 'ungültiges STL');
+            setComputing(false);
+            return;
+          }
+          setTriangles(parseStl(out));
+          setStl(out);
+          setError(null);
+          setComputing(false);
+        })
+        .catch((e: unknown) => {
+          if (id !== reqRef.current) return;
+          setError(e instanceof Error ? e.message : String(e));
+          setComputing(false);
+        });
+    }, 250);
+    return () => clearTimeout(timer);
+    // params ist aus values abgeleitet — die Einzelfelder sind die echten Deps.
+  }, [params.preset, params.h, params.b, params.tiefe]);
+
+  const iso = useMemo(
+    () => meshToIso(triangles, { width: VIEW_W, height: VIEW_H, rotation }),
+    [triangles, rotation],
+  );
+
+  const valuesKey = JSON.stringify(values);
+  useEffect(() => {
+    setActive({
+      formulaId: 'beam_reaction',
+      label: 'Auflagerkraft der Prüflast',
+      values: { F: BRUECKE_LAST },
+    });
+    setCanvasInputs(values);
+    return () => clearActive('beam_reaction');
+    // valuesKey repräsentiert values inhaltlich.
+  }, [setActive, clearActive, setCanvasInputs, valuesKey]);
+
+  useEffect(() => {
+    setBuildOk(allConstraintsOk);
+    return () => setBuildOk(null);
+  }, [setBuildOk, allConstraintsOk]);
+
+  const exportable = stl !== null && validateStl(stl).ok && allConstraintsOk;
+
+  const download = () => {
+    if (!stl) return;
+    const blob = new Blob([stl], { type: 'model/stl' });
+    const url = URL.createObjectURL(blob);
+    const art = values.preset === 2 ? 'trapez' : 'dreieck';
+    const name = `bruecke_${art}_h${fmt(values.h, 0)}_b${fmt(values.b, 1).replace(',', '-')}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}.stl`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    onExport?.({ ...values }, `Fachwerkbrücke ${statik?.label ?? art}, h = ${fmt(values.h, 0)} mm`);
+  };
+
+  // Die Bauart ist kein Schieberegler, sondern eine Entscheidung — deshalb
+  // Segment-Umschalter. Sie bleibt aber ein Bau-Parameter, damit die
+  // Constraints (und damit der Meilenstein) sie sehen.
+  const presetConfig = configs.find(([k]) => k === 'preset');
+  const sliderConfigs = configs.filter(([k]) => k !== 'preset');
+
+  return (
+    <figure className="rounded border border-black/10 bg-paper-2 p-4 shadow">
+      <MeshPreview
+        polygons={iso.polygons}
+        edges={iso.edges}
+        width={VIEW_W}
+        height={VIEW_H}
+        computing={computing}
+        empty={triangles.length === 0}
+      />
+
+      {/* Engine-Zeile: die echten Stabkräfte deiner Brücke unter 5 kg */}
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-sm" aria-live="polite">
+        {statik === null ? (
+          <span className="text-fehl">— Fachwerk nicht lösbar</span>
+        ) : (
+          <>
+            <span>
+              größte Druckkraft = <span className="text-accent-ink">{fmt(statik.druck)} N</span>
+            </span>
+            <span>
+              größte Zugkraft = <span className="text-accent-ink">{fmt(statik.zug)} N</span>
+            </span>
+            <span className="text-xs text-ink-faint">aus dem Fachwerk-Löser, bei 49,05 N mittig</span>
+          </>
+        )}
+        {error && (
+          <span className="text-xs text-fehl">
+            ⚠ Das Modell mag diese Werte nicht — stell einen Parameter zurück.
+          </span>
+        )}
+      </div>
+
+      {/* Bauart als Segment-Umschalter */}
+      {presetConfig && (
+        <div className="mt-4">
+          <span className="text-sm text-ink-2">{presetConfig[1].label}</span>
+          <div className="mt-1.5 inline-flex overflow-hidden rounded border border-black/10">
+            {[
+              { wert: 1, name: 'Dreieck' },
+              { wert: 2, name: 'Trapez' },
+            ].map((o) => (
+              <button
+                key={o.wert}
+                type="button"
+                aria-pressed={values.preset === o.wert}
+                onClick={() => setValues((prev) => ({ ...prev, preset: o.wert }))}
+                className={`min-h-11 px-4 font-mono text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent ${
+                  values.preset === o.wert ? 'bg-accent text-paper' : 'bg-paper text-ink-2 hover:bg-paper-sink'
+                }`}
+              >
+                {o.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Parameter-Slider */}
+      <div className="mt-4 flex flex-col gap-4">
+        {sliderConfigs.map(([key, c]) => (
+          <Slider
+            key={key}
+            label={c.label}
+            value={values[key]}
+            min={c.min}
+            max={c.max}
+            step={c.step}
+            unit={c.unit}
+            onChange={(v) => setValues((prev) => ({ ...prev, [key]: v }))}
+          />
+        ))}
+        <Slider
+          label="Ansicht drehen"
+          value={Math.round((rotation * 180) / Math.PI)}
+          min={0}
+          max={360}
+          step={5}
+          unit="°"
+          onChange={(v) => setRotation((v * Math.PI) / 180)}
+        />
+      </div>
+
+      {/* Anforderungen (build.constraints) — jede Zeile engine-geprüft */}
+      {constraints.length > 0 && (
+        <ul className="mt-4 space-y-1 border-t border-black/10 pt-3" aria-label="Anforderungen">
+          {constraints.map((c, idx) => (
+            <li key={idx} className={`flex items-center gap-2 font-mono text-sm ${c.ok ? 'text-ok' : 'text-fehl'}`}>
+              <span aria-hidden>{c.ok ? '✓' : '✗'}</span>
+              <span className="text-ink-2">{c.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Stückliste zugeklappt (SCREENS.md §6.2) */}
+      {(block.bom?.length ?? 0) > 0 && (
+        <details className="mt-3 text-sm text-ink-2">
+          <summary className="cursor-pointer font-mono text-xs uppercase tracking-wider text-ink-faint outline-none focus-visible:ring-2 focus-visible:ring-accent">
+            ▸ Stückliste
+          </summary>
+          <ul className="mt-1 list-inside list-disc">
+            {block.bom!.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      {/* Export — erst wenn alle Anforderungen erfüllt sind */}
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={download}
+          disabled={!exportable}
+          title={allConstraintsOk ? undefined : 'Erst alle Anforderungen erfüllen — die Liste oben zeigt, wo es hakt.'}
+          className="min-h-11 rounded border border-black/10 bg-accent px-4 text-sm text-paper outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          ⤓ STL herunterladen
+        </button>
+        <p className="mt-1.5 text-xs text-ink-faint">
+          Druck die Scheibe zweimal und verbinde sie mit kurzen Querstäben — erst als
+          Paar steht die Brücke von allein.
         </p>
       </div>
     </figure>

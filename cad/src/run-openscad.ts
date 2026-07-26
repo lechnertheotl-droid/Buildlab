@@ -7,9 +7,11 @@
 
 import { createOpenSCAD, type OpenSCADInstance } from 'openscad-wasm';
 import { gearProfile } from '@buildlab/iso';
+import { bridgePreset } from '@buildlab/engine';
 import gearScad from '../gear.scad?raw';
 import rolleScad from '../rolle.scad?raw';
 import raketeScad from '../rakete.scad?raw';
+import brueckeScad from '../bruecke.scad?raw';
 
 export interface GearParams {
   /** Modul m [mm] */
@@ -137,4 +139,44 @@ export function raketeScadSource(p: RaketeParams): string {
 export async function renderRaketeStl(p: RaketeParams): Promise<string> {
   const oscad = await newInstance();
   return oscad.renderToStl(raketeScadSource(p));
+}
+
+export interface BrueckeParams {
+  /** Bauart: 1 = Dreieck, 2 = Trapez (siehe bridgePreset in packages/engine). */
+  preset: number;
+  /** Fachwerkhöhe [mm] */
+  h: number;
+  /** Stabbreite in der Scheibenebene [mm] */
+  b: number;
+  /** Bautiefe / Extrusionshöhe [mm] */
+  tiefe: number;
+  /** Vorschau-Qualität ($fn); modest halten, damit die Facet-Zahl klein bleibt. */
+  fn?: number;
+}
+
+/**
+ * Baut den vollständigen .scad-Quelltext der Fachwerkbrücke.
+ *
+ * Knoten und Stäbe kommen aus bridgePreset() — derselben Funktion, aus der
+ * solveTruss die Stabkräfte rechnet. Bauteil und Statik können damit nicht
+ * auseinanderlaufen (Muster: gearScadSource).
+ */
+export function brueckeScadSource(p: BrueckeParams): string {
+  const fn = p.fn ?? 32;
+  const geo = bridgePreset(p.preset, p.h);
+  const nodes = geo.nodes.map((n) => `[${n.x.toFixed(4)},${n.y.toFixed(4)}]`).join(',');
+  const bars = geo.bars.map((e) => `[${e.from},${e.to}]`).join(',');
+  const feet = geo.supports.map((s) => s.node).join(',');
+  return (
+    `$fn=${fn};\n` +
+    `${brueckeScad}\n` +
+    `bruecke(nodes=[${nodes}], bars=[${bars}], feet=[${feet}], ` +
+    `eye=${geo.loadNode}, b=${p.b}, tiefe=${p.tiefe});\n`
+  );
+}
+
+/** Rendert die Fachwerkbrücke zu ASCII-STL (Text). Wirft bei OpenSCAD-Fehlern. */
+export async function renderBrueckeStl(p: BrueckeParams): Promise<string> {
+  const oscad = await newInstance();
+  return oscad.renderToStl(brueckeScadSource(p));
 }
