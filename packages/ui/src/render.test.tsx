@@ -75,6 +75,29 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     const html = wrap(<InteractiveRenderer block={block} />);
     expect(html).toContain('M1 = 10');
     expect(html).toContain('aria-live');
+    // Die Komponente hatte lange gar kein Bild; jetzt zeigt sie die Kennlinie.
+    expect(html).toContain('<polyline');
+  });
+
+  it('ValueSlider macht die Nichtlinearität sichtbar (Luftwiderstand ∝ v²)', () => {
+    const html = wrap(
+      <InteractiveRenderer
+        block={{
+          type: 'interactive',
+          componentId: 'value-slider',
+          params: { formulaId: 'drag', var: 'v', min: 0, max: 120, step: 5, fixed: { rho: 1.225, cw: 0.75, A: 0.000452 } },
+        }}
+      />,
+    );
+    // Kurvenpunkte aus der Engine: bei v² wächst der Abstand zwischen den
+    // Stützstellen monoton — eine Gerade hätte konstante Abstände.
+    const pts = html.match(/<polyline points="([^"]+)"/)?.[1].split(' ').map((p) => p.split(',').map(Number)) ?? [];
+    expect(pts.length).toBeGreaterThan(30);
+    const d1 = pts[10][1] - pts[11][1];
+    const d2 = pts[50][1] - pts[51][1];
+    expect(d2).toBeGreaterThan(d1 * 2); // hinten deutlich steiler
+    // Kleine feste Werte dürfen nicht auf 0 gerundet werden.
+    expect(html).toContain('0,000452');
   });
 
   it('PulleySystem zeigt die Zugkraft aus der Engine (G=19.62, n=4 → 4,905 N)', () => {
