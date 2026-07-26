@@ -17,4 +17,4 @@ export {
   type RaketeParams,
 } from './run-openscad';
 export { parseStl, validateStl, type Triangle, type StlValidation } from './stl';
-export { meshToIso, type MeshIsoOptions, type IsoPolygon, type MeshIsoResult } from './mesh-iso';
+export { meshToIso, type MeshIsoOptions, type IsoEdge, type IsoPolygon, type MeshIsoResult } from './mesh-iso';

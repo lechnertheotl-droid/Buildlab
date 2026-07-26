@@ -265,6 +265,7 @@ function GearBuild({ block, onExport }: CadBuildProps) {
 
       <MeshPreview
         polygons={iso.polygons}
+        edges={iso.edges}
         width={VIEW_W}
         height={VIEW_H}
         computing={computing}
@@ -497,6 +498,7 @@ function RolleBuild({ block, onExport }: CadBuildProps) {
     <figure className="rounded border border-black/10 bg-paper-2 p-4 shadow">
       <MeshPreview
         polygons={iso.polygons}
+        edges={iso.edges}
         width={VIEW_W}
         height={VIEW_H}
         computing={computing}
@@ -763,6 +765,7 @@ function RaketeBuild({ block, onExport }: CadBuildProps) {
 
       <MeshPreview
         polygons={iso.polygons}
+        edges={iso.edges}
         width={VIEW_W}
         height={VIEW_H}
         computing={computing}

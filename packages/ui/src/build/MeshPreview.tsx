@@ -5,16 +5,19 @@
 // DESIGN.md-Tokens (paper-Karte, Hairline-Rahmen, weicher Tiefenschatten) — gleiche
 // visuelle Sprache wie der LeverSlider.
 
-import type { IsoPolygon } from '@buildlab/cad';
+import type { IsoEdge, IsoPolygon } from '@buildlab/cad';
 
 export function MeshPreview({
   polygons,
+  edges = [],
   width,
   height,
   computing,
   empty,
 }: {
   polygons: IsoPolygon[];
+  /** Bauteilkanten aus meshToIso — ohne sie sieht man das Tesselierungsnetz. */
+  edges?: IsoEdge[];
   width: number;
   height: number;
   computing?: boolean;
@@ -52,11 +55,33 @@ export function MeshPreview({
 
         <g clipPath="url(#cad-field)">
           <rect x={0} y={0} width={width} height={height} fill="url(#cad-bg)" />
-          {/* Der Mesh-Körper: flach schattierte Facetten, fern→nah sortiert. */}
-          <g filter="url(#cad-soft)" stroke="#00000018" strokeWidth={0.4} strokeLinejoin="round">
-            {polygons.map((poly, i) => (
-              <polygon key={i} points={poly.points} fill={poly.fill} />
-            ))}
+          {/* Der Mesh-Körper: flach schattierte Facetten UND Bauteilkanten,
+              gemeinsam nach Tiefe sortiert. Die Facetten selbst tragen keine
+              Kontur — sonst zeichnet man das Tesselierungsnetz statt des
+              Bauteils; und die Kanten müssen mit den Flächen verschachtelt
+              werden, sonst scheinen verdeckte Kanten durch den Körper. */}
+          <g filter="url(#cad-soft)" strokeLinejoin="round" strokeLinecap="round">
+            {[
+              ...polygons.map((p, i) => ({ art: 'f' as const, d: p.depth, i, p })),
+              ...edges.map((e, i) => ({ art: 'e' as const, d: e.depth, i, e })),
+            ]
+              .sort((a, b) => a.d - b.d)
+              .map((it) =>
+                it.art === 'f' ? (
+                  <polygon key={`f${it.i}`} points={it.p.points} fill={it.p.fill} stroke={it.p.fill} strokeWidth={0.5} />
+                ) : (
+                  <line
+                    key={`e${it.i}`}
+                    x1={it.e.x1}
+                    y1={it.e.y1}
+                    x2={it.e.x2}
+                    y2={it.e.y2}
+                    stroke="var(--ink)"
+                    strokeOpacity={it.e.kind === 'silhouette' ? 0.85 : 0.4}
+                    strokeWidth={it.e.kind === 'silhouette' ? 1.1 : 0.55}
+                  />
+                ),
+              )}
           </g>
         </g>
 
