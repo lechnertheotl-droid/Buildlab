@@ -30,6 +30,7 @@
   --viz-low: #4f7a4a;
   --viz-mid: #c9a227;
   --viz-high: #b23a2e;
+  --viz-zug: #3a6ea5; /* kategoriale Fachwerk-Konvention: Zug blau, Druck rot */
 
   /* Semantische Feedback-Aliasse (DESIGN.md §5) — fürs Aufgaben-Feedback
      immer diese verwenden, nie --accent für richtig/falsch. */

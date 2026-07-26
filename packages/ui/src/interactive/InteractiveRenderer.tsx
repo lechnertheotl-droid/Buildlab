@@ -15,6 +15,9 @@ import { GearPair, type GearPairParams } from './GearPair';
 import { PulleySystem, type PulleySystemParams } from './PulleySystem';
 import { RocketStability, type RocketStabilityParams } from './RocketStability';
 import { FlightSim, type FlightSimParams } from './FlightSim';
+import { VectorDrag, type VectorDragParams } from './VectorDrag';
+import { ForceBalance, type ForceBalanceParams } from './ForceBalance';
+import { TrussLoad, type TrussLoadParams } from './TrussLoad';
 
 // Implementierte Komponenten (Registry: status "implementiert"). Einträge mit
 // status "geplant" erscheinen als ruhiger Platzhalter — und sind per Verifier
@@ -37,6 +40,15 @@ const IMPLEMENTED: Record<string, (block: InteractiveBlock) => ReactNode> = {
   ),
   'flight-sim': (block) => (
     <FlightSim params={(block.params ?? {}) as unknown as FlightSimParams} caption={block.caption} />
+  ),
+  'vector-drag': (block) => (
+    <VectorDrag params={(block.params ?? {}) as VectorDragParams} caption={block.caption} />
+  ),
+  'force-balance': (block) => (
+    <ForceBalance params={(block.params ?? {}) as unknown as ForceBalanceParams} caption={block.caption} />
+  ),
+  'truss-load': (block) => (
+    <TrussLoad params={(block.params ?? {}) as unknown as TrussLoadParams} caption={block.caption} />
   ),
 };
 

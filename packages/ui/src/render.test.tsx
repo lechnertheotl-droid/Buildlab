@@ -137,6 +137,61 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     expect(discs(four)).toBeGreaterThan(discs(one));
   });
 
+  it('VectorDrag rechnet die Komponenten Fx/Fy über die Engine', () => {
+    const block: InteractiveBlock = {
+      type: 'interactive',
+      componentId: 'vector-drag',
+      params: { maxN: 100, initN: 50, initDeg: 60 },
+    };
+    const html = wrap(<InteractiveRenderer block={block} />);
+    // F=50 N unter 60°: Fx = 50·cos60° = 25 N, Fy = 50·sin60° = 43,3 N (aus der Engine).
+    expect(html).toContain('25 N');
+    expect(html).toContain('43,3 N');
+    expect(html).toContain('aus der Engine');
+    expect(html).toContain('role="slider"'); // Drag-Handle ist auch per Tastatur bedienbar
+  });
+
+  it('ForceBalance quittiert das Gleichgewicht bei ΣF = 0', () => {
+    const render = (init: number) =>
+      wrap(
+        <InteractiveRenderer
+          block={{
+            type: 'interactive',
+            componentId: 'force-balance',
+            params: {
+              forces: [
+                { label: 'Seilzug', value: 30 },
+                { label: 'Wind', value: 19 },
+              ],
+              tolerance: 0.5,
+              range: [-60, 0],
+              init,
+            },
+          }}
+        />,
+      );
+    // 30 + 19 − 49 = 0 exakt (ganzzahlig, deshalb ist die Quittung erreichbar).
+    expect(render(-49)).toContain('Gleichgewicht');
+    expect(render(-30)).not.toContain('✓ Gleichgewicht');
+  });
+
+  it('TrussLoad färbt Zug- und Druckstäbe nach dem Engine-Löser', () => {
+    const block: InteractiveBlock = {
+      type: 'interactive',
+      componentId: 'truss-load',
+      params: { load: 49.05, allowN: 106 },
+    };
+    const html = wrap(<InteractiveRenderer block={block} />);
+    // Referenz-Dreiecksbrücke: Untergurt Zug 32,7 N, Diagonalen Druck 40,875 N,
+    // Vertikale trägt die volle Last (Werte aus solveTruss).
+    expect(html).toContain('32,7 N');
+    expect(html).toContain('-40,9 N');
+    expect(html).toContain('(Z)'); // Glyphe, nie nur Farbe (DESIGN §5/§7)
+    expect(html).toContain('(D)');
+    expect(html).toContain('24,5 N'); // Auflagerreaktionen aus dem Löser
+    expect(html).toContain('aus der Engine');
+  });
+
   it('lehnt componentIds ab, die nicht in der Registry stehen', () => {
     const block = {
       type: 'interactive',
@@ -147,7 +202,7 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
   });
 
   it('zeigt für geplante Registry-Komponenten einen ruhigen Platzhalter', () => {
-    const block: InteractiveBlock = { type: 'interactive', componentId: 'vector-drag' };
+    const block: InteractiveBlock = { type: 'interactive', componentId: 'stress-bar' };
     const html = wrap(<InteractiveRenderer block={block} />);
     expect(html).toContain('folgt in einer späteren Phase');
   });

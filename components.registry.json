@@ -31,22 +31,23 @@
     },
     {
       "id": "vector-drag",
-      "status": "geplant",
-      "purpose": "Ziehbarer 2.5D-Kraftvektor; zeigt Betrag und Richtung in Mono.",
-      "params": { "maxN": "number" }
+      "status": "implementiert",
+      "purpose": "Ziehbarer 2.5D-Kraftvektor auf isometrischer Buehne; Pfeilkopf ist der Drag-Handle, gestrichelte Konstruktionslinien zeigen die Komponenten Fx/Fy, Winkelbogen die Richtung. Betrag und Winkel auch per Slider und Tastatur.",
+      "params": { "maxN": "number", "initN": "number", "initDeg": "number" },
+      "computedBy": "engine"
     },
     {
       "id": "force-balance",
-      "status": "geplant",
-      "purpose": "Mehrere Kräfte addieren, bis Gleichgewicht (ΣF=0) erreicht ist; Ruhe-Zustand wird sichtbar quittiert.",
-      "params": { "forces": "array", "tolerance": "number" },
+      "status": "implementiert",
+      "purpose": "Mehrere Kraefte addieren, bis Gleichgewicht (SF=0) erreicht ist; die Kiste kriecht sichtbar weiter, solange die Resultierende nicht null ist, und kommt im Gleichgewicht zur Ruhe (Quittung).",
+      "params": { "forces": "array", "tolerance": "number", "range": "array", "init": "number" },
       "computedBy": "engine"
     },
     {
       "id": "truss-load",
-      "status": "geplant",
-      "purpose": "Fachwerk mit Knoten/Staeben unter Last; Stabkraefte aus dem Gleichungssystem (lusolve), Zug blau / Druck rot codiert; Versagens-Stab hervorgehoben.",
-      "params": { "nodes": "array", "bars": "array", "supports": "array", "load": "number" },
+      "status": "implementiert",
+      "purpose": "Fachwerk mit Knoten/Staeben unter Last; Stabkraefte aus dem Gleichungssystem (solveTruss), Zug blau / Druck rot mit Z/D-Glyphe, Strichdicke proportional zum Betrag, ueberlasteter Stab hervorgehoben.",
+      "params": { "nodes": "array", "bars": "array", "supports": "array", "load": "number", "loadNode": "number", "loadRange": "array", "allowN": "number" },
       "computedBy": "engine"
     },
     {

@@ -144,7 +144,7 @@ export function solveTruss({ nodes, bars, supports, loads }) {
  * Gleichgewichtsresiduum je Knoten (für Tests): Summe aller Stab-, Reaktions-
  * und Lastanteile — muss überall ≈ 0 sein.
  */
-export function trussResiduals({ nodes, bars, supports, loads }, { barForces, reactions }) {
+export function trussResiduals({ nodes, bars, loads }, { barForces, reactions }) {
   const res = nodes.map(() => ({ fx: 0, fy: 0 }));
   bars.forEach((bar, i) => {
     const { from, to } = bar;

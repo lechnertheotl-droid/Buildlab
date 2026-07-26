@@ -39,6 +39,7 @@ generisches Dashboard. Beiges Papier, Tuschelinien, Monospace-Messwerte, viel Lu
   --viz-low:    #4F7A4A;  /* grün = unkritisch */
   --viz-mid:    #C9A227;  /* gelb */
   --viz-high:   #B23A2E;  /* rot = kritisch */
+  --viz-zug:    #3A6EA5;  /* blau = Zugstab (Fachwerk-Konvention, §5) */
 
   /* Semantische Aliasse fürs Feedback (immer diese verwenden, §5) */
   --ok:         var(--viz-low);
@@ -180,6 +181,9 @@ kein Stapeln.
   aktiver Schritt-Punkt, Meilenstein-Maßlinien. **Nie** für richtig/falsch.
 - Aufgaben-Feedback und Sim-Overlays nutzen **ausschließlich** `--ok` / `--warn`
   / `--fehl`. Richtig ist grün, kritisch ist rot — auch wenn Orange „schöner" wäre.
+- `--viz-zug` ist **kategorial**, kein richtig/falsch: die Lehrbuch-Konvention
+  „Zugstab blau, Druckstab rot (`--viz-high`)" im Fachwerk-Sim. Immer mit
+  Z/D-Glyphe am Stab (nie nur Farbe, §7).
 - Status niemals nur über Farbe: immer Symbol (✓ ⚠ ✗) oder Text dazu (§7).
 
 ---

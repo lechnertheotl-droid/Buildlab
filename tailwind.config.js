@@ -22,6 +22,7 @@ export default {
         'viz-low': 'var(--viz-low)',
         'viz-mid': 'var(--viz-mid)',
         'viz-high': 'var(--viz-high)',
+        'viz-zug': 'var(--viz-zug)',
         // Semantische Feedback-Aliasse (DESIGN.md §5) — immer diese fürs Feedback.
         ok: 'var(--ok)',
         warn: 'var(--warn)',
