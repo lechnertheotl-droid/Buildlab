@@ -94,7 +94,7 @@ STL-Download hinter Constraints; `pnpm verify` grün.
       Ergebniszeilen, native Range-Inputs + −/+-Stepper, Tap-Targets ≥ 44 px.
 - [x] Motion-Vokabular (`einzeichnen`/`quittung`/`wechsel`) + reduzierte
       Bewegung (System ODER Einstellung, `html.bl-reduced-motion`).
-      Offen: `zaehlen` (rAF-Hochzählen der Ergebniszahl).
+      Gebaut: `zaehlen` (rAF-Hochzählen der Ergebniszahl, `useCountUp.ts`).
 - [x] Rechner-Verlauf persistent (`calcHistory`) + „⇥ in Aufgabe einsetzen".
 - [x] Gesamtdurchlauf im Browser (Playwright, headless) nach
       `VERIFICATION.md`-DoD: Onboarding (Persona→Tiefe) → Getriebe
@@ -107,12 +107,19 @@ STL-Download hinter Constraints; `pnpm verify` grün.
 
 ## Phase R7 — Content-Ausbau (laufend, nach dem Redesign)
 **Ziel:** Curriculum füllen — ein Projekt nach dem anderen.
-- [ ] `hebel-flaschenzug` (Tür Azubi) — braucht nur vorhandene Komponenten
+- [x] `hebel-flaschenzug` (Tür Azubi) — live; braucht nur vorhandene Komponenten
       (`lever-slider`, `value-slider`) + neue Formeln `pulley_force`,
       `torque_balance` (+ Golden Tests).
-- [ ] `fachwerkbruecke` (Tür Studium) — braucht `vector-drag`, `force-balance`,
-      `truss-load` (Engine-Löser zuerst, siehe `ENGINE_SPEC.md` §7);
-      bis dahin `draft: true`.
+- [x] `fachwerkbruecke` (Tür Studium) — komplett live: Fachwerk-Löser
+      (`packages/engine/truss.js`, Knotenpunktverfahren als LGS) mit
+      `bridgePreset` als EINER Topologie-Quelle für Löser, Bau-Panel und CAD;
+      Interactives `vector-drag`, `force-balance`, `truss-load` implementiert;
+      parametrisches `cad/bruecke.scad` (zwei Bauarten → STL) inkl.
+      Manifest-Prüfung (Kantenparität + Signed Volume) in `cad/src/stl.ts`;
+      neue Formeln `sum_f`, `det_truss`, `joint_strut`, `joint_chord`,
+      `euler_knick` mit Golden Tests; Anti-Drift-Test hält die Bau-Constraints
+      deckungsgleich mit dem Löser. Meilenstein: alle Anforderungen über den
+      ECHTEN Bauwerten (`ChallengeCheck`).
 - [x] `modellrakete` — komplett live (02.07.2026): RK4-Flug-Sim mit
       C6-Schubkurve und Barrowman/CG-Massenmodell in `packages/engine/rocket.js`
       (Golden Tests inkl. Anti-Drift zu den Bau-Constraints), Interactives

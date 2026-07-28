@@ -123,6 +123,44 @@
       }
     },
     {
+      "name": "params-unbekannter-schluessel",
+      "expectError": "kennt 'gear-pair' nicht",
+      "project": {
+        "id": "fx-params-key", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "interactive", "componentId": "gear-pair",
+              "params": { "z1": 20, "z2": 60, "hightlight": "i" } },
+            { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
+              "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
+      "name": "params-falscher-typ",
+      "expectError": "muss 'array' sein",
+      "project": {
+        "id": "fx-params-typ", "title": "Fx", "version": 2, "level": 1, "icon": "x",
+        "buildResult": "-", "challenge": "-",
+        "steps": [
+          { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
+            { "type": "interactive", "componentId": "gear-pair",
+              "params": { "z1": 20, "show": "z1" } },
+            { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
+              "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
+          ] },
+          { "id": "m", "title": "M", "goal": "G", "kind": "meilenstein", "blocks": [
+            { "type": "text", "layers": { "intuitive": "-" } }
+          ] }
+        ]
+      }
+    },
+    {
       "name": "geplant-in-live-projekt",
       "expectError": "nur in draft-Projekten erlaubt",
       "project": {
@@ -130,7 +168,7 @@
         "buildResult": "-", "challenge": "-",
         "steps": [
           { "id": "s1", "title": "S", "goal": "G", "kind": "lernen", "blocks": [
-            { "type": "interactive", "componentId": "vector-drag" },
+            { "type": "interactive", "componentId": "stress-bar" },
             { "type": "task", "kind": "match", "question": "?", "concepts": ["drehmoment"],
               "pairs": [ { "left": "a", "right": "b" }, { "left": "c", "right": "d" } ] }
           ] },

@@ -3,7 +3,7 @@
 // Mastery, Auffrisch-Karten. Erreichbar nur über die Projektkarte (Hub-Modell):
 // das Gating läuft über den Schritt-Graphen (src/dag.ts), nicht mehr linear.
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   ContentProvider, ScreenSkeleton, WorkspaceStep,
@@ -13,7 +13,7 @@ import { componentIds, concepts, formulas, projectById } from '../content';
 import { nextStepIndex as openStepIndex, unlockedStepIds } from '../dag';
 import {
   addBuild, completeStep, enterStep, markRefreshShown, setSetting, setTaskResult,
-  useConceptStates, useProgress, useSettings, useTaskStates,
+  useBuilds, useConceptStates, useProgress, useSettings, useTaskStates,
 } from '../db/repo';
 import { taskKey } from '../db/types';
 import NotFound from './NotFound';
@@ -25,6 +25,15 @@ export default function Workspace() {
   const project = meta as unknown as Project | undefined;
   const progress = useProgress(id ?? '');
   const taskStates = useTaskStates(id ?? '');
+  // Der Meilenstein rechnet den Nachweis mit den ECHTEN Bauwerten durch —
+  // deshalb den jüngsten Bau dieses Projekts hereinreichen. Die Persistenz
+  // bleibt hier in der App-Schicht; packages/ui bekommt nur die Zahlen.
+  const builds = useBuilds();
+  const lastBuildParams = useMemo(() => {
+    const eigene = (builds ?? []).filter((b) => b.projectId === (id ?? ''));
+    if (eigene.length === 0) return null;
+    return eigene.reduce((neuster, b) => (b.at > neuster.at ? b : neuster)).params;
+  }, [builds, id]);
   const conceptStates = useConceptStates();
   const settings = useSettings();
   const requested = Math.max(1, Number.parseInt(n ?? '1', 10) || 1);
@@ -131,6 +140,7 @@ export default function Workspace() {
         }}
         onOpenConcept={(conceptId) => navigate(`/konzept/${conceptId}`)}
         onRefreshShown={(conceptId) => void markRefreshShown(conceptId, project.id)}
+        lastBuildParams={lastBuildParams}
         onExport={(params, label) => {
           // cadModel aus dem build-Block des Schritts — nicht hartkodieren,
           // sonst landet z. B. die Umlenkrolle als „gear" in der Datenbank.

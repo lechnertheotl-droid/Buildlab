@@ -7,12 +7,14 @@ import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ContentProvider } from './content-context';
 import { InteractiveRenderer } from './interactive/InteractiveRenderer';
+import { rasterMitte } from './interactive/ValueSlider';
 import { BlockRenderer } from './blocks';
 import { Calculator } from './Calculator';
 import { TaskView } from './task/TaskView';
 import { WorkspaceStep } from './workspace/WorkspaceStep';
 import { classifyMiss, isWithin, parseGermanNumber } from './task/feedback';
 import { AmpelArrow, IsoStage, ampelColor } from './iso-scene';
+import { ChallengeCheck } from './workspace/ChallengeCheck';
 import { useWorkspaceStore } from './store';
 import type {
   BuildBlock, Concept, Formula, InteractiveBlock, Project, TaskBlock,
@@ -22,10 +24,14 @@ import concepts from '../../../content/concepts.json';
 import registry from '../../../components.registry.json';
 import getriebe from '../../../content/stirnradgetriebe.json';
 import flaschenzug from '../../../content/hebel-flaschenzug.json';
+import bruecke from '../../../content/fachwerkbruecke.json';
+import modellrakete from '../../../content/modellrakete.json';
 
 const componentIds = registry.components.map((c) => c.id);
 const project = getriebe as unknown as Project;
 const hebel = flaschenzug as unknown as Project;
+const rakete = modellrakete as unknown as Project;
+const fachwerk = bruecke as unknown as Project;
 
 function wrap(node: React.ReactNode): string {
   return renderToStaticMarkup(
@@ -75,6 +81,65 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     const html = wrap(<InteractiveRenderer block={block} />);
     expect(html).toContain('M1 = 10');
     expect(html).toContain('aria-live');
+    // Die Komponente hatte lange gar kein Bild; jetzt zeigt sie die Kennlinie.
+    expect(html).toContain('<polyline');
+  });
+
+  it('ValueSlider startet auf dem Raster seines Reglers, nie dazwischen', () => {
+    // Der Startwert war die rohe Mitte des Wegs — bei „tragende Seilstränge"
+    // (1…8, Schritt 1) also n = 4,5, ein Wert, den es nicht gibt und den der
+    // Regler selbst nie wieder anfährt.
+    expect(rasterMitte({ min: 1, max: 7, step: 1 })).toBe(4);
+    expect(rasterMitte({ min: 0.85, max: 1, step: 0.01 })).toBe(0.93);
+    expect(rasterMitte({ min: 0.05, max: 0.55, step: 0.05 })).toBe(0.3);
+    expect(rasterMitte({ min: 1, max: 5, step: 0.25 })).toBe(3);
+    // Jeder Startwert liegt exakt auf min + k·step und im Regelbereich.
+    for (const r of [
+      { min: 0.4, max: 3, step: 0.01 },
+      { min: 60, max: 170, step: 2.5 },
+      { min: 0.02, max: 0.2, step: 0.005 },
+    ]) {
+      const v = rasterMitte(r);
+      expect(v).toBeGreaterThanOrEqual(r.min);
+      expect(v).toBeLessThanOrEqual(r.max);
+      expect(Math.abs((v - r.min) / r.step - Math.round((v - r.min) / r.step))).toBeLessThan(1e-9);
+    }
+  });
+
+  it('jeder value-slider im Content startet auf einem Rasterwert', () => {
+    const slider = [project, hebel, rakete, fachwerk]
+      .flatMap((p) => p.steps)
+      .flatMap((s) => s.blocks)
+      .filter(
+        (b): b is InteractiveBlock => b.type === 'interactive' && b.componentId === 'value-slider',
+      );
+    expect(slider.length).toBeGreaterThan(4);
+    for (const b of slider) {
+      const p = b.params as unknown as { min: number; max: number; step: number };
+      const k = (rasterMitte(p) - p.min) / p.step;
+      expect(Math.abs(k - Math.round(k))).toBeLessThan(1e-9);
+    }
+  });
+
+  it('ValueSlider macht die Nichtlinearität sichtbar (Luftwiderstand ∝ v²)', () => {
+    const html = wrap(
+      <InteractiveRenderer
+        block={{
+          type: 'interactive',
+          componentId: 'value-slider',
+          params: { formulaId: 'drag', var: 'v', min: 0, max: 120, step: 5, fixed: { rho: 1.225, cw: 0.75, A: 0.000452 } },
+        }}
+      />,
+    );
+    // Kurvenpunkte aus der Engine: bei v² wächst der Abstand zwischen den
+    // Stützstellen monoton — eine Gerade hätte konstante Abstände.
+    const pts = html.match(/<polyline points="([^"]+)"/)?.[1].split(' ').map((p) => p.split(',').map(Number)) ?? [];
+    expect(pts.length).toBeGreaterThan(30);
+    const d1 = pts[10][1] - pts[11][1];
+    const d2 = pts[50][1] - pts[51][1];
+    expect(d2).toBeGreaterThan(d1 * 2); // hinten deutlich steiler
+    // Kleine feste Werte dürfen nicht auf 0 gerundet werden.
+    expect(html).toContain('0,000452');
   });
 
   it('PulleySystem zeigt die Zugkraft aus der Engine (G=19.62, n=4 → 4,905 N)', () => {
@@ -98,9 +163,12 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
       params: { ballast: 8, show: ['ballast'] },
     };
     const html = wrap(<InteractiveRenderer block={block} />);
-    expect(html).toContain('209 mm'); // CG aus rocket_cg
+    // CG aus dem korrigierten Massenmodell: der Ballast sitzt nicht in der
+    // Spitze, sondern dort, wo Knete in der Kegelkavität wirklich landet;
+    // Finnen- und Nasenschwerpunkt folgen den Flächenschwerpunkten.
+    expect(html).toContain('214 mm'); // CG aus rocket_cg
     expect(html).toContain('248 mm'); // CP aus rocket_cp (Barrowman)
-    expect(html).toContain('1,63 Kaliber'); // S aus stability
+    expect(html).toContain('1,42 Kaliber'); // S aus stability
     expect(html).toContain('stabil'); // Ampel-Urteil in Worten, nie nur Farbe
     expect(html).toContain('aus der Engine');
     expect(html).toContain('aria-live');
@@ -137,6 +205,127 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
     expect(discs(four)).toBeGreaterThan(discs(one));
   });
 
+  it('GearPair: der Modul verändert das Bild wirklich', () => {
+    // Vorher kürzte sich m aus dem normierten Maßstab heraus — das SVG war für
+    // m=1 und m=4 pixelgleich, der Schritt „Modul & Teilkreis" ohne Bild.
+    const render = (m: number) =>
+      wrap(
+        <InteractiveRenderer
+          block={{ type: 'interactive', componentId: 'gear-pair', params: { z1: 20, z2: 60, m } }}
+        />,
+      );
+    const spannweite = (html: string) => {
+      const xs = [...html.matchAll(/points="([^"]+)"/g)]
+        .flatMap((mm) => mm[1].split(' '))
+        .map((p) => Number.parseFloat(p.split(',')[0]))
+        .filter(Number.isFinite);
+      return Math.max(...xs) - Math.min(...xs);
+    };
+    expect(spannweite(render(4))).toBeGreaterThan(spannweite(render(1)) * 1.5);
+  });
+
+  it('GearPair: die Zähne greifen ineinander statt sich zu durchdringen', () => {
+    // Die Grundstellung muss die Eingriffsphase tragen — auch ohne Animation
+    // (reduzierte Bewegung setzt nie ein Transform).
+    const html = wrap(
+      <InteractiveRenderer
+        block={{ type: 'interactive', componentId: 'gear-pair', params: { z1: 20, z2: 60, m: 2 } }}
+      />,
+    );
+    // z2 = 60 ist gerade → Phase π/60 ≠ 0 → Rad 2 trägt eine Drehmatrix.
+    const matrizen = [...html.matchAll(/matrix\(([^)]+)\)/g)].map((mm) => mm[1]);
+    expect(matrizen.length).toBeGreaterThanOrEqual(2);
+    // Mindestens eine Matrix ist keine Identität (Rad 2 ist um die halbe Teilung versetzt).
+    const identisch = matrizen.filter((s) => {
+      const v = s.split(' ').map(Number);
+      return Math.abs(v[0] - 1) < 1e-9 && Math.abs(v[1]) < 1e-9;
+    });
+    expect(identisch.length).toBeLessThan(matrizen.length);
+  });
+
+  it('VectorDrag rechnet die Komponenten Fx/Fy über die Engine', () => {
+    const block: InteractiveBlock = {
+      type: 'interactive',
+      componentId: 'vector-drag',
+      params: { maxN: 100, initN: 50, initDeg: 60 },
+    };
+    const html = wrap(<InteractiveRenderer block={block} />);
+    // F=50 N unter 60°: Fx = 50·cos60° = 25 N, Fy = 50·sin60° = 43,3 N (aus der Engine).
+    expect(html).toContain('25 N');
+    expect(html).toContain('43,3 N');
+    expect(html).toContain('aus der Engine');
+    expect(html).toContain('role="slider"'); // Drag-Handle ist auch per Tastatur bedienbar
+  });
+
+  it('ForceBalance quittiert das Gleichgewicht bei ΣF = 0', () => {
+    const render = (init: number) =>
+      wrap(
+        <InteractiveRenderer
+          block={{
+            type: 'interactive',
+            componentId: 'force-balance',
+            params: {
+              forces: [
+                { label: 'Seilzug', value: 30 },
+                { label: 'Wind', value: 19 },
+              ],
+              tolerance: 0.5,
+              range: [-60, 0],
+              init,
+            },
+          }}
+        />,
+      );
+    // 30 + 19 − 49 = 0 exakt (ganzzahlig, deshalb ist die Quittung erreichbar).
+    expect(render(-49)).toContain('Gleichgewicht');
+    expect(render(-30)).not.toContain('✓ Gleichgewicht');
+  });
+
+  it('TrussLoad färbt Zug- und Druckstäbe nach dem Engine-Löser', () => {
+    const block: InteractiveBlock = {
+      type: 'interactive',
+      componentId: 'truss-load',
+      params: { load: 49.05, allowN: 106 },
+    };
+    const html = wrap(<InteractiveRenderer block={block} />);
+    // Referenz-Dreiecksbrücke: Untergurt Zug 32,7 N, Diagonalen Druck 40,875 N,
+    // Vertikale trägt die volle Last (Werte aus solveTruss).
+    expect(html).toContain('32,7 N');
+    expect(html).toContain('-40,9 N');
+    expect(html).toContain('(Z)'); // Glyphe, nie nur Farbe (DESIGN §5/§7)
+    expect(html).toContain('(D)');
+    expect(html).toContain('24,5 N'); // Auflagerreaktionen aus dem Löser
+    expect(html).toContain('aus der Engine');
+  });
+
+  it('PulleySystem: der Zugkraft-Pfeil zeigt nach unten', () => {
+    // Die AmpelArrow-Primitive zeigt bereits nach unten; eine zusätzliche
+    // Spiegelung ließ die Hand nach OBEN ziehen.
+    const html = wrap(
+      <InteractiveRenderer
+        block={{ type: 'interactive', componentId: 'pulley-system', params: { G: 19.62, n: 2 } }}
+      />,
+    );
+    // Kein scale(1 -1) mehr in der Szene.
+    expect(html).not.toContain('scale(1 -1)');
+    // Der Kraftpfeil ist das Polygon mit 7 Ecken: seine Spitze (größtes y)
+    // muss unterhalb des Schaftendes (kleinstes y) liegen.
+    const pfeile = [...html.matchAll(/points="([^"]+)"/g)]
+      .map((mm) => mm[1].trim().split(/\s+/))
+      .filter((pts) => pts.length === 7)
+      .map((pts) => pts.map((p) => p.split(',').map(Number)));
+    expect(pfeile.length).toBeGreaterThan(0);
+    for (const p of pfeile) {
+      const ys = p.map((q) => q[1]);
+      const xs = p.map((q) => q[0]);
+      // Die Spitze ist der Punkt mit dem extremsten y und mittigem x.
+      const spitzeY = Math.max(...ys);
+      const mitteX = (Math.min(...xs) + Math.max(...xs)) / 2;
+      const spitze = p.find((q) => q[1] === spitzeY);
+      expect(Math.abs((spitze?.[0] ?? 0) - mitteX)).toBeLessThan(1);
+    }
+  });
+
   it('lehnt componentIds ab, die nicht in der Registry stehen', () => {
     const block = {
       type: 'interactive',
@@ -147,7 +336,7 @@ describe('InteractiveRenderer (Registry-Gate)', () => {
   });
 
   it('zeigt für geplante Registry-Komponenten einen ruhigen Platzhalter', () => {
-    const block: InteractiveBlock = { type: 'interactive', componentId: 'vector-drag' };
+    const block: InteractiveBlock = { type: 'interactive', componentId: 'stress-bar' };
     const html = wrap(<InteractiveRenderer block={block} />);
     expect(html).toContain('folgt in einer späteren Phase');
   });
@@ -174,11 +363,21 @@ describe('Feedback-Heuristiken (ENGINE_SPEC.md §4)', () => {
 });
 
 describe('TaskView (9 Aufgabenarten)', () => {
-  const numericTask = project.steps[1].blocks[4] as TaskBlock; // numeric (i = 3)
-  const errorFindTask = project.steps[2].blocks[4] as TaskBlock;
-  const targetTask = project.steps[3].blocks[4] as TaskBlock;
-  const stepsTask = project.steps[4].blocks[4] as TaskBlock;
-  const singleTask = project.steps[5].blocks[3] as TaskBlock;
+  // Aufgaben über Schritt-ID und Art holen, nicht über den Block-Index: Ein
+  // zusätzlicher Interactive-Block im Content hat diese Fixtures sonst still
+  // verschoben — der Test war dann rot, ohne dass am Renderer etwas fehlte.
+  const task = (stepId: string, kind: TaskBlock['kind']) => {
+    const step = project.steps.find((s) => s.id === stepId);
+    const found = step?.blocks.find((b) => b.type === 'task' && b.kind === kind);
+    if (!found) throw new Error(`Keine ${kind}-Aufgabe in Schritt „${stepId}"`);
+    return found as TaskBlock;
+  };
+
+  const numericTask = task('uebersetzung', 'numeric'); // i = 3
+  const errorFindTask = task('modul-teilkreis', 'error-find');
+  const targetTask = task('achsabstand', 'target');
+  const stepsTask = task('drehzahl-drehmoment', 'steps');
+  const singleTask = task('wirkungsgrad', 'single');
 
   it('rendert numeric mit Eingabefeld und Prüfen-Knopf', () => {
     const html = wrap(<TaskView block={numericTask} />);
@@ -193,8 +392,7 @@ describe('TaskView (9 Aufgabenarten)', () => {
   });
 
   it('multi rendert Checkboxen und verlangt die richtige Options-Menge (B-19)', () => {
-    const multiTask = project.steps[1].blocks[5] as TaskBlock; // i=4-Aussagen
-    expect(multiTask.kind).toBe('multi');
+    const multiTask = task('uebersetzung', 'multi'); // i=4-Aussagen
     const html = wrap(<TaskView block={multiTask} />);
     expect(html).toContain(multiTask.question);
     expect(html).toContain('role="checkbox"');
@@ -216,10 +414,7 @@ describe('TaskView (9 Aufgabenarten)', () => {
   });
 
   it('match rendert je Paar ein Auswahlfeld mit allen rechten Seiten', () => {
-    const matchTask = project.steps[5].blocks.find(
-      (b) => (b as TaskBlock).kind === 'match',
-    ) as TaskBlock;
-    expect(matchTask).toBeDefined();
+    const matchTask = task('wirkungsgrad', 'match');
     const html = wrap(<TaskView block={matchTask} />);
     expect((html.match(/<select/g) ?? []).length).toBe(matchTask.pairs!.length);
     for (const p of matchTask.pairs!) expect(html).toContain(p.left);
@@ -349,8 +544,10 @@ describe('Projekt hebel-flaschenzug (R7-Content)', () => {
   });
 
   it('die target-Aufgabe der Auslegung koppelt an die pulley-Canvas', () => {
-    const targetTask = hebel.steps[5].blocks[3] as TaskBlock;
-    expect(targetTask.kind).toBe('target');
+    const targetTask = hebel.steps
+      .find((s) => s.id === 'auslegung')!
+      .blocks.find((b) => b.type === 'task' && b.kind === 'target') as TaskBlock;
+    expect(targetTask).toBeDefined();
     const html = wrap(<TaskView block={targetTask} />);
     expect(html).toContain('Ziel:');
     // Große Toleranz (±50 %) wird als Korridor angezeigt (Befund B-15).
@@ -378,7 +575,9 @@ describe('CadBuild (build-Block)', () => {
   });
 
   it('Radpaar-Build (z1+z2): Umschalter + Constraints + gesperrter Export', () => {
-    const block = project.steps[6].blocks[1] as BuildBlock;
+    const block = project.steps
+      .flatMap((s) => s.blocks)
+      .find((b) => b.type === 'build') as BuildBlock;
     const html = wrap(<BlockRenderer block={block} />);
     expect(html).toContain('Rad 1');
     expect(html).toContain('Rad 2');
@@ -395,16 +594,21 @@ describe('CadBuild (build-Block)', () => {
 
 describe('Text-Varianten (LERNMODELL.md §2.2)', () => {
   it('hook rendert als Frage-Karte, merksatz mit Akzent-Strich', () => {
-    const hook = project.steps[0].blocks[0];
+    const textBlock = (stepId: string, variant?: string) =>
+      project.steps
+        .find((s) => s.id === stepId)!
+        .blocks.find((b) => b.type === 'text' && b.variant === variant)!;
+
+    const hook = textBlock('warum-zahnraeder', 'hook');
     expect(wrap(<BlockRenderer block={hook} />)).toContain('font-display');
-    const merksatz = project.steps[5].blocks[1];
+    const merksatz = textBlock('wirkungsgrad', 'merksatz');
     expect(wrap(<BlockRenderer block={merksatz} />)).toContain('border-accent');
   });
 
   it('globale Tiefe wählt die Ebene; lokaler Umschalter ist vorhanden', () => {
-    const text = project.steps[1].blocks[0];
+    const text = project.steps.find((s) => s.id === 'uebersetzung')!.blocks[0];
     const html = wrap(<BlockRenderer block={text} depth="rigorous" />);
-    expect(html).toContain('Eingriffspunkt'); // rigoroser Text
+    expect(html).toContain('Wälzpunkt'); // rigoroser Text (nur dort gilt v gleich)
     expect(html).toContain('Erklärtiefe für diesen Text');
   });
 });
@@ -487,5 +691,43 @@ describe('Meilenstein (SCREENS.md §6.3)', () => {
     expect(project.steps[msIndex].finaleParts?.length).toBeGreaterThan(0);
     // Projekt mit build-Block → Bauteil-Satz; ohne → Abschluss-Satz.
     expect(html).toContain('Dein Bauteil wartet oben auf deiner Projektkarte.');
+  });
+});
+
+describe('ChallengeCheck — der Meilenstein rechnet mit den eigenen Bauwerten', () => {
+  const projekt = bruecke as unknown as Project;
+
+  it('zeigt ohne eigenen Bau nur an, WAS geprüft wird — ohne Urteil', () => {
+    // Die Parameter-Defaults sind in manchen Projekten bewusst noch nicht die
+    // Lösung; ein ✓/✗ dagegen wäre irreführend.
+    const html = wrap(<ChallengeCheck project={projekt} buildParams={null} />);
+    expect(html).toContain('Sobald du im Bau-Schritt ein STL herunterlädst');
+    expect(html).not.toContain('✗');
+    expect(html).not.toContain('✓');
+    expect(html).not.toContain('deine Werte');
+  });
+
+  it('nimmt die echten Bauwerte, sobald einer gespeichert ist', () => {
+    const html = wrap(
+      <ChallengeCheck project={projekt} buildParams={{ preset: 2, h: 130, b: 8, tiefe: 8 }} />,
+    );
+    expect(html).toContain('deine Werte');
+    expect(html).toContain('130'); // die selbst gewählte Fachwerkhöhe
+    expect(html).not.toContain('Du hast noch nichts gebaut');
+  });
+
+  it('meldet eine verfehlte Anforderung, statt sie schönzurechnen', () => {
+    // Zu dünne Stäbe: der Druckstab knickt.
+    const html = wrap(
+      <ChallengeCheck project={projekt} buildParams={{ preset: 1, h: 112.5, b: 4, tiefe: 8 }} />,
+    );
+    expect(html).toContain('✗');
+    expect(html).toContain('Eine Anforderung ist noch offen');
+  });
+
+  it('urteilt nicht, wenn ein alter Bau Felder vermissen lässt', () => {
+    const html = wrap(<ChallengeCheck project={projekt} buildParams={{ h: 130 }} />);
+    expect(html).toContain('Sobald du im Bau-Schritt');
+    expect(html).not.toContain('deine Werte');
   });
 });

@@ -51,12 +51,17 @@ function discPoints(cx: number, cz: number, y: number, r: number): string {
 }
 
 function Pulley({ cx, cz }: { cx: number; cz: number }) {
+  // Tiefenreihenfolge: In dieser Projektion ist GRÖSSERES y näher am
+  // Betrachter (Blickrichtung (1,1,1)). Die hintere Wange liegt also bei
+  // y = −4 und wird zuerst gezeichnet; vorher war es umgekehrt, sodass die
+  // hintere Scheibe die vordere verdeckte und die Nabe hinten saß.
   return (
     <g>
-      {/* Scheibe mit Tiefe: hintere Lage dunkler, vordere heller, Nabe als Punkt */}
-      <polygon points={discPoints(cx, cz, 4, R)} fill={shade(PULLEY_COLOR, -0.22)} stroke="var(--ink)" strokeOpacity={0.3} strokeWidth={0.6} />
-      <polygon points={discPoints(cx, cz, -4, R)} fill={shade(PULLEY_COLOR, 0.18)} stroke="var(--ink)" strokeOpacity={0.4} strokeWidth={0.7} />
-      <polygon points={discPoints(cx, cz, -4, R * 0.3)} fill="var(--paper-sink)" stroke="var(--ink)" strokeOpacity={0.3} strokeWidth={0.5} />
+      <polygon points={discPoints(cx, cz, -4, R)} fill={shade(PULLEY_COLOR, -0.22)} stroke="var(--ink)" strokeOpacity={0.3} strokeWidth={0.6} />
+      {/* Seilrille zwischen den Wangen — hier läuft das Seil wirklich */}
+      <polygon points={discPoints(cx, cz, 0, R * 0.82)} fill={shade(PULLEY_COLOR, -0.36)} stroke="none" />
+      <polygon points={discPoints(cx, cz, 4, R)} fill={shade(PULLEY_COLOR, 0.18)} stroke="var(--ink)" strokeOpacity={0.4} strokeWidth={0.7} />
+      <polygon points={discPoints(cx, cz, 4, R * 0.3)} fill="var(--paper-sink)" stroke="var(--ink)" strokeOpacity={0.3} strokeWidth={0.5} />
     </g>
   );
 }
@@ -66,7 +71,7 @@ function Pulley({ cx, cz }: { cx: number; cz: number }) {
  * dann abwechselnd unter lose / über feste Rollen, zuletzt über die
  * Zug-Umlenkrolle nach unten zur Hand. Liefert auch die Rollen-Positionen.
  */
-function buildRope(n: number, zBot: number) {
+function buildRope(n: number, zBot: number, handZ: number = HAND_Z) {
   const xs = (k: number) => (k - (n - 1) / 2) * S;
   const rope: Vec3[] = [];
   const tops: number[] = [];
@@ -98,11 +103,17 @@ function buildRope(n: number, zBot: number) {
   }
   arcTop(xs(n - 1) + R); // Zug-Umlenkung, immer oben
   const pullX = xs(n - 1) + 2 * R;
-  rope.push({ x: pullX, y: 0, z: HAND_Z });
+  rope.push({ x: pullX, y: 0, z: handZ });
 
   const anchor = rope[0];
-  const attachXs = anchorBottom ? [anchor.x, ...bots] : bots.length ? bots : [xs(0)];
-  const loadCx = (Math.min(...attachXs) + Math.max(...attachXs)) / 2;
+  // Der Haken sitzt im KRAFTschwerpunkt der Anschlagpunkte, nicht in der Mitte
+  // zwischen Minimum und Maximum: bei ungeradem n trägt der Totpunkt 1·F, jede
+  // lose Rolle 2·F. Vorher hing die Last 4 px daneben und der Unterkloben
+  // hätte kippen müssen.
+  const attachXs = anchorBottom ? [anchor.x, ...bots.flatMap((b) => [b, b])] : bots.flatMap((b) => [b, b]);
+  const loadCx = attachXs.length
+    ? attachXs.reduce((s, x) => s + x, 0) / attachXs.length
+    : xs(0);
   return { rope, tops, bots, pullX, anchor, anchorBottom, loadCx };
 }
 
@@ -128,8 +139,13 @@ export function PulleySystem({ params, caption }: { params: PulleySystemParams; 
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const zBot = 48 + lift; // Achsen der losen Rollen / Anbindung an die Last
-  const { rope, tops, bots, pullX, anchor, loadCx } = buildRope(n, zBot);
+  // Achsen der losen Rollen / Anbindung an die Last.
+  const zBot = 48 + lift;
+  // Seillänge bleibt erhalten: hebt sich die Last um Δh, muss das freie Ende
+  // um n·Δh nachlaufen. Genau das ist die Kernaussage des Themas
+  // (Kraft ÷ n ⇒ Weg × n) — vorher „dehnte" sich das Seil um bis zu 30 px.
+  const handZ = HAND_Z - n * lift;
+  const { rope, tops, bots, pullX, anchor, loadCx } = buildRope(n, zBot, handZ);
   const ropePts = rope.map((p) => project(p)).map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ');
 
   // Last + Haken unter dem Unterkloben.
@@ -201,11 +217,10 @@ export function PulleySystem({ params, caption }: { params: PulleySystemParams; 
           G = {fmt(G)} N
         </text>
 
-        {/* Zugkraft als Ampel-Pfeil am Seilende (an der Hand-Höhe gespiegelt,
-            weil die Zugrichtung nach unten zeigt). */}
-        <g transform={`translate(0 ${r2(hand.y + tipY)}) scale(1 -1)`}>
-          <AmpelArrow tip={{ x: hand.x, y: tipY }} length={aLen} frac={frac} shaftHalf={2} headHalf={7} headLen={11} />
-        </g>
+        {/* Zugkraft als Ampel-Pfeil am Seilende. Die Primitive zeigt bereits
+            nach unten (Spitze unten, Schaft darüber) — eine zusätzliche
+            Spiegelung ließ die Hand früher nach OBEN ziehen. */}
+        <AmpelArrow tip={{ x: hand.x, y: tipY }} length={aLen} frac={frac} shaftHalf={2} headHalf={7} headLen={11} />
         {/* Bei n = 1 endet das Seil direkt an der Last — Label höher und neben
           das Seil setzen, sonst kollidiert es mit Massen-Label und Seillinie
           (Befund B-25). */}

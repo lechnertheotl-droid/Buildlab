@@ -54,7 +54,9 @@ export function FlightSim({ params, caption }: { params: FlightSimParams; captio
   }
 
   const tEnd = sim.trajectory[sim.trajectory.length - 1]?.t ?? 1;
-  const hTop = Math.max(sim.apogee, goal ?? 0) * 1.12;
+  // Mindesthöhe 1 m: hebt die Rakete nicht ab (Schub <= Gewicht), wäre hTop = 0
+  // und sy() lieferte NaN — die ganze Kurve wäre zerstört.
+  const hTop = Math.max(Math.max(sim.apogee, goal ?? 0) * 1.12, 1);
   const sx = (t: number) => M.left + (t / tEnd) * (W - M.left - M.right);
   const sy = (h: number) => H - M.bottom - (h / hTop) * (H - M.top - M.bottom);
 
@@ -133,7 +135,10 @@ export function FlightSim({ params, caption }: { params: FlightSimParams; captio
           Coast
         </text>
         <text x={(sx(sim.tApogee) + (W - M.right)) / 2} y={M.top + 9} textAnchor="middle" fontSize="9" className="fill-[color:var(--ink-faint)] font-mono">
-          Sinken
+          Sinkflug
+        </text>
+        <text x={(sx(sim.tApogee) + (W - M.right)) / 2} y={M.top + 20} textAnchor="middle" fontSize="8" className="fill-[color:var(--ink-faint)] font-mono">
+          ohne Bergung
         </text>
 
         {/* Die Flugbahn selbst */}
@@ -161,6 +166,16 @@ export function FlightSim({ params, caption }: { params: FlightSimParams; captio
         </span>
         <span>
           Brennschluss = <span className="text-accent-ink">{fmt(sim.tBurnout, 2)} s</span>
+        </span>
+        {/* Ehrlichkeit: das Modell kennt keine Bergung. Ohne Fallschirm schlägt
+            die Rakete mit dieser Geschwindigkeit auf — die Zahl gehört sichtbar
+            dazu, sonst liest sich „Sinken" wie eine geregelte Landung. */}
+        <span>
+          Aufschlag ={' '}
+          <span className="text-fehl">
+            {fmt(Math.abs(sim.trajectory[sim.trajectory.length - 1]?.v ?? 0))} m/s
+          </span>{' '}
+          <span className="text-xs text-ink-faint">(ohne Fallschirm)</span>
         </span>
         <span className="text-xs text-ink-faint">aus der Engine (RK4)</span>
       </p>

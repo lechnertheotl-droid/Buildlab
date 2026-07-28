@@ -5,18 +5,20 @@
 
 import {
   renderGearStl,
+  renderBrueckeStl,
   renderPulleyStl,
   renderRaketeStl,
   type GearParams,
   type PulleyParams,
   type RaketeParams,
+  type BrueckeParams,
 } from './run-openscad';
 
 interface RequestMsg {
   id: number;
   /** Welches parametrische Modell — Default 'gear' (Abwärtskompatibilität). */
-  model?: 'gear' | 'rolle' | 'rakete';
-  params: GearParams | PulleyParams | RaketeParams;
+  model?: 'gear' | 'rolle' | 'rakete' | 'bruecke';
+  params: GearParams | PulleyParams | RaketeParams | BrueckeParams;
 }
 
 // Im DOM-Typkontext ist `self` als Window typisiert; im Worker ist postMessage 1-argig.
@@ -27,7 +29,9 @@ self.onmessage = async (e: MessageEvent<RequestMsg>) => {
   const { id, model, params } = e.data;
   try {
     const stl =
-      model === 'rakete'
+      model === 'bruecke'
+        ? await renderBrueckeStl(params as BrueckeParams)
+        : model === 'rakete'
         ? await renderRaketeStl(params as RaketeParams)
         : model === 'rolle'
           ? await renderPulleyStl(params as PulleyParams)

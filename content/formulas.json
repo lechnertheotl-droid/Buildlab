@@ -767,5 +767,235 @@
     ]
    }
   ]
+ },
+ {
+  "id": "sum_f",
+  "latex": "\\Sigma F = F_1 + F_2 + F_3",
+  "expr": "F1 + F2 + F3",
+  "conceptId": "gleichgewicht",
+  "result": {
+   "symbol": "\\Sigma F",
+   "name": "Kräftesumme (eine Richtung)",
+   "unit": "N"
+  },
+  "variables": [
+   {
+    "var": "F1",
+    "symbol": "F_1",
+    "name": "erste Kraft",
+    "unit": "N",
+    "explanation": "Erste Kraft entlang der Wirkungslinie; Vorzeichen gibt die Richtung an.",
+    "typicalRange": [
+     -1000,
+     1000
+    ]
+   },
+   {
+    "var": "F2",
+    "symbol": "F_2",
+    "name": "zweite Kraft",
+    "unit": "N",
+    "explanation": "Zweite Kraft entlang derselben Richtung; positiv = gleiche Richtung wie F₁.",
+    "typicalRange": [
+     -1000,
+     1000
+    ]
+   },
+   {
+    "var": "F3",
+    "symbol": "F_3",
+    "name": "dritte Kraft",
+    "unit": "N",
+    "explanation": "Dritte Kraft — im Gleichgewicht gleicht sie die anderen genau aus (ΣF = 0).",
+    "typicalRange": [
+     -1000,
+     1000
+    ]
+   }
+  ]
+ },
+ {
+  "id": "det_truss",
+  "latex": "f = 2k - (s + r)",
+  "expr": "2 * k - (s + r)",
+  "conceptId": "statische_bestimmtheit",
+  "result": {
+   "symbol": "f",
+   "name": "Freiheitsgrad (0 = statisch bestimmt)",
+   "unit": "-"
+  },
+  "variables": [
+   {
+    "var": "k",
+    "symbol": "k",
+    "name": "Anzahl Knoten",
+    "unit": "-",
+    "explanation": "Jeder Knoten liefert zwei Gleichgewichtsbedingungen (x und y).",
+    "typicalRange": [
+     3,
+     50
+    ]
+   },
+   {
+    "var": "s",
+    "symbol": "s",
+    "name": "Anzahl Stäbe",
+    "unit": "-",
+    "explanation": "Jeder Stab trägt genau eine unbekannte Stabkraft.",
+    "typicalRange": [
+     3,
+     100
+    ]
+   },
+   {
+    "var": "r",
+    "symbol": "r",
+    "name": "Auflager-Wertigkeit",
+    "unit": "-",
+    "explanation": "Anzahl gesperrter Richtungen: Festlager zählt 2, Loslager zählt 1.",
+    "typicalRange": [
+     3,
+     6
+    ]
+   }
+  ]
+ },
+ {
+  "id": "joint_strut",
+  "latex": "S_D = \\dfrac{F_A \\cdot l_S}{h}",
+  "expr": "FA * lS / h",
+  "conceptId": "knotenpunktverfahren",
+  "result": {
+   "symbol": "S_D",
+   "name": "Diagonalstab-Kraft (Betrag)",
+   "unit": "N"
+  },
+  "variables": [
+   {
+    "var": "FA",
+    "symbol": "F_A",
+    "name": "Auflagerkraft",
+    "unit": "N",
+    "explanation": "Senkrechte Kraft am Auflagerknoten — dort beginnt das Knotenpunktverfahren.",
+    "typicalRange": [
+     1,
+     100000
+    ]
+   },
+   {
+    "var": "lS",
+    "symbol": "l_S",
+    "name": "Stablänge der Diagonale",
+    "unit": "mm",
+    "explanation": "Länge der Diagonale — das Kraftdreieck am Knoten ist dem Geometriedreieck ähnlich.",
+    "typicalRange": [
+     10,
+     10000
+    ]
+   },
+   {
+    "var": "h",
+    "symbol": "h",
+    "name": "Fachwerkhöhe",
+    "unit": "mm",
+    "explanation": "Senkrechter Abstand zwischen Untergurt und Firstknoten.",
+    "typicalRange": [
+     10,
+     10000
+    ]
+   }
+  ]
+ },
+ {
+  "id": "joint_chord",
+  "latex": "S_U = \\dfrac{S_D \\cdot a}{l_S}",
+  "expr": "SD * a / lS",
+  "conceptId": "knotenpunktverfahren",
+  "result": {
+   "symbol": "S_U",
+   "name": "Untergurt-Kraft (Betrag)",
+   "unit": "N"
+  },
+  "variables": [
+   {
+    "var": "SD",
+    "symbol": "S_D",
+    "name": "Diagonalstab-Kraft (Betrag)",
+    "unit": "N",
+    "explanation": "Betrag der Diagonalkraft aus dem ersten Schritt des Knotenpunktverfahrens.",
+    "typicalRange": [
+     1,
+     100000
+    ]
+   },
+   {
+    "var": "a",
+    "symbol": "a",
+    "name": "waagerechter Abstand",
+    "unit": "mm",
+    "explanation": "Waagerechte Ausdehnung der Diagonale — die Ankathete des Geometriedreiecks.",
+    "typicalRange": [
+     10,
+     10000
+    ]
+   },
+   {
+    "var": "lS",
+    "symbol": "l_S",
+    "name": "Stablänge der Diagonale",
+    "unit": "mm",
+    "explanation": "Länge der Diagonale — die Hypotenuse des Geometriedreiecks.",
+    "typicalRange": [
+     10,
+     10000
+    ]
+   }
+  ]
+ },
+ {
+  "id": "euler_knick",
+  "latex": "F_k = \\dfrac{\\pi^2 \\cdot E \\cdot b^4}{12 \\cdot l_k^2}",
+  "expr": "pi^2 * E * b^4 / (12 * lk^2)",
+  "conceptId": "zugdruckstab",
+  "result": {
+   "symbol": "F_k",
+   "name": "Knicklast (quadratischer Stab, beidseitig gelenkig)",
+   "unit": "N"
+  },
+  "variables": [
+   {
+    "var": "E",
+    "symbol": "E",
+    "name": "Elastizitätsmodul",
+    "unit": "N/mm^2",
+    "explanation": "Steifigkeit des Werkstoffs — für gedrucktes PLA rechnen wir mit 3500 N/mm².",
+    "typicalRange": [
+     1000,
+     250000
+    ]
+   },
+   {
+    "var": "b",
+    "symbol": "b",
+    "name": "Stab-Kantenlänge",
+    "unit": "mm",
+    "explanation": "Kantenlänge des quadratischen Querschnitts; geht mit der 4. Potenz ein!",
+    "typicalRange": [
+     1,
+     50
+    ]
+   },
+   {
+    "var": "lk",
+    "symbol": "l_k",
+    "name": "Knicklänge",
+    "unit": "mm",
+    "explanation": "Freie Länge des Druckstabs zwischen den Knoten (Eulerfall 2).",
+    "typicalRange": [
+     10,
+     10000
+    ]
+   }
+  ]
  }
 ]

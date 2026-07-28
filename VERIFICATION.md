@@ -83,6 +83,13 @@ führt nacheinander aus (bricht beim ersten Fehler ab):
     verwendet, ist im selben Schritt vorher (Blockindex) oder in einem
     transitiven `requires`-Vorfahren eingeführt. Konzepte aus anderen
     Projekten sind ausgenommen (Auffrisch-Karten decken den Quereinstieg ab).
+22. **interactive-params** — jeder Schlüssel in `interactive.params` ist in
+    `components.registry.json` für diese `componentId` deklariert und hat den
+    dort genannten Typ (`number`/`string`/`boolean`/`array`/`object`) →
+    sonst **Fehler**. Unbekannte Schlüssel sind bewusst kein Warnhinweis: Sie
+    sehen im Content richtig aus, fallen zur Laufzeit aber still auf den
+    Default zurück (`nrange` statt `nRange`) und sind nur im Browser zu
+    bemerken. Die Registry ist damit ein Vertrag, keine Dokumentation.
 
 ## §3 Golden Tests — das Herz der Prüfungsgenauigkeit
 

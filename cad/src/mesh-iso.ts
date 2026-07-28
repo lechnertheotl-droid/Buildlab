@@ -23,10 +23,27 @@ export interface MeshIsoOptions {
 export interface IsoPolygon {
   points: string;
   fill: string;
+  /** Tiefe entlang der Blickrichtung — größer = näher (Maler-Reihenfolge). */
+  depth: number;
+}
+
+/** Eine Bauteilkante in Bildkoordinaten (Silhouette oder Knickkante). */
+export interface IsoEdge {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  /** 'silhouette' = Umriss gegen den Hintergrund, 'crease' = Knick im Körper. */
+  kind: 'silhouette' | 'crease';
+  /** Tiefe wie bei den Flächen — Kanten werden mit ihnen verschachtelt
+      gezeichnet, sonst scheinen verdeckte Kanten durch den Körper. */
+  depth: number;
 }
 
 export interface MeshIsoResult {
   polygons: IsoPolygon[];
+  /** Bauteilkanten — ohne sie sieht man das Tesselierungsnetz statt der Kanten. */
+  edges: IsoEdge[];
   width: number;
   height: number;
 }
@@ -41,13 +58,6 @@ function dot(a: Vec3, b: Vec3): number {
 function norm(a: Vec3): Vec3 {
   const len = Math.hypot(a.x, a.y, a.z) || 1;
   return { x: a.x / len, y: a.y / len, z: a.z / len };
-}
-function centroid3(t: Triangle): Vec3 {
-  return {
-    x: (t.v[0].x + t.v[1].x + t.v[2].x) / 3,
-    y: (t.v[0].y + t.v[1].y + t.v[2].y) / 3,
-    z: (t.v[0].z + t.v[1].z + t.v[2].z) / 3,
-  };
 }
 
 /**
@@ -106,7 +116,10 @@ export function meshToIso(triangles: Triangle[], opts: MeshIsoOptions): MeshIsoR
   const visible: { points: string; fill: string; depth: number }[] = [];
   for (const t of rotated) {
     if (dot(t.n, viewN) <= 0) continue; // rückseitig
-    const depth = dot(centroid3(t), viewN);
+    // Tiefe über die NÄCHSTE Ecke statt über den Schwerpunkt: bei nicht-konvexen
+    // Körpern (Zahnlücken, Seilrille, Finnen am Rohr) ordnet der Schwerpunkt
+    // sichtbar falsch — eine große ferne Fläche verdeckt sonst kleine nahe.
+    const depth = Math.max(...t.v.map((p) => dot(p, viewN)));
     const lit = dot(norm(t.n), lightN); // [-1, 1]
     const amount = Math.max(-0.3, Math.min(0.3, lit * 0.3));
     const points = toPolygonPoints(t.v.map(proj));
@@ -117,8 +130,76 @@ export function meshToIso(triangles: Triangle[], opts: MeshIsoOptions): MeshIsoR
   visible.sort((a, b) => a.depth - b.depth);
 
   return {
-    polygons: visible.map(({ points, fill }) => ({ points, fill })),
+    polygons: visible,
+    edges: extractEdges(rotated, viewN, proj),
     width: opts.width,
     height: opts.height,
   };
+}
+
+/**
+ * Zieht aus dem Mesh die tatsächlichen Bauteilkanten:
+ *   Silhouette — die beiden Nachbarflächen zeigen in verschiedene Richtungen
+ *                relativ zur Kamera (Umriss gegen den Hintergrund),
+ *   Crease     — die Nachbarflächen knicken um mehr als CREASE_DEG.
+ *
+ * Damit verschwindet das Tesselierungsnetz glatter Zylinder, während
+ * Zahnflanken, Rillenkanten und Finnenkanten stehen bleiben — der Unterschied
+ * zwischen „Klumpen" und technischer Zeichnung.
+ */
+const CREASE_DEG = 25;
+const QUANT = 1e4; // Ecken auf 1e-4 runden, damit geteilte Kanten zusammenfinden
+
+function extractEdges(
+  tris: Triangle[],
+  viewN: Vec3,
+  proj: (p: Vec3) => { x: number; y: number },
+): IsoEdge[] {
+  const key = (p: Vec3) =>
+    `${Math.round(p.x * QUANT)},${Math.round(p.y * QUANT)},${Math.round(p.z * QUANT)}`;
+  const map = new Map<string, { a: Vec3; b: Vec3; normals: Vec3[] }>();
+
+  for (const t of tris) {
+    for (let i = 0; i < 3; i++) {
+      const a = t.v[i];
+      const b = t.v[(i + 1) % 3];
+      const ka = key(a);
+      const kb = key(b);
+      const id = ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`;
+      const eintrag = map.get(id);
+      if (eintrag) eintrag.normals.push(t.n);
+      else map.set(id, { a, b, normals: [t.n] });
+    }
+  }
+
+  const creaseCos = Math.cos((CREASE_DEG * Math.PI) / 180);
+  const edges: IsoEdge[] = [];
+  for (const { a, b, normals } of map.values()) {
+    let kind: IsoEdge['kind'] | null = null;
+    if (normals.length === 1) {
+      kind = 'silhouette'; // offener Rand (nicht-manifest) — immer zeichnen
+    } else {
+      const [n1, n2] = normals;
+      const s1 = dot(n1, viewN) > 0;
+      const s2 = dot(n2, viewN) > 0;
+      if (s1 !== s2) kind = 'silhouette';
+      else if (s1 && dot(norm(n1), norm(n2)) < creaseCos) kind = 'crease';
+    }
+    if (!kind) continue;
+    const pa = proj(a);
+    const pb = proj(b);
+    // Minimal nach vorn versetzt, damit eine Kante über ihrer eigenen Fläche
+    // liegt, aber weiterhin von näheren Flächen verdeckt wird.
+    const depth = Math.max(dot(a, viewN), dot(b, viewN)) + 1e-6;
+    edges.push({
+      x1: Math.round(pa.x * 100) / 100,
+      y1: Math.round(pa.y * 100) / 100,
+      x2: Math.round(pb.x * 100) / 100,
+      y2: Math.round(pb.y * 100) / 100,
+      kind,
+      depth,
+    });
+  }
+  edges.sort((a, b) => a.depth - b.depth);
+  return edges;
 }

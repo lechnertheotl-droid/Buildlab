@@ -17,6 +17,18 @@
         }
       ]
     },
+    "auflagerreaktion": {
+      "introducedIn": {
+        "project": "fachwerkbruecke",
+        "step": "auflagerreaktionen"
+      },
+      "usedIn": [
+        {
+          "project": "fachwerkbruecke",
+          "step": "knotenpunktverfahren"
+        }
+      ]
+    },
     "barrowman": {
       "introducedIn": {
         "project": "modellrakete",
@@ -99,6 +111,22 @@
       },
       "usedIn": [
         {
+          "project": "fachwerkbruecke",
+          "step": "gleichgewicht-herstellen"
+        },
+        {
+          "project": "fachwerkbruecke",
+          "step": "auflagerreaktionen"
+        },
+        {
+          "project": "fachwerkbruecke",
+          "step": "knotenpunktverfahren"
+        },
+        {
+          "project": "fachwerkbruecke",
+          "step": "statisch-bestimmt"
+        },
+        {
           "project": "hebel-flaschenzug",
           "step": "rollen-fest-lose"
         }
@@ -116,12 +144,27 @@
         }
       ]
     },
+    "knotenpunktverfahren": {
+      "introducedIn": {
+        "project": "fachwerkbruecke",
+        "step": "knotenpunktverfahren"
+      },
+      "usedIn": []
+    },
     "kraft": {
       "introducedIn": {
         "project": "hebel-flaschenzug",
         "step": "was-ist-kraft"
       },
       "usedIn": [
+        {
+          "project": "fachwerkbruecke",
+          "step": "kraefte-haben-richtung"
+        },
+        {
+          "project": "fachwerkbruecke",
+          "step": "gleichgewicht-herstellen"
+        },
         {
           "project": "hebel-flaschenzug",
           "step": "hebelarm-drehmoment"
@@ -169,6 +212,22 @@
         {
           "project": "hebel-flaschenzug",
           "step": "meilenstein"
+        }
+      ]
+    },
+    "kraftvektor": {
+      "introducedIn": {
+        "project": "fachwerkbruecke",
+        "step": "kraefte-haben-richtung"
+      },
+      "usedIn": [
+        {
+          "project": "fachwerkbruecke",
+          "step": "gleichgewicht-herstellen"
+        },
+        {
+          "project": "fachwerkbruecke",
+          "step": "zug-oder-druck"
         }
       ]
     },
@@ -268,6 +327,13 @@
         }
       ]
     },
+    "statische_bestimmtheit": {
+      "introducedIn": {
+        "project": "fachwerkbruecke",
+        "step": "statisch-bestimmt"
+      },
+      "usedIn": []
+    },
     "teilkreisdurchmesser": {
       "introducedIn": {
         "project": "stirnradgetriebe",
@@ -302,14 +368,10 @@
     },
     "wirkungsgrad": {
       "introducedIn": {
-        "project": "stirnradgetriebe",
-        "step": "wirkungsgrad"
+        "project": "hebel-flaschenzug",
+        "step": "wirkungsgrad-in-echt"
       },
       "usedIn": [
-        {
-          "project": "hebel-flaschenzug",
-          "step": "wirkungsgrad-in-echt"
-        },
         {
           "project": "hebel-flaschenzug",
           "step": "auslegung"
@@ -321,6 +383,10 @@
         {
           "project": "hebel-flaschenzug",
           "step": "meilenstein"
+        },
+        {
+          "project": "stirnradgetriebe",
+          "step": "wirkungsgrad"
         },
         {
           "project": "stirnradgetriebe",
@@ -350,6 +416,22 @@
         "step": "warum-zahnraeder"
       },
       "usedIn": []
+    },
+    "zugdruckstab": {
+      "introducedIn": {
+        "project": "fachwerkbruecke",
+        "step": "zug-oder-druck"
+      },
+      "usedIn": [
+        {
+          "project": "fachwerkbruecke",
+          "step": "knotenpunktverfahren"
+        },
+        {
+          "project": "fachwerkbruecke",
+          "step": "statisch-bestimmt"
+        }
+      ]
     }
   }
 }

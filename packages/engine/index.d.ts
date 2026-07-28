@@ -140,3 +140,98 @@ export interface FlightResult {
 
 /** Senkrechter Flug per RK4 (fester Schritt): h(t), Apogäum, v_max. */
 export function simulateFlight(opts: FlightOptions): FlightResult;
+
+// ── Fachwerk-Modul (truss.js) ────────────────────────────────────────────────
+
+/** Knoten in mm; y zeigt nach oben. */
+export interface TrussNode {
+  x: number;
+  y: number;
+}
+
+/** Stab zwischen zwei Knoten-Indizes. */
+export interface TrussBar {
+  from: number;
+  to: number;
+}
+
+/** Auflager: gesperrte Richtungen am Knoten (Festlager: fx+fy, Loslager: fy). */
+export interface TrussSupport {
+  node: number;
+  fx?: boolean;
+  fy?: boolean;
+}
+
+/** Äußere Kraft am Knoten in N (y nach oben, Gewicht also fy < 0). */
+export interface TrussLoad {
+  node: number;
+  fx?: number;
+  fy?: number;
+}
+
+export interface TrussTopology {
+  nodes: TrussNode[];
+  bars: TrussBar[];
+  supports: TrussSupport[];
+}
+
+export interface TrussProblem extends TrussTopology {
+  loads: TrussLoad[];
+}
+
+export interface DeterminacyResult {
+  k: number;
+  s: number;
+  r: number;
+  /** f = 2k − (s + r); 0 = statisch bestimmt. */
+  f: number;
+}
+
+export interface TrussReaction {
+  node: number;
+  fx: number;
+  fy: number;
+}
+
+export interface TrussSolution {
+  /** Stabkraft je Stab: > 0 Zug, < 0 Druck (N). */
+  barForces: number[];
+  reactions: TrussReaction[];
+  maxAbs: number;
+  maxAbsIndex: number;
+}
+
+/** Zählt k, s, r und liefert den Freiheitsgrad f = 2k − (s + r). */
+export function checkDeterminacy(topology: TrussTopology): DeterminacyResult;
+
+/** Löst ein statisch bestimmtes Fachwerk per Knotenpunktverfahren (lusolve). */
+export function solveTruss(problem: TrussProblem): TrussSolution;
+
+/** Gleichgewichtsresiduum je Knoten (Testhilfe) — muss überall ≈ 0 sein. */
+export function trussResiduals(
+  problem: TrussProblem,
+  solution: Pick<TrussSolution, 'barForces' | 'reactions'>,
+): { fx: number; fy: number }[];
+
+// ── Brücken-Presets: eine Quelle für Löser, Bau-Panel und CAD ────────────────
+
+/** Spannweite aller Brücken-Presets in mm. */
+export declare const BRIDGE_SPAN: number;
+
+export interface BridgeGeometry extends TrussTopology {
+  label: string;
+  /** Knoten, an dem die Last angreift (Mitte des Untergurts). */
+  loadNode: number;
+}
+
+/** Waagerechter Abstand Auflager → erster Obergurt-/Firstknoten. */
+export function bridgeDiagonalRun(preset: number): number;
+
+/** Topologie und Geometrie einer Bauart (1 = Dreieck, 2 = Trapez). */
+export function bridgePreset(preset: number, h: number): BridgeGeometry;
+
+/** Preset unter mittiger Last F lösen. */
+export function solveBridge(preset: number, h: number, F: number): BridgeGeometry & TrussSolution;
+
+/** Gesamte Stablänge der Bauart (mm) — Grundlage des Material-Budgets. */
+export function bridgeBarLength(preset: number, h: number): number;

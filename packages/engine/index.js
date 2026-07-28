@@ -11,6 +11,9 @@ import { create, all } from 'mathjs';
 // Raketen-Modul (Motordaten, Massenmodell, Barrowman, RK4-Flugbahn).
 export * from './rocket.js';
 
+// Fachwerk-Modul (statische Bestimmtheit, Knotenpunktverfahren als LGS).
+export * from './truss.js';
+
 const math = create(all, {});
 
 // Fachlich dimensionslose Einheiten-Labels, die mathjs nicht als Unit kennt.

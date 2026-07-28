@@ -383,8 +383,14 @@ export default function ProjectTree() {
 
   // Beim Einstieg zum nächsten offenen Schritt scrollen — der Baum wächst
   // nach oben, der Anfang liegt unten. Sprung statt Smooth (reduced-motion-fest).
+  //
+  // `builds` gehört in die Abhängigkeiten, obwohl es hier nicht gelesen wird:
+  // Solange es lädt, steht unten das Skeleton statt des Baums, und der Effekt
+  // suchte einen Knoten, den es noch nicht gab. Wer die Karte aufschlug, landete
+  // dann am oberen Ende — bei den gesperrten Schritten, während der einzige
+  // offene ganz unten aus dem Bild ragte.
   useEffect(() => {
-    if (!active) return;
+    if (!active || !builds) return;
     const unlocked = unlockedStepIds(active, stepsDone);
     const next = layoutTree(active)
       .nodes.filter((n) => unlocked.has(n.stepId) && !stepsDone.has(n.stepId))
@@ -392,7 +398,7 @@ export default function ProjectTree() {
     if (next) {
       document.getElementById(`bl-node-${next.stepId}`)?.scrollIntoView({ block: 'center' });
     }
-  }, [active, stepsDone]);
+  }, [active, stepsDone, builds]);
 
   if (!settings || !allProgress || !builds || !active) {
     return <ScreenSkeleton layout="detail" />;

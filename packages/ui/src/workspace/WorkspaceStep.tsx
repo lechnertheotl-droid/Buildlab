@@ -14,6 +14,7 @@ import { useCountUp } from '../useCountUp';
 import { useWorkspaceStore } from '../store';
 import { formatUnit } from '../units';
 import { CadBuild } from '../build/CadBuild';
+import { ChallengeCheck, evaluateChallenge } from './ChallengeCheck';
 import { buttonClass } from '../primitives/Button';
 import { focusRing } from '../primitives/focus';
 import { reducedMotionActive } from '../primitives/motion';
@@ -39,6 +40,8 @@ export interface WorkspaceStepProps {
   onExit: () => void;
   onStepComplete: (stepIndex: number) => void;
   onMilestone?: () => void;
+  /** Parameter des jüngsten gespeicherten Baus — der Meilenstein rechnet damit. */
+  lastBuildParams?: Record<string, number> | null;
   onOpenConcept?: (conceptId: string) => void;
   onRefreshShown?: (conceptId: string) => void;
   onExport?: (params: Record<string, number>, label: string) => void;
@@ -261,6 +264,7 @@ export function WorkspaceStep({
   onOpenConcept,
   onRefreshShown,
   onExport,
+  lastBuildParams,
 }: WorkspaceStepProps) {
   const step = project.steps[stepIndex];
   const clearCanvasInputs = useWorkspaceStore((s) => s.clearCanvasInputs);
@@ -289,14 +293,32 @@ export function WorkspaceStep({
   // build-Block noch nicht gemountet ist (buildOk === null), gilt er als offen.
   const buildOk = useWorkspaceStore((s) => s.buildOk);
   const hasBuildBlock = step.blocks.some((b) => b.type === 'build');
+  // Der Meilenstein gilt erst als geschafft, wenn der Nachweis über den
+  // ECHTEN Bauwerten grün ist. Sonst hätte die App „Steht." gefeiert, während
+  // die Anforderungsliste daneben eine rote Zeile zeigt.
+  const challenge = useMemo(
+    () => evaluateChallenge(project, lastBuildParams),
+    [project, lastBuildParams],
+  );
+  // Blockiert wird NUR, wenn wirklich eigene Bauwerte vorliegen und diese die
+  // Challenge verfehlen. Ohne gespeicherten Bau gelten die Parameter-Defaults —
+  // und die sind in manchen Projekten bewusst noch nicht die Lösung (im
+  // Getriebe startet z₂ bei 40, die Challenge verlangt i = 3). Daran darf der
+  // Meilenstein nicht hängen bleiben.
+  const challengeOffen =
+    step.kind === 'meilenstein' && challenge.vorhanden && challenge.eigen && !challenge.ok;
   const stepDone =
-    requiredTasks.every((i) => taskStates[i]?.solved) && (!hasBuildBlock || buildOk === true);
+    requiredTasks.every((i) => taskStates[i]?.solved) &&
+    (!hasBuildBlock || buildOk === true) &&
+    !challengeOffen;
   // Weiter führt zum eindeutigen nächsten Schritt — sonst zurück zur
   // Projektkarte (sie ist der Hub; bei parallelen Ästen entscheidet sie).
   const weiterZurKarte = stepDone && nextStepIndex === null;
   const lockHintText =
     hasBuildBlock && buildOk !== true
       ? 'Erst alle Anforderungen in der Bau-Ansicht erfüllen.'
+      : challengeOffen
+      ? 'Der Nachweis ist noch rot — geh zurück in den Bau-Schritt und stell nach.'
       : 'Noch eine Aufgabe offen — sie ist direkt über mir.';
   // Sichtbarer Hinweis nach Tap auf den gesperrten Weiter-Knopf (blendet sich aus).
   const [lockHint, setLockHint] = useState<string | null>(null);
@@ -431,7 +453,14 @@ export function WorkspaceStep({
                       <BlockRenderer block={canvasBlock} depth={depth} />
                     )
                   ) : step.kind === 'meilenstein' ? (
-                    <MilestoneFinale project={project} />
+                    challengeOffen ? (
+                      <p className="max-w-xs text-center font-mono text-sm text-fehl">
+                        Der Nachweis unten ist noch rot. Stell im Bau-Schritt nach — dann steht
+                        deine Brücke auch auf dem Papier.
+                      </p>
+                    ) : (
+                      <MilestoneFinale project={project} />
+                    )
                   ) : (
                     <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded border border-black/10 bg-paper-2 p-6 text-center shadow">
                       <p className="font-display text-xl text-ink-2">
@@ -482,6 +511,9 @@ export function WorkspaceStep({
 
           <div key={stepIndex} className="bl-wechsel mt-5 space-y-6">
             {lessonBlocks.map(({ b, i }) => renderBlock(b, i))}
+            {step.kind === 'meilenstein' && (
+              <ChallengeCheck project={project} buildParams={lastBuildParams} />
+            )}
             {step.kind === 'meilenstein' && stepDone && canvasBlock !== null && (
               <MilestoneFinale project={project} />
             )}

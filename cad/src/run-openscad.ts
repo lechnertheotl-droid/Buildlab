@@ -6,9 +6,12 @@
 // angezeigten Maße kommen aus packages/engine; hier entsteht nur die Geometrie.
 
 import { createOpenSCAD, type OpenSCADInstance } from 'openscad-wasm';
+import { gearProfile } from '@buildlab/iso';
+import { bridgePreset } from '@buildlab/engine';
 import gearScad from '../gear.scad?raw';
 import rolleScad from '../rolle.scad?raw';
 import raketeScad from '../rakete.scad?raw';
+import brueckeScad from '../bruecke.scad?raw';
 
 export interface GearParams {
   /** Modul m [mm] */
@@ -19,6 +22,12 @@ export interface GearParams {
   thickness: number;
   /** Bohrungsdurchmesser [mm] */
   bore: number;
+  /** Flankenspiel [mm] — gedruckte Zahnräder brauchen 0,1–0,2 mm, sonst klemmen sie. */
+  backlash?: number;
+  /** Nabendurchmesser [mm]; 0 = keine Nabe. */
+  hub?: number;
+  /** Nabenüberstand je Seite [mm]. */
+  hubHeight?: number;
   /** Vorschau-Qualität ($fn); modest halten, damit die Facet-Zahl klein bleibt. */
   fn?: number;
 }
@@ -47,13 +56,26 @@ export interface PulleyParams {
   fn?: number;
 }
 
-/** Baut den vollständigen .scad-Quelltext: $fn + Modell + parametrisierter Aufruf. */
+/**
+ * Baut den vollständigen .scad-Quelltext: $fn + Modell + Evolventen-Kontur.
+ *
+ * Die Zahnkontur kommt aus gearProfile() — derselben Funktion, aus der die
+ * Simulation zeichnet. Bild und gedrucktes Teil können damit nicht mehr
+ * auseinanderlaufen; die Flankenzahl (steps) ist im CAD höher als im Bild,
+ * die Geometrie aber identisch.
+ */
 export function gearScadSource(p: GearParams): string {
   const fn = p.fn ?? 24;
+  const profile = gearProfile({ z: p.z, m: p.m, steps: 12, backlash: p.backlash ?? 0.15 });
+  const pts = profile.points.map((q) => `[${q.x.toFixed(4)},${q.y.toFixed(4)}]`).join(',');
+  // Nabe nur, wenn sie über die Bohrung hinausragt und im Fußkreis Platz hat.
+  const hub = p.hub ?? Math.min(p.bore + 6, Math.max(0, (profile.rf - 1) * 2));
+  const hubHeight = p.hubHeight ?? (hub > p.bore + 1 ? 3 : 0);
   return (
     `$fn=${fn};\n` +
     `${gearScad}\n` +
-    `gear(m=${p.m}, z=${p.z}, thickness=${p.thickness}, bore=${p.bore});\n`
+    `gear(profile=[${pts}], thickness=${p.thickness}, bore=${p.bore}, ` +
+    `hub=${hub.toFixed(3)}, hubHeight=${hubHeight});\n`
   );
 }
 
@@ -117,4 +139,44 @@ export function raketeScadSource(p: RaketeParams): string {
 export async function renderRaketeStl(p: RaketeParams): Promise<string> {
   const oscad = await newInstance();
   return oscad.renderToStl(raketeScadSource(p));
+}
+
+export interface BrueckeParams {
+  /** Bauart: 1 = Dreieck, 2 = Trapez (siehe bridgePreset in packages/engine). */
+  preset: number;
+  /** Fachwerkhöhe [mm] */
+  h: number;
+  /** Stabbreite in der Scheibenebene [mm] */
+  b: number;
+  /** Bautiefe / Extrusionshöhe [mm] */
+  tiefe: number;
+  /** Vorschau-Qualität ($fn); modest halten, damit die Facet-Zahl klein bleibt. */
+  fn?: number;
+}
+
+/**
+ * Baut den vollständigen .scad-Quelltext der Fachwerkbrücke.
+ *
+ * Knoten und Stäbe kommen aus bridgePreset() — derselben Funktion, aus der
+ * solveTruss die Stabkräfte rechnet. Bauteil und Statik können damit nicht
+ * auseinanderlaufen (Muster: gearScadSource).
+ */
+export function brueckeScadSource(p: BrueckeParams): string {
+  const fn = p.fn ?? 32;
+  const geo = bridgePreset(p.preset, p.h);
+  const nodes = geo.nodes.map((n) => `[${n.x.toFixed(4)},${n.y.toFixed(4)}]`).join(',');
+  const bars = geo.bars.map((e) => `[${e.from},${e.to}]`).join(',');
+  const feet = geo.supports.map((s) => s.node).join(',');
+  return (
+    `$fn=${fn};\n` +
+    `${brueckeScad}\n` +
+    `bruecke(nodes=[${nodes}], bars=[${bars}], feet=[${feet}], ` +
+    `eye=${geo.loadNode}, b=${p.b}, tiefe=${p.tiefe});\n`
+  );
+}
+
+/** Rendert die Fachwerkbrücke zu ASCII-STL (Text). Wirft bei OpenSCAD-Fehlern. */
+export async function renderBrueckeStl(p: BrueckeParams): Promise<string> {
+  const oscad = await newInstance();
+  return oscad.renderToStl(brueckeScadSource(p));
 }
